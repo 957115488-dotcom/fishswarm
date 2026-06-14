@@ -1,0 +1,54 @@
+{
+  "name": "fishswarm",
+  "version": "0.1.0",
+  "private": true,
+  "description": "鱼群 - 桌面优先的多智能体工作工厂",
+  "packageManager": "pnpm@9.4.0",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "node node_modules/concurrently/dist/bin/concurrently.js -k \"node node_modules/vite/bin/vite.js --host 127.0.0.1\" \"node node_modules/wait-on/bin/wait-on http://127.0.0.1:5173 && node node_modules/electron/cli.js .\"",
+    "dev:web": "node node_modules/concurrently/dist/bin/concurrently.js -k \"node electron/app-server.cjs\" \"node node_modules/vite/bin/vite.js --host 127.0.0.1\"",
+    "build": "node node_modules/typescript/bin/tsc --noEmit && node node_modules/vite/bin/vite.js build",
+    "preview": "node node_modules/vite/bin/vite.js preview --host 127.0.0.1",
+    "desktop:dev": "npm run dev",
+    "desktop:build": "npm run build && node node_modules/electron-builder/cli.js --win --dir",
+    "lint": "node node_modules/typescript/bin/tsc --noEmit",
+    "repair:electron": "node node_modules/electron/install.js",
+    "repair:electron:cn": "node -e \"process.env.ELECTRON_MIRROR='https://npmmirror.com/mirrors/electron/'; require('./node_modules/electron/install.js')\""
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "^5.1.1",
+    "lucide-react": "^0.468.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "concurrently": "^9.1.0",
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.3",
+    "wait-on": "^8.0.1"
+  },
+  "build": {
+    "appId": "com.fishswarm.desktop",
+    "productName": "鱼群",
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "signAndEditExecutable": false,
+      "target": [
+        "nsis"
+      ]
+    }
+  }
+}
