@@ -1,31 +1,37 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import {
+  ArrowUp,
   Archive,
   Bot,
   CheckCircle2,
+  ChevronDown,
   CircleAlert,
-  Factory,
+  FileText,
+  ImageIcon,
   KeyRound,
-  Library,
+  Layers,
   Loader2,
   MessageSquareText,
+  Mic,
   Plus,
   Send,
-  Settings,
   Sparkles,
   UsersRound
 } from "lucide-react";
 import "./styles.css";
 
-type Page = "chat" | "projects" | "employees" | "library" | "keys" | "settings";
+type Page = "chat" | "projects" | "keys" | "governance" | "rolepool";
 type TaskStatus = "draft" | "ready" | "assigned" | "running" | "reviewing" | "needs_rework" | "blocked" | "done" | "cancelled";
 type RuntimeStatus = "idle" | "queued" | "running" | "reviewing" | "waiting_for_user" | "blocked" | "failed";
-type ModelProviderKind = "openai_compatible" | "anthropic" | "gemini" | "deepseek" | "qwen" | "moonshot" | "openrouter" | "ollama" | "custom";
+type ModelProviderKind = "openai_compatible" | "anthropic" | "gemini" | "deepseek" | "qwen" | "moonshot" | "minimax" | "openrouter" | "ollama" | "custom";
+type ApiFormat = "openai_chat" | "anthropic_messages" | "gemini_generate_content" | "ollama_openai" | "custom_http";
+type RunMode = "plan" | "plan_and_dev" | "full_auto";
 
 type ModelConnection = {
   id: string;
   providerKind: ModelProviderKind;
+  apiFormat: ApiFormat;
   provider: string;
   baseUrl: string;
   modelName: string;
@@ -72,8 +78,99 @@ type Task = {
   description: string;
   status: TaskStatus;
   phase: string;
+  requiredTalentProfileId?: string | null;
+  assignedTalentProfileId?: string | null;
   assignedAgentWorkerId: string | null;
+  actionType?: "read" | "suggest" | "create" | "modify" | "delete" | "external" | "execute";
   dependsOn: string[];
+};
+
+type TalentProfile = {
+  id: string;
+  name: string;
+  domain: string;
+  responsibilities: string[];
+  requiredSkills: string[];
+  outputTypes: string[];
+  toolNeeds: string[];
+  reviewCriteria: string[];
+  status: string;
+  scope?: {
+    allowedDomains?: string[];
+    allowedFilePatterns?: string[];
+    allowedTools?: string[];
+    maxRiskLevel?: string;
+  };
+};
+
+type AgentRoleAssignment = {
+  id: string;
+  agentWorkerId: string;
+  talentProfileId: string;
+  scopeType: "workspace" | "factory" | "project";
+  scopeId: string;
+  priority: number;
+  active: boolean;
+  trial?: boolean;
+};
+
+type GuardedAction = {
+  id: string;
+  taskId: string;
+  agentWorkerId: string;
+  talentProfileId: string | null;
+  actionType: string;
+  title: string;
+  target: string;
+  reason: string;
+  riskLevel: "low" | "medium" | "high";
+  impactSummary: string;
+  status: string;
+};
+
+type ActionReviewBrief = {
+  id: string;
+  actionId: string;
+  title: string;
+  requestedBy: string;
+  target: string;
+  reason: string;
+  expectedBenefit: string;
+  riskSummary: string;
+  affectedScope: string[];
+  rollbackPlan?: string;
+  managementRecommendation: "approve" | "reject" | "revise";
+};
+
+type CapabilityGap = {
+  id: string;
+  taskId: string;
+  missingCapability: string;
+  requiredOutputs: string[];
+  requiredTools: string[];
+  acceptanceCriteria: string[];
+  riskLevel: string;
+  status: string;
+};
+
+type CandidateTalentProfile = {
+  id: string;
+  sourceGapId: string;
+  name: string;
+  domain: string;
+  responsibilities: string[];
+  requiredSkills: string[];
+  toolNeeds: string[];
+  reviewCriteria: string[];
+  status: string;
+};
+
+type AuditLog = {
+  id: string;
+  actor: string;
+  action: string;
+  detail: string;
+  createdAt: string;
 };
 
 type Artifact = {
@@ -96,17 +193,27 @@ type Dashboard = {
   factories: FactoryTemplate[];
   activeProject?: Project;
   agents: AgentWorker[];
+  talentProfiles: TalentProfile[];
+  agentRoleAssignments: AgentRoleAssignment[];
   tasks: Task[];
   artifacts: Artifact[];
+  guardedActions: GuardedAction[];
+  actionReviewBriefs: ActionReviewBrief[];
+  capabilityGaps: CapabilityGap[];
+  candidateTalentProfiles: CandidateTalentProfile[];
+  auditLogs: AuditLog[];
   events: EventItem[];
   metrics: {
     factories: number;
     agents: number;
+    talents: number;
     teamMembers: number;
     readyTasks: number;
     runningTasks: number;
     blockedTasks: number;
     pendingApprovals: number;
+    capabilityGaps: number;
+    guardedActions: number;
     artifacts: number;
   };
 };
@@ -116,17 +223,27 @@ type ApiResponse<T> = { ok: true; data: T } | { ok: false; error: { message: str
 const emptyDashboard: Dashboard = {
   factories: [],
   agents: [],
+  talentProfiles: [],
+  agentRoleAssignments: [],
   tasks: [],
   artifacts: [],
+  guardedActions: [],
+  actionReviewBriefs: [],
+  capabilityGaps: [],
+  candidateTalentProfiles: [],
+  auditLogs: [],
   events: [],
   metrics: {
     factories: 0,
     agents: 0,
+    talents: 0,
     teamMembers: 0,
     readyTasks: 0,
     runningTasks: 0,
     blockedTasks: 0,
     pendingApprovals: 0,
+    capabilityGaps: 0,
+    guardedActions: 0,
     artifacts: 0
   }
 };
@@ -134,10 +251,9 @@ const emptyDashboard: Dashboard = {
 const navItems: Array<{ id: Page; label: string; icon: React.ReactNode }> = [
   { id: "chat", label: "协作群", icon: <MessageSquareText size={18} /> },
   { id: "projects", label: "项目", icon: <CheckCircle2 size={18} /> },
-  { id: "employees", label: "员工", icon: <UsersRound size={18} /> },
-  { id: "library", label: "工厂库", icon: <Library size={18} /> },
+  { id: "rolepool", label: "角色库", icon: <Layers size={18} /> },
   { id: "keys", label: "模型连接", icon: <KeyRound size={18} /> },
-  { id: "settings", label: "设置", icon: <Settings size={18} /> }
+  { id: "governance", label: "治理", icon: <CircleAlert size={18} /> }
 ];
 
 const taskStatusText: Record<TaskStatus, string> = {
@@ -154,6 +270,7 @@ const taskStatusText: Record<TaskStatus, string> = {
 
 const providerPresets: Array<{
   kind: ModelProviderKind;
+  apiFormat: ApiFormat;
   provider: string;
   baseUrl: string;
   modelName: string;
@@ -162,6 +279,7 @@ const providerPresets: Array<{
 }> = [
   {
     kind: "openai_compatible",
+    apiFormat: "openai_chat",
     provider: "OpenAI Compatible",
     baseUrl: "https://api.openai.com/v1",
     modelName: "gpt-4.1",
@@ -170,6 +288,7 @@ const providerPresets: Array<{
   },
   {
     kind: "anthropic",
+    apiFormat: "anthropic_messages",
     provider: "Anthropic",
     baseUrl: "https://api.anthropic.com/v1",
     modelName: "claude-sonnet-4",
@@ -178,6 +297,7 @@ const providerPresets: Array<{
   },
   {
     kind: "gemini",
+    apiFormat: "gemini_generate_content",
     provider: "Google Gemini",
     baseUrl: "https://generativelanguage.googleapis.com/v1beta",
     modelName: "gemini-2.5-pro",
@@ -186,6 +306,7 @@ const providerPresets: Array<{
   },
   {
     kind: "deepseek",
+    apiFormat: "openai_chat",
     provider: "DeepSeek",
     baseUrl: "https://api.deepseek.com/v1",
     modelName: "deepseek-chat",
@@ -194,6 +315,7 @@ const providerPresets: Array<{
   },
   {
     kind: "qwen",
+    apiFormat: "openai_chat",
     provider: "通义千问 / DashScope",
     baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1",
     modelName: "qwen-plus",
@@ -202,6 +324,7 @@ const providerPresets: Array<{
   },
   {
     kind: "moonshot",
+    apiFormat: "openai_chat",
     provider: "Moonshot Kimi",
     baseUrl: "https://api.moonshot.cn/v1",
     modelName: "moonshot-v1-32k",
@@ -209,7 +332,17 @@ const providerPresets: Array<{
     note: "Kimi / Moonshot 兼容 OpenAI 风格调用。"
   },
   {
+    kind: "minimax",
+    apiFormat: "anthropic_messages",
+    provider: "MiniMax",
+    baseUrl: "https://api.minimaxi.com/anthropic/v1",
+    modelName: "MiniMax-M2.7",
+    keyLabel: "MiniMax API Key",
+    note: "适合 MiniMax 的 Anthropic 兼容接口；如果填 https://api.minimaxi.com/anthropic，系统会自动补齐 /v1。"
+  },
+  {
     kind: "openrouter",
+    apiFormat: "openai_chat",
     provider: "OpenRouter",
     baseUrl: "https://openrouter.ai/api/v1",
     modelName: "openai/gpt-4.1",
@@ -218,6 +351,7 @@ const providerPresets: Array<{
   },
   {
     kind: "ollama",
+    apiFormat: "ollama_openai",
     provider: "Ollama / Local",
     baseUrl: "http://127.0.0.1:11434/v1",
     modelName: "llama3.1",
@@ -226,6 +360,7 @@ const providerPresets: Array<{
   },
   {
     kind: "custom",
+    apiFormat: "custom_http",
     provider: "Custom Endpoint",
     baseUrl: "https://your-provider.example/v1",
     modelName: "your-model-name",
@@ -235,7 +370,7 @@ const providerPresets: Array<{
 ];
 
 function getApiBaseUrl() {
-  return window.fishswarm?.getApiBaseUrl() ?? "http://127.0.0.1:3767";
+  return window.fishswarm?.getApiBaseUrl() ?? "";
 }
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
@@ -259,6 +394,7 @@ function loadModelConnections(): ModelConnection[] {
       .map((item) => ({
         id: item.id || `model-${Date.now()}`,
         providerKind: item.providerKind || "openai_compatible",
+        apiFormat: item.apiFormat || defaultApiFormat(item.providerKind || "openai_compatible"),
         provider: item.provider || "OpenAI Compatible",
         baseUrl: item.baseUrl || "https://api.openai.com/v1",
         modelName: item.modelName || "gpt-4.1",
@@ -282,11 +418,17 @@ function App() {
   const [dashboard, setDashboard] = React.useState<Dashboard>(emptyDashboard);
   const [connections, setConnections] = React.useState<ModelConnection[]>(loadModelConnections);
   const [connectionState, setConnectionState] = React.useState<"connecting" | "online" | "offline">("connecting");
+  const [leftCollapsed, setLeftCollapsed] = React.useState(false);
+  const [rightCollapsed, setRightCollapsed] = React.useState(false);
+  const [activeModelId, setActiveModelId] = React.useState("");
   const [notice, setNotice] = React.useState<{ tone: "success" | "error"; text: string } | null>(null);
   const [busy, setBusy] = React.useState(false);
-  const [prompt, setPrompt] = React.useState("帮我设计一个面向小团队的项目管理 SaaS MVP，输出需求、原型结构、技术方案和第一版交付计划。");
+  const [prompt, setPrompt] = React.useState("");
+  const [runMode, setRunMode] = React.useState<RunMode>("plan_and_dev");
+  const [chatMessages, setChatMessages] = React.useState<Array<{ from: "user" | "assistant"; text: string; time: string }>>([]);
 
   const hasModel = connections.some((item) => item.status === "connected");
+  const activeModel = connections.find((connection) => connection.id === activeModelId) || connections[0];
 
   const refresh = React.useCallback(async () => {
     try {
@@ -308,41 +450,41 @@ function App() {
   React.useEffect(() => {
     saveModelConnections(connections);
     setDashboard((current) => attachModelBindings(current, connections));
+    setActiveModelId((current) => (connections.some((connection) => connection.id === current) ? current : connections[0]?.id || ""));
   }, [connections]);
 
   async function launchWork(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setNotice(null);
+    if (!prompt.trim()) {
+      setNotice({ tone: "error", text: "先告诉小鱼你想完成什么目标。" });
+      return;
+    }
     if (!hasModel) {
       setPage("keys");
       setNotice({ tone: "error", text: "请先连接一个大模型 API Key。员工需要模型连接后才能开始工作。" });
       return;
     }
-    const latest = (await refresh()) ?? dashboard;
-    const factory = chooseFactory(prompt, latest.factories);
-    if (!factory) {
-      setNotice({ tone: "error", text: "还没有可用工厂模板，无法启动项目。" });
-      return;
-    }
 
+    const userMsg = { from: "user" as const, text: prompt.trim(), time: new Date().toISOString() };
+    setChatMessages((msgs) => [...msgs, userMsg]);
+    setPrompt("");
     setBusy(true);
+
     try {
-      const { project } = await request<{ project: Project }>("/api/projects", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: prompt.length > 22 ? `${prompt.slice(0, 22)}...` : prompt,
-          goal: prompt,
-          factoryId: factory.id
-        })
-      });
-      await request(`/api/projects/${project.id}/build-team`, { method: "POST" });
-      const { tasks } = await request<{ tasks: Task[] }>(`/api/projects/${project.id}/generate-task-graph`, { method: "POST" });
-      const ready = tasks.find((task) => task.status === "ready");
-      if (ready) await request(`/api/tasks/${ready.id}/run`, { method: "POST" });
-      await refresh();
-      setPage("projects");
-      setNotice({ tone: "success", text: "项目已经启动，员工已入群并开始处理第一步。" });
+      const latest = (await refresh()) ?? dashboard;
+      const factory = chooseFactory(prompt, latest.factories);
+
+      await new Promise((r) => setTimeout(r, 800));
+
+      let assistantText = "";
+      if (!factory) {
+        assistantText = "我还没太明白你想做什么，可以再描述详细一点吗？比如你想完成什么产品、做什么研究或解决什么问题。";
+      } else {
+        assistantText = `好的，我理解你想做的是"${userMsg.text.slice(0, 80)}"。这个目标我会安排团队帮你推进，预计需要拆解成几个阶段。你希望我现在就开始制定计划，还是还有其他想法想先补充？`;
+      }
+
+      setChatMessages((msgs) => [...msgs, { from: "assistant", text: assistantText, time: new Date().toISOString() }]);
     } catch (reason) {
       setNotice({ tone: "error", text: reason instanceof Error ? reason.message : "启动失败。" });
     } finally {
@@ -355,6 +497,7 @@ function App() {
     const connection: ModelConnection = {
       id: `model-${Date.now()}`,
       providerKind: input.providerKind,
+      apiFormat: input.apiFormat,
       provider: input.provider.trim(),
       baseUrl: input.baseUrl.trim(),
       modelName: input.modelName.trim(),
@@ -372,9 +515,25 @@ function App() {
     setConnections((items) => items.filter((item) => item.id !== id));
   }
 
+  async function decideGuardedAction(actionId: string, decision: "approve" | "reject") {
+    setBusy(true);
+    try {
+      await request(`/api/guarded-actions/${actionId}/${decision}`, { method: "POST" });
+      await refresh();
+      setNotice({ tone: "success", text: decision === "approve" ? "风险动作已批准，任务已回到就绪状态。" : "风险动作已拒绝，任务保持受阻。" });
+    } catch (reason) {
+      setNotice({ tone: "error", text: reason instanceof Error ? reason.message : "审批失败。" });
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${leftCollapsed ? "left-collapsed" : ""} ${rightCollapsed ? "right-collapsed" : ""}`}>
       <aside className="sidebar">
+        <button className="collapse-button" onClick={() => setLeftCollapsed((value) => !value)} title={leftCollapsed ? "展开侧边栏" : "收起侧边栏"} type="button">
+          {leftCollapsed ? ">" : "<"}
+        </button>
         <div className="brand">
           <div className="brand-mark">鱼</div>
           <div>
@@ -406,43 +565,276 @@ function App() {
         </div>
       </aside>
 
-      <main className="workspace">
-        <header className="topbar">
-          <div>
-            <p className="eyebrow">FishSwarm</p>
-            <h1>{titleForPage(page)}</h1>
-          </div>
-          <button className="ghost-button" onClick={() => void refresh()} type="button">
-            刷新
-          </button>
-        </header>
+      <main className={`workspace workspace-${page}`}>
+        {page === "chat" ? null : (
+          <header className="topbar">
+            <div>
+              <p className="eyebrow">FishSwarm</p>
+              <h1>{titleForPage(page)}</h1>
+            </div>
+            <button className="ghost-button" onClick={() => void refresh()} type="button">
+              刷新
+            </button>
+          </header>
+        )}
 
         {notice ? <div className={`notice notice-${notice.tone}`}>{notice.text}</div> : null}
 
         {page === "chat" ? (
           <ChatHome
+            activeModel={activeModel}
+            activeModelId={activeModel?.id || ""}
             busy={busy}
+            chatMessages={chatMessages}
+            connections={connections}
             dashboard={dashboard}
             hasModel={hasModel}
+            modeOptions={runMode}
             prompt={prompt}
+            setActiveModelId={setActiveModelId}
+            setModeOptions={setRunMode}
             setPage={setPage}
             setPrompt={setPrompt}
             onLaunch={launchWork}
           />
         ) : null}
         {page === "projects" ? <ProjectRoom dashboard={dashboard} /> : null}
-        {page === "employees" ? <Employees agents={dashboard.agents} connections={connections} /> : null}
-        {page === "library" ? <FactoryLibrary factories={dashboard.factories} /> : null}
+        {page === "rolepool" ? <RolePool dashboard={dashboard} /> : null}
         {page === "keys" ? <ModelConnections connections={connections} onAdd={addConnection} onRemove={removeConnection} /> : null}
-        {page === "settings" ? <SettingsView /> : null}
+        {page === "governance" ? <GovernanceView busy={busy} dashboard={dashboard} onDecision={decideGuardedAction} /> : null}
       </main>
+      <RightInspector collapsed={rightCollapsed} dashboard={dashboard} setCollapsed={setRightCollapsed} setPage={setPage} />
     </div>
   );
 }
 
 function ChatHome({
+  activeModel,
+  activeModelId,
   busy,
+  chatMessages,
+  connections,
   dashboard,
+  hasModel,
+  prompt,
+  modeOptions,
+  setActiveModelId,
+  setModeOptions,
+  setPage,
+  setPrompt,
+  onLaunch
+}: {
+  activeModel: ModelConnection | undefined;
+  activeModelId: string;
+  busy: boolean;
+  chatMessages: Array<{ from: "user" | "assistant"; text: string; time: string }>;
+  connections: ModelConnection[];
+  dashboard: Dashboard;
+  hasModel: boolean;
+  prompt: string;
+  modeOptions: RunMode;
+  setActiveModelId: (value: string) => void;
+  setModeOptions: (value: RunMode) => void;
+  setPage: (page: Page) => void;
+  setPrompt: (value: string) => void;
+  onLaunch: (event: React.FormEvent<HTMLFormElement>) => void;
+}) {
+  const [showAttachPanel, setShowAttachPanel] = React.useState(false);
+  const [showModePanel, setShowModePanel] = React.useState(false);
+  const attachWrapRef = React.useRef<HTMLDivElement>(null);
+  const modeWrapRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    function handleClick(event: MouseEvent) {
+      const target = event.target as Node;
+      if (showAttachPanel && attachWrapRef.current && !attachWrapRef.current.contains(target)) setShowAttachPanel(false);
+      if (showModePanel && modeWrapRef.current && !modeWrapRef.current.contains(target)) setShowModePanel(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showAttachPanel, showModePanel]);
+
+  const modeLabels: Record<RunMode, string> = { plan: "计划", plan_and_dev: "计划+开发", full_auto: "全流程" };
+  return (
+    <section className="swarm-chat">
+      <div className="swarm-thread">
+        {chatMessages.length === 0 && (
+          <ChatMessage name="小鱼" role="助理" text="有什么想法或目标直接跟我说，我会帮你安排下去。" tone={hasModel ? "guide" : "warning"} />
+        )}
+        {chatMessages.map((msg, index) => (
+          <ChatMessage
+            key={index}
+            name={msg.from === "user" ? "你" : "小鱼"}
+            role={msg.from === "user" ? "用户" : "助理"}
+            tone={msg.from === "user" ? "user" : "assistant"}
+            text={msg.text}
+          />
+        ))}
+      </div>
+      <form className="swarm-composer" onSubmit={onLaunch}>
+        <textarea
+          onChange={(event) => setPrompt(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && !event.shiftKey) {
+              event.preventDefault();
+              onLaunch(event as unknown as React.FormEvent<HTMLFormElement>);
+            }
+          }}
+          placeholder="输入你的想法或目标..."
+          value={prompt}
+        />
+        <div className="composer-toolbar">
+          <div className="toolbar-left">
+            <div className="toolbar-popup-wrap" ref={attachWrapRef}>
+              <button className="toolbar-icon" onClick={() => setShowAttachPanel((v) => !v)} title="添加附件" type="button">
+                <Plus size={18} />
+              </button>
+              {showAttachPanel ? (
+                <div className="attach-panel">
+                  <button className="attach-row" onClick={() => setShowAttachPanel(false)} type="button">
+                    <ImageIcon size={16} />
+                    <span>添加图片</span>
+                  </button>
+                  <button className="attach-row" onClick={() => setShowAttachPanel(false)} type="button">
+                    <FileText size={16} />
+                    <span>添加文件</span>
+                  </button>
+                </div>
+              ) : null}
+            </div>
+            <div className="access-dropdown" ref={modeWrapRef}>
+              <button className="toolbar-access" onClick={() => setShowModePanel(!showModePanel)} title="切换权限模式" type="button">
+                <CircleAlert size={14} className={`access-icon access-${modeOptions === "full_auto" ? "high" : modeOptions === "plan_and_dev" ? "medium" : "low"}`} />
+                <span className="access-label">
+                  {modeLabels[modeOptions]}
+                </span>
+                <ChevronDown size={14} />
+              </button>
+              {showModePanel ? (
+                <div className="mode-panel">
+                  {(["plan", "plan_and_dev", "full_auto"] as RunMode[]).map((mode) => (
+                    <button className={`mode-row ${modeOptions === mode ? "mode-row-active" : ""}`} key={mode} onClick={() => { setModeOptions(mode); setShowModePanel(false); }} type="button">
+                      <CircleAlert size={14} className={`access-icon access-${mode === "full_auto" ? "high" : mode === "plan_and_dev" ? "medium" : "low"}`} />
+                      <span>{modeLabels[mode]}</span>
+                      {modeOptions === mode ? <CheckCircle2 size={14} /> : null}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          </div>
+          <div className="toolbar-right">
+            <button className="toolbar-model" title="切换模型" type="button">
+              <span className="model-badge">{activeModel?.modelName?.slice(0, 8) || "-"}</span>
+              <ChevronDown size={14} />
+            </button>
+            <button className="toolbar-icon" title="语音输入" type="button">
+              <Mic size={18} />
+            </button>
+            <button className="send-circle" disabled={busy || !hasModel} type={hasModel ? "submit" : "button"} onClick={!hasModel ? () => setPage("keys") : undefined}>
+              {busy ? <Loader2 className="spin" size={20} /> : <ArrowUp size={20} />}
+            </button>
+          </div>
+        </div>
+      </form>
+    </section>
+  );
+}
+
+function RightInspector({
+  collapsed,
+  dashboard,
+  setCollapsed,
+  setPage
+}: {
+  collapsed: boolean;
+  dashboard: Dashboard;
+  setCollapsed: (value: boolean) => void;
+  setPage: (page: Page) => void;
+}) {
+  const pendingActions = dashboard.guardedActions.filter((action) => ["needs_management_review", "needs_user_approval"].includes(action.status));
+  const openGaps = dashboard.capabilityGaps.filter((gap) => gap.status === "open");
+  const activeTasks = dashboard.tasks.filter((task) => ["ready", "assigned", "running", "reviewing", "blocked"].includes(task.status));
+  const latestArtifact = dashboard.artifacts[0];
+  const snapshotTime = new Date().toISOString();
+  const systemMessages = [
+    ...(dashboard.activeProject ? [{ id: `project-${dashboard.activeProject.id}`, title: "项目状态", detail: `${dashboard.activeProject.name} · ${dashboard.activeProject.status}`, time: snapshotTime, tone: "normal" as const, page: "projects" as Page }] : []),
+    ...pendingActions.map((action) => ({ id: `action-${action.id}`, title: "哨兵拦截", detail: `${action.title} · ${action.target}`, time: snapshotTime, tone: "urgent" as const, page: "governance" as Page })),
+    ...openGaps.map((gap) => ({ id: `gap-${gap.id}`, title: "能力缺口", detail: gap.missingCapability, time: snapshotTime, tone: "warn" as const, page: "governance" as Page })),
+    ...activeTasks.map((task) => ({ id: `task-${task.id}`, title: taskStatusText[task.status], detail: task.title, time: snapshotTime, tone: task.status === "blocked" ? "urgent" as const : "normal" as const, page: "projects" as Page })),
+    ...(latestArtifact ? [{ id: `artifact-${latestArtifact.id}`, title: "最新产物", detail: latestArtifact.name, time: latestArtifact.createdAt, tone: "normal" as const, page: "projects" as Page }] : []),
+    ...dashboard.events.map((event) => ({ id: `event-${event.id}`, title: event.actor, detail: `${event.event}：${event.detail}`, time: event.time, tone: "normal" as const, page: "projects" as Page }))
+  ].sort((left, right) => new Date(right.time).getTime() - new Date(left.time).getTime());
+
+  return (
+    <aside className="inspector">
+      <button className="collapse-button inspector-toggle" onClick={() => setCollapsed(!collapsed)} title={collapsed ? "展开项目监察" : "收起项目监察"} type="button">
+        {collapsed ? "<" : ">"}
+      </button>
+      {collapsed ? null : (
+        <div className="inspector-content">
+          <section className="system-feed">
+            <div className="system-feed-head">
+              <strong>系统消息</strong>
+              <span>{systemMessages.length}</span>
+            </div>
+            <div className="mini-progress">
+              <span style={{ width: `${progressPercent(dashboard.tasks)}%` }} />
+            </div>
+            <div className="system-feed-list">
+              {systemMessages.length === 0 ? <EmptyState text="系统消息会在项目启动后出现。" /> : null}
+              {systemMessages.slice(0, 24).map((message) => (
+                <button className={`system-message ${message.tone}`} key={message.id} onClick={() => setPage(message.page)} type="button">
+                  <span>{formatTime(message.time)}</span>
+                  <strong>{message.title}</strong>
+                  <small>{message.detail}</small>
+                </button>
+              ))}
+            </div>
+          </section>
+        </div>
+      )}
+    </aside>
+  );
+}
+
+function progressPercent(tasks: Task[]) {
+  if (tasks.length === 0) return 0;
+  return Math.round((tasks.filter((task) => task.status === "done").length / tasks.length) * 100);
+}
+
+function SystemReadiness({ dashboard, hasModel }: { dashboard: Dashboard; hasModel: boolean }) {
+  const pendingActions = dashboard.guardedActions.filter((action) => ["needs_management_review", "needs_user_approval"].includes(action.status)).length;
+  const openGaps = dashboard.capabilityGaps.filter((gap) => gap.status === "open").length;
+  const projectStatus = dashboard.activeProject ? dashboard.activeProject.status : "暂无";
+  return (
+    <section className="readiness-band">
+      <div>
+        <p className="eyebrow">Command center</p>
+        <h2>交给鱼群处理</h2>
+      </div>
+      <div className="readiness-grid">
+        <StatusTile label="模型连接" value={hasModel ? "已连接" : "未连接"} tone={hasModel ? "good" : "warn"} />
+        <StatusTile label="可用人才" value={`${dashboard.talentProfiles.length}`} />
+        <StatusTile label="待审批" value={`${pendingActions}`} tone={pendingActions ? "warn" : "good"} />
+        <StatusTile label="能力缺口" value={`${openGaps}`} tone={openGaps ? "warn" : "good"} />
+        <StatusTile label="当前项目" value={projectStatus} />
+      </div>
+    </section>
+  );
+}
+
+function StatusTile({ label, value, tone = "neutral" }: { label: string; value: string; tone?: "neutral" | "good" | "warn" }) {
+  return (
+    <article className={`status-tile status-${tone}`}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </article>
+  );
+}
+
+function GoalComposer({
+  busy,
   hasModel,
   prompt,
   setPage,
@@ -450,63 +842,112 @@ function ChatHome({
   onLaunch
 }: {
   busy: boolean;
-  dashboard: Dashboard;
   hasModel: boolean;
   prompt: string;
   setPage: (page: Page) => void;
   setPrompt: (value: string) => void;
   onLaunch: (event: React.FormEvent<HTMLFormElement>) => void;
 }) {
+  const examples = [
+    "做一个 SaaS MVP：输出需求、技术方案和第一版交付计划。",
+    "写一份竞品调研：输出关键竞品、差异点和机会判断。",
+    "培养一个 Chrome 插件工程师，并完成插件 MVP 的任务拆解。",
+    "审查当前项目风险：输出架构、权限、交付和缺口问题。"
+  ];
   return (
-    <section className="chat-layout">
-      <div className="chat-panel">
-        <div className="chat-room-header">
-          <div>
-            <p className="eyebrow">Group chat intake</p>
-            <h2>鱼群协作群</h2>
-          </div>
-          <span className={`pill ${hasModel ? "pill-good" : "pill-warn"}`}>{hasModel ? "可以派活" : "需要模型 Key"}</span>
-        </div>
-        <div className="message-list">
-          <ChatMessage name="引导者" role="群管" text="欢迎来到鱼群。这里不是管理后台，你只需要像在群里派活一样，说清楚想完成什么。" />
-          <ChatMessage
-            name="引导者"
-            role="模型提醒"
-            tone={hasModel ? "guide" : "warning"}
-            text={hasModel ? "模型连接已就绪。我会按你的目标邀请合适员工入群，并启动第一步。" : "先连接一个大模型 API Key，我才能让员工真正开始工作。每个员工都是一个固定 Agent，并绑定一个模型。"}
-          />
-          {dashboard.events.slice(0, 4).map((event) => (
-            <ChatMessage key={event.id} name={event.actor} role={formatTime(event.time)} tone="event" text={`${event.event}：${event.detail}`} />
-          ))}
-        </div>
-        <div className="examples">
-          {["做一个 SaaS MVP 方案", "写一份竞品分析报告", "规划一个内容营销活动"].map((text) => (
+    <section className="goal-card">
+      <div className="goal-copy">
+        <p className="eyebrow">Goal dispatch</p>
+        <h2>描述目标，鱼群会自动拆解、匹配人才并启动第一步</h2>
+        <p>缺少人才会进入进化队列；涉及修改、外部访问或高风险动作时，会先生成管理简报交给你批准。</p>
+      </div>
+      <form className="goal-form" onSubmit={onLaunch}>
+        <label>
+          <span>目标</span>
+          <textarea onChange={(event) => setPrompt(event.target.value)} placeholder="描述你想完成的目标..." value={prompt} />
+        </label>
+        <div className="examples goal-examples">
+          {examples.map((text) => (
             <button key={text} onClick={() => setPrompt(text)} type="button">{text}</button>
           ))}
         </div>
-        <form className="composer" onSubmit={onLaunch}>
-          <textarea onChange={(event) => setPrompt(event.target.value)} placeholder="在群里发送任务..." value={prompt} />
-          {hasModel ? (
-            <button className="primary-button" disabled={busy} type="submit">
-              {busy ? <Loader2 className="spin" size={18} /> : <Send size={18} />}
-              <span>{busy ? "接单中" : "发送任务"}</span>
-            </button>
-          ) : (
-            <button className="primary-button" onClick={() => setPage("keys")} type="button">
-              <KeyRound size={18} />
-              <span>连接 Key</span>
-            </button>
-          )}
-        </form>
+        {hasModel ? (
+          <button className="primary-button" disabled={busy} type="submit">
+            {busy ? <Loader2 className="spin" size={18} /> : <Send size={18} />}
+            <span>{busy ? "接单中" : "交给鱼群处理"}</span>
+          </button>
+        ) : (
+          <button className="primary-button" onClick={() => setPage("keys")} type="button">
+            <KeyRound size={18} />
+            <span>先连接模型</span>
+          </button>
+        )}
+      </form>
+    </section>
+  );
+}
+
+function AttentionQueue({
+  latestArtifact,
+  openGaps,
+  pendingActions,
+  runningTasks,
+  setPage
+}: {
+  latestArtifact?: Artifact;
+  openGaps: CapabilityGap[];
+  pendingActions: GuardedAction[];
+  runningTasks: Task[];
+  setPage: (page: Page) => void;
+}) {
+  return (
+    <section className="panel attention-card">
+      <PanelTitle icon={<CircleAlert size={18} />} title="需要你注意" />
+      <div className="attention-list">
+        {pendingActions.length === 0 && openGaps.length === 0 && runningTasks.length === 0 && !latestArtifact ? <EmptyState text="系统空闲，可以派发新目标。" /> : null}
+        {pendingActions.slice(0, 2).map((action) => (
+          <button className="attention-item urgent" key={action.id} onClick={() => setPage("governance")} type="button">
+            <strong>待审批动作</strong>
+            <span>{action.target}</span>
+          </button>
+        ))}
+        {openGaps.slice(0, 2).map((gap) => (
+          <button className="attention-item" key={gap.id} onClick={() => setPage("governance")} type="button">
+            <strong>能力缺口</strong>
+            <span>{gap.missingCapability}</span>
+          </button>
+        ))}
+        {runningTasks.slice(0, 2).map((task) => (
+          <button className="attention-item" key={task.id} onClick={() => setPage("projects")} type="button">
+            <strong>{taskStatusText[task.status]}</strong>
+            <span>{task.title}</span>
+          </button>
+        ))}
+        {latestArtifact ? (
+          <button className="attention-item" onClick={() => setPage("projects")} type="button">
+            <strong>最新产物</strong>
+            <span>{latestArtifact.name}</span>
+          </button>
+        ) : null}
       </div>
-      <aside className="room-side">
-        <PanelTitle icon={<UsersRound size={18} />} title="群内员工" />
-        <div className="member-list">
-          {dashboard.agents.slice(0, 6).map((agent) => (
-            <EmployeeMini key={agent.id} agent={agent} />
-          ))}
-        </div>
-      </aside>
+    </section>
+  );
+}
+
+function RecentActivity({ events }: { events: EventItem[] }) {
+  return (
+    <section className="panel activity-card">
+      <PanelTitle icon={<Archive size={18} />} title="最近动态" />
+      <div className="activity-list">
+        {events.length === 0 ? <EmptyState text="系统动态会出现在这里。" /> : null}
+        {events.slice(0, 6).map((event) => (
+          <article className="activity-row" key={event.id}>
+            <strong>{event.actor}</strong>
+            <span>{event.event}：{event.detail}</span>
+            <small>{formatTime(event.time)}</small>
+          </article>
+        ))}
+      </div>
     </section>
   );
 }
@@ -526,14 +967,15 @@ function ProjectRoom({ dashboard }: { dashboard: Dashboard }) {
           <EmptyState text="还没有项目。在协作群里发送第一条任务后，这里会出现项目房间。" />
         )}
       </div>
-      <WorkTimeline tasks={dashboard.tasks} agents={dashboard.agents} />
+      <WorkTimeline tasks={dashboard.tasks} agents={dashboard.agents} talents={dashboard.talentProfiles} />
       <ArtifactDrawer artifacts={dashboard.artifacts} agents={dashboard.agents} />
     </section>
   );
 }
 
-function WorkTimeline({ tasks, agents }: { tasks: Task[]; agents: AgentWorker[] }) {
+function WorkTimeline({ tasks, agents, talents }: { tasks: Task[]; agents: AgentWorker[]; talents: TalentProfile[] }) {
   const names = new Map(agents.map((agent) => [agent.id, agent.name]));
+  const talentNames = new Map(talents.map((talent) => [talent.id, talent.name]));
   return (
     <section className="panel timeline-panel">
       <PanelTitle icon={<CheckCircle2 size={18} />} title="工作时间线" />
@@ -548,7 +990,7 @@ function WorkTimeline({ tasks, agents }: { tasks: Task[]; agents: AgentWorker[] 
                 <span>{taskStatusText[task.status]}</span>
               </div>
               <p>{task.description}</p>
-              <small>{task.assignedAgentWorkerId ? names.get(task.assignedAgentWorkerId) : "等待分派"} · {task.phase}</small>
+              <small>{task.assignedAgentWorkerId ? names.get(task.assignedAgentWorkerId) : "等待分派"} · {talentNames.get(task.assignedTalentProfileId || "") || "缺少人才"} · {task.actionType || "create"}</small>
             </div>
           </article>
         ))}
@@ -586,6 +1028,232 @@ function Employees({ agents, connections }: { agents: AgentWorker[]; connections
   );
 }
 
+function RolePool({ dashboard }: { dashboard: Dashboard }) {
+  const agents = new Map(dashboard.agents.map((agent) => [agent.id, agent]));
+  const assignmentsByTalent = new Map<string, AgentRoleAssignment[]>();
+  for (const assignment of dashboard.agentRoleAssignments) {
+    assignmentsByTalent.set(assignment.talentProfileId, [...(assignmentsByTalent.get(assignment.talentProfileId) || []), assignment]);
+  }
+
+  const layerGroups = dashboard.talentProfiles.reduce((groups, talent) => {
+    if (talent.domain === "管理") groups.manager.push(talent);
+    else if (talent.domain === "治理") groups.sentinel.push(talent);
+    else groups.talent.push(talent);
+    return groups;
+  }, { manager: [] as TalentProfile[], sentinel: [] as TalentProfile[], talent: [] as TalentProfile[] });
+
+  const layerMeta: Array<{ key: string; label: string; icon: React.ReactNode; items: TalentProfile[]; color: string }> = [
+    { key: "manager", label: "管理层", icon: <UsersRound size={18} />, items: layerGroups.manager, color: "#1a7a54" },
+    { key: "sentinel", label: "哨兵层", icon: <CircleAlert size={18} />, items: layerGroups.sentinel, color: "#dd695b" },
+    { key: "talent", label: "人才层", icon: <Bot size={18} />, items: layerGroups.talent, color: "#5d5749" }
+  ];
+
+  return (
+    <section className="role-pool">
+      {layerMeta.map((layer) => (
+        <section className="panel role-layer" key={layer.key}>
+          <div className="layer-title" style={{ color: layer.color }}>
+            {layer.icon}
+            <strong>{layer.label}</strong>
+            <span>{layer.items.length}</span>
+          </div>
+          <div className="role-grid">
+            {layer.items.length === 0 ? <EmptyState text={`${layer.label}暂无角色。`} /> : null}
+            {layer.items.map((talent) => {
+              const assignments = assignmentsByTalent.get(talent.id) || [];
+              const candidateAgents = assignments.map((a) => agents.get(a.agentWorkerId)?.name).filter(Boolean);
+              return (
+                <article className="role-card" key={talent.id}>
+                  <div className="role-head">
+                    <strong>{talent.name}</strong>
+                    <span>{talent.domain}</span>
+                  </div>
+                  <p>{talent.responsibilities.join("、")}</p>
+                  <div className="chip-row">
+                    {talent.requiredSkills.slice(0, 4).map((skill) => <span className="chip" key={skill}>{skill}</span>)}
+                  </div>
+                  {candidateAgents.length > 0 ? <small>候选员工：{candidateAgents.join("、")}</small> : <EmptyState text="暂无候选员工" />}
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      ))}
+    </section>
+  );
+}
+
+function TalentLayer({ dashboard }: { dashboard: Dashboard }) {
+  const agents = new Map(dashboard.agents.map((agent) => [agent.id, agent]));
+  const assignmentsByTalent = new Map<string, AgentRoleAssignment[]>();
+  for (const assignment of dashboard.agentRoleAssignments) {
+    assignmentsByTalent.set(assignment.talentProfileId, [...(assignmentsByTalent.get(assignment.talentProfileId) || []), assignment]);
+  }
+
+  return (
+    <section className="org-grid">
+      <section className="panel">
+        <PanelTitle icon={<Bot size={18} />} title={`人才层（${dashboard.talentProfiles.length}）`} />
+        <div className="talent-grid">
+          {dashboard.talentProfiles.map((talent) => {
+            const assignments = assignmentsByTalent.get(talent.id) || [];
+            return (
+              <article className="talent-card" key={talent.id}>
+                <div className="talent-head">
+                  <strong>{talent.name}</strong>
+                  <span>{talent.domain}</span>
+                </div>
+                <p>{talent.responsibilities.join("、")}</p>
+                <div className="chip-row">
+                  {talent.requiredSkills.slice(0, 4).map((skill) => <span className="chip" key={skill}>{skill}</span>)}
+                </div>
+                <small>候选 Agent：{assignments.map((assignment) => agents.get(assignment.agentWorkerId)?.name).filter(Boolean).join("、") || "暂无"}</small>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+      <section className="panel">
+        <PanelTitle icon={<UsersRound size={18} />} title="员工-人才矩阵" />
+        <div className="matrix">
+          <div className="matrix-row matrix-head-row">
+            <span>员工</span>
+            {dashboard.talentProfiles.slice(0, 6).map((talent) => <span key={talent.id}>{talent.name}</span>)}
+          </div>
+          {dashboard.agents.map((agent) => (
+            <div className="matrix-row" key={agent.id}>
+              <strong>{agent.name}</strong>
+              {dashboard.talentProfiles.slice(0, 6).map((talent) => {
+                const assigned = dashboard.agentRoleAssignments.some((assignment) => assignment.agentWorkerId === agent.id && assignment.talentProfileId === talent.id && assignment.active);
+                return <span className={assigned ? "matrix-on" : "matrix-off"} key={talent.id}>{assigned ? "可承担" : ""}</span>;
+              })}
+            </div>
+          ))}
+        </div>
+      </section>
+    </section>
+  );
+}
+
+function GovernanceView({
+  busy,
+  dashboard,
+  onDecision
+}: {
+  busy: boolean;
+  dashboard: Dashboard;
+  onDecision: (actionId: string, decision: "approve" | "reject") => void;
+}) {
+  return (
+    <section className="governance-stack">
+      <section className="panel">
+        <PanelTitle icon={<Sparkles size={18} />} title="系统治理" />
+        <div className="governance-summary">
+          <SummaryMetric label="可用人才" value={dashboard.talentProfiles.length} />
+          <SummaryMetric label="待审批动作" value={dashboard.guardedActions.filter((action) => ["needs_management_review", "needs_user_approval"].includes(action.status)).length} />
+          <SummaryMetric label="能力缺口" value={dashboard.capabilityGaps.filter((gap) => gap.status === "open").length} />
+          <SummaryMetric label="审计记录" value={dashboard.auditLogs.length} />
+        </div>
+      </section>
+      <SentinelLayer busy={busy} dashboard={dashboard} onDecision={onDecision} />
+      <EvolutionLayer dashboard={dashboard} />
+    </section>
+  );
+}
+
+function SummaryMetric({ label, value }: { label: string; value: number }) {
+  return (
+    <article className="summary-metric">
+      <strong>{value}</strong>
+      <span>{label}</span>
+    </article>
+  );
+}
+
+function SentinelLayer({
+  busy,
+  dashboard,
+  onDecision
+}: {
+  busy: boolean;
+  dashboard: Dashboard;
+  onDecision: (actionId: string, decision: "approve" | "reject") => void;
+}) {
+  const briefs = new Map(dashboard.actionReviewBriefs.map((brief) => [brief.actionId, brief]));
+  return (
+    <section className="org-grid">
+      <section className="panel">
+        <PanelTitle icon={<CircleAlert size={18} />} title={`待审批动作（${dashboard.guardedActions.length}）`} />
+        <div className="approval-list">
+          {dashboard.guardedActions.length === 0 ? <EmptyState text="当前没有被哨兵拦截的风险动作。" /> : null}
+          {dashboard.guardedActions.map((action) => {
+            const brief = briefs.get(action.id);
+            const pending = ["needs_management_review", "needs_user_approval"].includes(action.status);
+            return (
+              <article className="approval-card" key={action.id}>
+                <div className="approval-head">
+                  <strong>{action.title}</strong>
+                  <span className={`risk risk-${action.riskLevel}`}>{action.riskLevel}</span>
+                </div>
+                <p>{brief?.riskSummary || action.impactSummary}</p>
+                <small>目标：{action.target} · 动作：{action.actionType} · 状态：{action.status}</small>
+                {brief ? <div className="brief-box">建议：{brief.managementRecommendation}。收益：{brief.expectedBenefit} 回滚：{brief.rollbackPlan}</div> : null}
+                {pending ? (
+                  <div className="approval-actions">
+                    <button className="secondary-button" disabled={busy} onClick={() => onDecision(action.id, "reject")} type="button">拒绝</button>
+                    <button className="primary-button" disabled={busy} onClick={() => onDecision(action.id, "approve")} type="button">批准</button>
+                  </div>
+                ) : null}
+              </article>
+            );
+          })}
+        </div>
+      </section>
+      <section className="panel">
+        <PanelTitle icon={<Archive size={18} />} title="审计日志" />
+        <div className="audit-list">
+          {dashboard.auditLogs.length === 0 ? <EmptyState text="哨兵和管理层的关键决策会记录在这里。" /> : null}
+          {dashboard.auditLogs.map((log) => (
+            <article className="audit-row" key={log.id}>
+              <strong>{log.actor} · {log.action}</strong>
+              <span>{log.detail}</span>
+              <small>{formatTime(log.createdAt)}</small>
+            </article>
+          ))}
+        </div>
+      </section>
+    </section>
+  );
+}
+
+function EvolutionLayer({ dashboard }: { dashboard: Dashboard }) {
+  const candidates = new Map(dashboard.candidateTalentProfiles.map((candidate) => [candidate.sourceGapId, candidate]));
+  return (
+    <section className="panel">
+      <PanelTitle icon={<Sparkles size={18} />} title={`进化队列（${dashboard.capabilityGaps.length}）`} />
+      <div className="evolution-list">
+        {dashboard.capabilityGaps.length === 0 ? <EmptyState text="当任务找不到合适人才时，能力缺口和候选人才会出现在这里。" /> : null}
+        {dashboard.capabilityGaps.map((gap) => {
+          const candidate = candidates.get(gap.id);
+          return (
+            <article className="evolution-card" key={gap.id}>
+              <div className="talent-head">
+                <strong>{gap.missingCapability}</strong>
+                <span>{gap.status}</span>
+              </div>
+              <p>缺口要求：{gap.acceptanceCriteria.join("、")}</p>
+              <div className="chip-row">
+                {gap.requiredTools.map((tool) => <span className="chip" key={tool}>{tool}</span>)}
+              </div>
+              {candidate ? <small>候选人才：{candidate.name} · {candidate.status} · {candidate.responsibilities.join("、")}</small> : null}
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 function ModelConnections({
   connections,
   onAdd,
@@ -597,6 +1265,7 @@ function ModelConnections({
 }) {
   const [form, setForm] = React.useState({
     providerKind: providerPresets[0].kind,
+    apiFormat: providerPresets[0].apiFormat,
     provider: providerPresets[0].provider,
     baseUrl: providerPresets[0].baseUrl,
     modelName: providerPresets[0].modelName,
@@ -606,6 +1275,7 @@ function ModelConnections({
     | { status: "idle" }
     | { status: "testing" }
     | { status: "connected"; message: string; latencyMs: number; checkedAt: string }
+    | { status: "saved"; message: string; latencyMs: number; checkedAt: string }
     | { status: "error"; message: string }
   >({ status: "idle" });
   const activePreset = providerPresets.find((preset) => preset.kind === form.providerKind) ?? providerPresets[0];
@@ -615,6 +1285,7 @@ function ModelConnections({
     setForm((current) => ({
       ...current,
       providerKind: preset.kind,
+      apiFormat: preset.apiFormat,
       provider: preset.provider,
       baseUrl: preset.baseUrl,
       modelName: preset.modelName
@@ -635,9 +1306,17 @@ function ModelConnections({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form)
       });
-      setTestState({
+      onAdd({
+        ...form,
         status: "connected",
-        message: result.message,
+        statusMessage: result.message,
+        checkedAt: result.checkedAt,
+        latencyMs: result.latencyMs
+      });
+      setForm((current) => ({ ...current, apiKey: "" }));
+      setTestState({
+        status: "saved",
+        message: "连接成功，已加入模型连接池。",
         latencyMs: result.latencyMs,
         checkedAt: result.checkedAt
       });
@@ -676,6 +1355,16 @@ function ModelConnections({
         </label>
         <div className="provider-note">{activePreset.note}</div>
         <label>
+          <span>API 格式</span>
+          <select value={form.apiFormat} onChange={(event) => updateForm({ ...form, apiFormat: event.target.value as ApiFormat })}>
+            <option value="openai_chat">OpenAI-compatible Chat Completions</option>
+            <option value="anthropic_messages">Anthropic Messages</option>
+            <option value="gemini_generate_content">Gemini Generative Language</option>
+            <option value="ollama_openai">Ollama OpenAI-compatible</option>
+            <option value="custom_http">Custom HTTP</option>
+          </select>
+        </label>
+        <label>
           <span>Provider 名称</span>
           <input value={form.provider} onChange={(event) => updateForm({ ...form, provider: event.target.value })} />
         </label>
@@ -696,12 +1385,12 @@ function ModelConnections({
             {testState.status === "testing" ? <Loader2 className="spin" size={18} /> : <CheckCircle2 size={18} />}
             检测连接
           </button>
-          <button className="primary-button" disabled={testState.status !== "connected"} type="submit"><Plus size={18} />添加到连接池</button>
+          <button className="primary-button" disabled={testState.status !== "connected"} type="submit"><Plus size={18} />{testState.status === "saved" ? "已加入连接池" : "添加到连接池"}</button>
         </div>
         {testState.status !== "idle" ? (
           <div className={`test-result test-${testState.status}`}>
             {testState.status === "testing" ? "正在检测模型服务..." : null}
-            {testState.status === "connected" ? `${testState.message} 延迟 ${testState.latencyMs}ms。` : null}
+            {testState.status === "connected" || testState.status === "saved" ? `${testState.message} 延迟 ${testState.latencyMs}ms。` : null}
             {testState.status === "error" ? testState.message : null}
           </div>
         ) : null}
@@ -715,7 +1404,7 @@ function ModelConnections({
               <div className="connection-index">{index + 1}</div>
               <div>
                 <strong>{connection.provider}</strong>
-                <span>{connection.modelName} · {connection.keyPreview}</span>
+                <span>{connection.modelName} · {formatApiFormat(connection.apiFormat)} · {connection.keyPreview}</span>
                 <small>{connection.baseUrl}</small>
                 <small>{connectionStatusText(connection)}</small>
               </div>
@@ -724,23 +1413,6 @@ function ModelConnections({
           ))}
         </div>
       </section>
-    </section>
-  );
-}
-
-function FactoryLibrary({ factories }: { factories: FactoryTemplate[] }) {
-  return (
-    <section className="panel">
-      <PanelTitle icon={<Factory size={18} />} title="工厂库" />
-      <div className="factory-grid">
-        {factories.map((factory) => (
-          <article className="factory-card" key={factory.id}>
-            <strong>{factory.name}</strong>
-            <p>{factory.description}</p>
-            <div className="chip-row">{factory.qualityGates.map((gate) => <span className="chip" key={gate}>{gate}</span>)}</div>
-          </article>
-        ))}
-      </div>
     </section>
   );
 }
@@ -766,16 +1438,7 @@ function ArtifactDrawer({ artifacts, agents }: { artifacts: Artifact[]; agents: 
   );
 }
 
-function SettingsView() {
-  return (
-    <section className="panel settings-panel">
-      <PanelTitle icon={<Settings size={18} />} title="设置" />
-      <EmptyState text="当前版本只保留必要设置。复杂权限、市场和多工作区暂不加入。" />
-    </section>
-  );
-}
-
-function ChatMessage({ name, role, text, tone = "guide" }: { name: string; role: string; text: string; tone?: "guide" | "warning" | "event" }) {
+function ChatMessage({ name, role, text, tone = "guide" }: { name: string; role: string; text: string; tone?: "guide" | "warning" | "event" | "user" | "assistant" }) {
   return (
     <article className={`chat-message ${tone}`}>
       <div className="chat-avatar">{name.slice(0, 1)}</div>
@@ -821,10 +1484,9 @@ function titleForPage(page: Page) {
   const titles: Record<Page, string> = {
     chat: "进入协作群，先连接模型，再派员工工作",
     projects: "项目房间",
-    employees: "员工档案",
-    library: "工厂模板库",
+    rolepool: "角色库",
     keys: "模型连接",
-    settings: "设置"
+    governance: "治理与成长"
   };
   return titles[page];
 }
@@ -861,6 +1523,25 @@ function attachModelBindings(dashboard: Dashboard, connections: ModelConnection[
       };
     })
   };
+}
+
+function defaultApiFormat(providerKind: ModelProviderKind): ApiFormat {
+  if (providerKind === "anthropic") return "anthropic_messages";
+  if (providerKind === "gemini") return "gemini_generate_content";
+  if (providerKind === "ollama") return "ollama_openai";
+  if (providerKind === "custom") return "custom_http";
+  return "openai_chat";
+}
+
+function formatApiFormat(value: ApiFormat) {
+  const labels: Record<ApiFormat, string> = {
+    openai_chat: "OpenAI-compatible",
+    anthropic_messages: "Anthropic Messages",
+    gemini_generate_content: "Gemini API",
+    ollama_openai: "Ollama",
+    custom_http: "Custom HTTP"
+  };
+  return labels[value] || value;
 }
 
 function connectionStatusText(connection: ModelConnection) {

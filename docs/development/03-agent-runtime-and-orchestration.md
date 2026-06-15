@@ -20,33 +20,38 @@ Agent Runtime 负责“让某个 Agent 在给定上下文和工具权限下完�
 4. 控制项目阶段。
 5. 检查用户确认节点。
 6. 汇总最终交付物。
+7. 在任务无法匹配人才时触发进化层。
+8. 在高风险动作前触发哨兵 Hook。
 
 ### 2.2 任务级职责
 
 1. 检查任务依赖。
 2. 匹配任务负责人。
-3. 创建 AgentRun。
-4. 推送队列任务。
-5. 处理执行结果。
-6. 触发评审。
-7. 生成返工任务。
+3. 先匹配 TalentProfile，再选择 AgentWorker。
+4. 创建 AgentRun。
+5. 推送队列任务。
+6. 处理执行结果。
+7. 触发评审。
+8. 生成返工任务。
 
 ## 3. Agent Runtime 职责
 
 一次 AgentRun 的完整流程：
 
 1. 读取 AgentWorker。
-2. 读取 Task。
-3. 读取 Project。
-4. 读取相关 Artifact。
-5. 读取可用工具权限。
-6. 构造模型输入。
-7. 调用模型。
-8. 解析输出。
-9. 校验输出 schema。
-10. 保存 AgentRun。
-11. 创建 Artifact。
-12. 返回运行结果。
+2. 读取本次任务使用的 TalentProfile。
+3. 读取 Task。
+4. 读取 Project。
+5. 读取相关 Artifact。
+6. 读取可用工具权限。
+7. 触发 Sentinel Hook 检查动作边界。
+8. 构造模型输入。
+9. 调用模型。
+10. 解析输出。
+11. 校验输出 schema。
+12. 保存 AgentRun。
+13. 创建 Artifact。
+14. 返回运行结果。
 
 ## 4. Agent 输入上下文
 
@@ -89,6 +94,13 @@ type AgentRunContext = {
     responsibilities: unknown;
     constraints: unknown;
     handoffRules: unknown;
+    reviewCriteria: unknown;
+  };
+  talent: {
+    id: string;
+    name: string;
+    responsibilities: unknown;
+    outputContract?: unknown;
     reviewCriteria: unknown;
   };
   artifacts: Array<{
@@ -172,6 +184,52 @@ type TaskGraphOutput = {
 4. 每个任务执行后进入 review。
 5. Review passed 后进入 done。
 6. Review failed 后进入 needs_rework。
+7. 缺少人才时进入 blocked，并生成 CapabilityGap。
+8. 高风险动作进入 blocked，并生成 GuardedAction、ActionReviewBrief 和 UserApproval。
+
+### 7.1.1 人才匹配策略
+
+任务图中的每个任务应包含 `requiredTalentProfileId` 或可解析的角色名称。
+
+匹配顺序：
+
+1. 查找项目团队里的 TalentProfile 绑定。
+2. 查找 factory 范围的 AgentRoleAssignment。
+3. 查找 workspace 范围的 AgentRoleAssignment。
+4. 根据 priority、Agent 状态和历史表现选择 AgentWorker。
+5. 没有候选 Agent 时创建 CapabilityGap。
+
+### 7.1.2 哨兵 Hook 策略
+
+Agent 执行动作前必须先经过哨兵检查。
+
+动作类型：
+
+1. `read`
+2. `suggest`
+3. `create`
+4. `modify`
+5. `delete`
+6. `external`
+7. `execute`
+
+默认规则：
+
+1. read、suggest、create 可按 TalentScope 放行。
+2. modify 需要管理层简报和用户审批。
+3. delete、external、execute 视为高风险动作，需要用户审批。
+4. 所有动作必须写入 AuditLog。
+
+### 7.1.3 进化层策略
+
+当任务无法匹配人才时，系统生成：
+
+1. CapabilityGap。
+2. LearningSource。
+3. CandidateTalentProfile。
+4. TalentTrainingRun。
+
+候选人才通过 TalentEvaluation 后才能进入正式 TalentProfile。
 
 ### 7.2 后续策略
 
@@ -283,4 +341,3 @@ interface AgentRuntime {
   }): Promise<AgentRunResult>;
 }
 ```
-

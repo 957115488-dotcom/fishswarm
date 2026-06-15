@@ -1,26 +1,19 @@
 const { error, ok } = require("./shared.cjs");
 
-const OPENAI_COMPATIBLE_KINDS = new Set([
-  "openai_compatible",
-  "deepseek",
-  "qwen",
-  "moonshot",
-  "openrouter",
-  "ollama",
-  "custom"
-]);
+const OPENAI_COMPATIBLE_FORMATS = new Set(["openai_chat", "ollama_openai"]);
 
 async function testModelConnection(input) {
   const validation = validateInput(input);
   if (!validation.ok) return validation;
 
   const providerKind = input.providerKind || "openai_compatible";
-  const baseUrl = trimTrailingSlash(input.baseUrl);
+  const apiFormat = input.apiFormat || defaultApiFormat(providerKind);
+  const baseUrl = normalizeBaseUrl(trimTrailingSlash(input.baseUrl), providerKind, apiFormat);
   const apiKey = typeof input.apiKey === "string" ? input.apiKey.trim() : "";
   const startedAt = Date.now();
 
   try {
-    const response = await requestProvider({ providerKind, baseUrl, apiKey });
+    const response = await requestProvider({ providerKind, apiFormat, baseUrl, apiKey });
     const latencyMs = Date.now() - startedAt;
     const body = await readSmallBody(response);
 
@@ -48,6 +41,7 @@ function validateInput(input) {
   if (!input || typeof input !== "object") return error("VALIDATION_ERROR", "请求体必须是 JSON 对象。");
   if (typeof input.baseUrl !== "string" || !input.baseUrl.trim()) return error("VALIDATION_ERROR", "Base URL 不能为空。");
   if (typeof input.providerKind !== "string" || !input.providerKind.trim()) return error("VALIDATION_ERROR", "Provider 类型不能为空。");
+  if (input.apiFormat && typeof input.apiFormat !== "string") return error("VALIDATION_ERROR", "API 格式无效。");
   if (input.providerKind !== "ollama" && (typeof input.apiKey !== "string" || !input.apiKey.trim())) {
     return error("VALIDATION_ERROR", "API Key 不能为空。");
   }
@@ -59,11 +53,11 @@ function validateInput(input) {
   return ok({});
 }
 
-function requestProvider({ providerKind, baseUrl, apiKey }) {
+function requestProvider({ providerKind, apiFormat, baseUrl, apiKey }) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10000);
-  const headers = createHeaders(providerKind, apiKey);
-  const url = createTestUrl(providerKind, baseUrl, apiKey);
+  const headers = createHeaders(apiFormat, apiKey);
+  const url = createTestUrl(providerKind, apiFormat, baseUrl, apiKey);
 
   return fetch(url, {
     method: "GET",
@@ -72,30 +66,54 @@ function requestProvider({ providerKind, baseUrl, apiKey }) {
   }).finally(() => clearTimeout(timeout));
 }
 
-function createTestUrl(providerKind, baseUrl, apiKey) {
-  if (providerKind === "gemini") {
+function createTestUrl(providerKind, apiFormat, baseUrl, apiKey) {
+  if (providerKind === "deepseek") return `${removeTrailingPath(baseUrl, "/v1")}/models`;
+  if (providerKind === "openrouter") return `${baseUrl}/auth/key`;
+  if (apiFormat === "gemini_generate_content") {
     const url = new URL(`${baseUrl}/models`);
     url.searchParams.set("key", apiKey);
     return url.toString();
   }
-  if (providerKind === "anthropic") return `${baseUrl}/models`;
-  if (OPENAI_COMPATIBLE_KINDS.has(providerKind)) return `${baseUrl}/models`;
+  if (apiFormat === "anthropic_messages") return `${baseUrl}/models`;
+  if (OPENAI_COMPATIBLE_FORMATS.has(apiFormat)) return `${baseUrl}/models`;
   return `${baseUrl}/models`;
 }
 
-function createHeaders(providerKind, apiKey) {
+function normalizeBaseUrl(baseUrl, providerKind, apiFormat) {
+  if (providerKind === "minimax" && apiFormat === "anthropic_messages" && baseUrl.endsWith("/anthropic")) {
+    return `${baseUrl}/v1`;
+  }
+  if (providerKind === "gemini" && apiFormat === "openai_chat" && !baseUrl.endsWith("/openai")) {
+    return `${baseUrl}/openai`;
+  }
+  return baseUrl;
+}
+
+function removeTrailingPath(baseUrl, suffix) {
+  return baseUrl.endsWith(suffix) ? baseUrl.slice(0, -suffix.length) : baseUrl;
+}
+
+function createHeaders(apiFormat, apiKey) {
   const headers = {
     Accept: "application/json"
   };
-  if (providerKind === "anthropic") {
+  if (apiFormat === "anthropic_messages") {
     headers["x-api-key"] = apiKey;
     headers["anthropic-version"] = "2023-06-01";
     return headers;
   }
-  if (providerKind !== "gemini" && apiKey) {
+  if (apiFormat !== "gemini_generate_content" && apiKey) {
     headers.Authorization = `Bearer ${apiKey}`;
   }
   return headers;
+}
+
+function defaultApiFormat(providerKind) {
+  if (providerKind === "anthropic") return "anthropic_messages";
+  if (providerKind === "gemini") return "gemini_generate_content";
+  if (providerKind === "ollama") return "ollama_openai";
+  if (providerKind === "custom") return "custom_http";
+  return "openai_chat";
 }
 
 async function readSmallBody(response) {

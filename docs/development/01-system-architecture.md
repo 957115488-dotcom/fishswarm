@@ -15,6 +15,10 @@ Desktop Shell
       -> Application Services
         -> Domain Services
         -> Orchestrator
+          -> Management Layer
+          -> Talent Layer
+          -> Sentinel Hook Layer
+          -> Evolution Layer
           -> Agent Runtime
             -> Model Provider
             -> Tool Gateway
@@ -104,6 +108,53 @@ Domain Service 负责普通业务操作，例如创建员工、加入工厂、�
 
 Orchestrator 是鱼群区别于普通 Agent 聊天应用的核心。
 
+### 3.5.1 Management Layer
+
+职责：
+
+1. Planner 拆解项目和任务。
+2. Dispatcher 从人才层选择角色，再从 Agent 池选择执行者。
+3. Reviewer 验证产物是否满足验收标准。
+4. Arbiter 处理多 Agent 分歧。
+5. Coach 把评审反馈沉淀为成长经验。
+
+管理层负责判断“任务应该怎么组织、谁来执行、输出是否可用”。
+
+### 3.5.2 Talent Layer
+
+职责：
+
+1. 保存系统当前支持的人才角色。
+2. 定义角色职责、技能、输入输出规范、工具需求和评审标准。
+3. 通过 AgentRoleAssignment 记录哪个 Agent 可以承担哪些人才角色。
+4. 支持单 Agent 多角色和多 Agent 多角色共同存在。
+
+人才层负责回答“系统现在有哪些工种，以及每个工种能做什么”。
+
+### 3.5.3 Sentinel Hook Layer
+
+职责：
+
+1. 在 Agent 执行动作前检查职责边界和权限范围。
+2. 拦截 modify、delete、external、execute 等高风险动作。
+3. 为风险动作生成 GuardedAction 和管理层简报。
+4. 把需要用户裁决的动作提交 UserApproval。
+5. 记录审计日志。
+
+哨兵层负责把“人才不能越权”变成强制执行机制。
+
+### 3.5.4 Evolution Layer
+
+职责：
+
+1. 当任务找不到合适人才时生成 CapabilityGap。
+2. 记录 LearningSource，后续接入官方文档、GitHub 和公开资料检索。
+3. 生成 CandidateTalentProfile。
+4. 创建 TalentTrainingRun 进入试用。
+5. 通过 TalentEvaluation 决定候选人才是否进入正式人才层。
+
+进化层负责把“缺人”转化为“可培养的人才”。
+
 ### 3.6 Agent Runtime
 
 职责：
@@ -170,7 +221,10 @@ MVP 使用内存队列 + SQLite 状态持久化。Redis 和 BullMQ 留到服务�
 
 ```text
 Renderer UI -> Local App Server -> Services -> Database
-Local App Server -> Orchestrator -> Agent Runtime -> Tool Gateway
+Local App Server -> Orchestrator -> Management Layer -> Talent Layer
+Orchestrator -> Sentinel Hook Layer -> UserApproval
+Orchestrator -> Evolution Layer -> Talent Layer
+Orchestrator -> Agent Runtime -> Tool Gateway
 Agent Runtime -> Services
 Local Scheduler -> Orchestrator
 ```

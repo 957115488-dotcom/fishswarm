@@ -102,6 +102,21 @@ function startAppServer(options = {}) {
       return;
     }
 
+    if (req.method === "GET" && url.pathname === "/api/talent-profiles") {
+      writeJson(req, res, ok({ talentProfiles: state.talentProfiles }));
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/guarded-actions") {
+      writeJson(req, res, ok({ guardedActions: state.guardedActions, actionReviewBriefs: state.actionReviewBriefs }));
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/capability-gaps") {
+      writeJson(req, res, ok({ capabilityGaps: state.capabilityGaps, candidateTalentProfiles: state.candidateTalentProfiles, learningSources: state.learningSources }));
+      return;
+    }
+
     if (req.method === "GET" && url.pathname === "/api/events") {
       setCorsHeaders(req, res);
       res.writeHead(200, {
@@ -154,6 +169,13 @@ function startAppServer(options = {}) {
     if (req.method === "POST" && url.pathname === "/api/model-connections/test") {
       const body = await readJsonBody(req);
       writeJson(req, res, body.ok ? await testModelConnection(body.data) : body);
+      return;
+    }
+
+    const guardedAction = url.pathname.match(/^\/api\/guarded-actions\/([^/]+)\/(approve|reject)$/);
+    if (req.method === "POST" && guardedAction) {
+      const [, actionId, decision] = guardedAction;
+      writeJson(req, res, services.decideGuardedAction(actionId, decision === "approve" ? "approved" : "rejected"));
       return;
     }
 
