@@ -1,129 +1,352 @@
-# 鱼群 FishSwarm
+<p align="center">
+  <img src="resources/logo.png" alt="FishSwarm Logo" width="280" />
+</p>
 
-桌面优先的多智能体工作工厂。
+<h1 align="center">🚀 FishSwarm: Your Personal AI Agent Desktop App</h1>
 
-把 Agent 当成员工配置进工厂，围绕项目目标完成组队、拆解、执行、评审和产物沉淀。
+<p align="center">
+  • Open Source AI Agent • One-Click Install 
+</p>
 
-![Electron](https://img.shields.io/badge/Electron-33.2.1-47848F?logo=electron)
-![React](https://img.shields.io/badge/React-18.3.1-61DAFB?logo=react)
-![Vite](https://img.shields.io/badge/Vite-6.0.3-646CFF?logo=vite)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.7.2-3178C6?logo=typescript)
+<p align="center">
+  <a href="./README_zh.md">中文文档</a> •
+  <a href="#features">Features</a> •
+  <a href="#demo">Demo</a> •
+  <a href="#installation">Downloads</a> •
+  <a href="#quick-start">Quick Start</a> •
+  <a href="#skills">Skills Library</a>
+</p>
 
-## 核心概念
+<p align="center">
+  <img src="https://img.shields.io/badge/Platform-Windows%20%7C%20macOS-blue" alt="Platform" />
+  <img src="https://img.shields.io/badge/License-MIT-green" alt="License" />
+  <img src="https://img.shields.io/badge/Node.js-18+-brightgreen" alt="Node.js" />
+  <a href="https://discord.gg/pynjtQDf"><img src="https://img.shields.io/discord/1493588403260883078?logo=discord&label=Discord&color=5865F2" alt="Discord" /></a>
+  <a href="#community"><img src="https://img.shields.io/badge/WeChat-微信群-07C160?logo=wechat&logoColor=white" alt="WeChat" /></a>
+</p>
 
-**工厂（Factory）** — 定义岗位、流程和质量门禁的模板  
-**员工（AgentWorker）** — 可配置使命、职责、工具权限的 AI 员工  
-**项目（Project）** — 基于工厂创建的目标驱动任务集合  
-**任务图（TaskGraph）** — 由 Orchestrator 拆解的依赖任务网络  
-**产物（Artifact）** — Agent 执行生成的输出结果  
+---
 
-## 功能演示
+FishSwarm is a free, open-source AI agent desktop application for Windows and macOS. It wraps Claude Code, OpenAI, Gemini, DeepSeek, and other AI models into a user-friendly GUI with one-click installation — no coding required. Key capabilities include VM-level sandbox isolation (WSL2 on Windows, Lima on macOS), a built-in Skills system for generating PPTX, DOCX, XLSX, and PDF documents, MCP (Model Context Protocol) integration for connecting to browsers, Notion, and other desktop apps, GUI automation via computer use, and remote control through Feishu (Lark) and Slack. FishSwarm is designed to make AI-powered desktop automation accessible to everyone.
 
-- [x] 桌面应用启动（Electron 窗口 + 本地 App Server）
-- [x] Agent Operations Dashboard 实时状态展示
-- [x] 工厂创建与团队组建
-- [x] 项目派发与自动组队
-- [x] 任务自动拆解与执行
-- [x] 产物评审流程
-- [x] 本地 SQLite 持久化
+---
 
-## 内置工厂模板
+## 📖 Introduction
 
-### 软件开发工厂
+**FishSwarm** is an open-source AI agent desktop app with one-click installers for **Windows** and **macOS**—no coding required.
 
-| 岗位 | 职责 |
-|------|------|
-| 项目经理 | 拆解目标、跟踪进度、协调阻塞 |
-| 产品经理 | 需求分析、PRD 撰写、优先级排序 |
-| 架构师 | 技术方案设计、代码评审 |
-| 前端工程师 | 界面实现、交互打磨 |
-| 后端工程师 | API 设计、数据建模 |
-| 测试评审员 | 测试计划、回归验证 |
+It provides a sandboxed workspace where AI can manage files, generate professional outputs (PPTX, DOCX, XLSX, etc.) through our built-in **Skills** system, and **connect to desktop apps via MCP** (browser, Notion, etc.) for better collaboration.
 
-### 研究分析工厂
+> [!WARNING]
+> **Disclaimer**: FishSwarm is an AI collaboration tool. Please exercise caution with its operations, especially when authorizing file modifications or deletions. We support VM-based sandbox isolation, but some operations may still carry risks.
 
-| 岗位 | 职责 |
-|------|------|
-| 研究经理 | 研究方向把控、结论汇总 |
-| 搜索分析师 | 信息检索、竞品调研 |
-| 数据整理员 | 数据清洗、结构化 |
-| 行业分析师 | 市场分析、趋势研判 |
-| 报告撰写员 | 报告输出、文案打磨 |
-| 事实核查员 | 数据核实、交叉验证 |
+---
 
-## 技术架构
+<a id="features"></a>
 
-```
-Desktop Shell (Electron)
-  -> Renderer UI (React + Vite)
-    -> Local App Server
-      -> Application Services
-        -> Domain Services
-        -> Orchestrator
-          -> Agent Runtime
-            -> Model Provider
-            -> Tool Gateway
-        -> Local Persistence (SQLite)
-```
+## ✨ Key Features
 
-详细架构说明见 [docs/development/01-system-architecture.md](docs/development/01-system-architecture.md)
+|               | MCP & Skills | Remote Control | GUI Operation |
+| ------------- | ------------ | -------------- | ------------- |
+| Claude Code CLI | ✓            | ✗              | ✗             |
+| FishSwarm    | ✓            | ✓              | ✓             |
 
-## 快速开始
+- **One-Click Install, Ready to Use**: Pre-built installers for Windows and macOS, no environment setup needed—just download and start using.
+- **Flexible Model Support**: Supports **Claude**, **OpenAI-compatible APIs**, and Chinese models like **GLM**, **MiniMax**, **Kimi**. Use your OpenRouter, Anthropic, or other API keys with flexible configuration. More models coming soon!
+- **Remote Control**: Connect to collaboration platforms like **Feishu (Lark)** and other remote services to automate workflows and cross-platform operations.
+- **GUI Operation**: Control and interact with various desktop GUI applications on your computer. **Recommended model: Gemini-3-Pro** for optimal GUI understanding and control.
+- **Smart File Management**: Read, write, and organize files within your workspace.
+- **Skills System**: Built-in workflows for PPTX, DOCX, PDF, XLSX generation and processing. **Supports custom skill creation and deletion.**
+- **Role Incubation**: When current roles are not sufficiently capable for a task, FishSwarm can create a temporary candidate role and let the user save it as a formal role.
+- **MCP External Service Support**: Integrate browser, Notion, custom apps and more through **MCP Connectors** to extend AI capabilities.
+- **Multimodal Input**: Drag & drop files and images directly into the chat input for seamless multimodal interaction.
+- **Real-time Trace**: Watch AI reasoning and tool execution in the Trace Panel.
+- **Secure Workspace**: All operations confined to your chosen workspace folder.
+- **VM-Level Isolation**: WSL2 (Windows) and Lima (macOS) VM isolation—all commands execute in an isolated VM to protect your host system.
+- **UI Enhancements**: Beautiful and flexible UI design, system language switching, comprehensive MCP/Skills/Tools call display.
 
-### 安装依赖
+<a id="demo"></a>
+
+## 🎬 Demo
+
+See FishSwarm in action:
+
+### 1. Folder Organization & Cleanup 📂
+
+https://github.com/user-attachments/assets/dbeb0337-2d19-4b5d-a438-5220f2a87ca7
+
+### 2. Generate PPT from Files 📊
+
+https://github.com/user-attachments/assets/30299ded-0260-468f-b11d-d282bb9c97f2
+
+### 3. Generate XLSX Spreadsheets 📉
+
+https://github.com/user-attachments/assets/f57b9106-4b2c-4747-aecd-a07f78af5dfc
+
+### 4. GUI Operation🖥
+
+https://github.com/user-attachments/assets/75542c76-210f-414d-8182-1da988c148f2
+
+### 5. Remote control with Feishu(Lark) 🤖
+
+https://github.com/user-attachments/assets/05a703de-c0f5-407b-9a43-18b6a172fd74
+
+---
+
+<a id="installation"></a>
+
+## 📦 Installation
+
+### Option 1: Homebrew (macOS, Recommended)
 
 ```bash
-pnpm install
+brew tap FishSwarm/tap
+brew install --cask --no-quarantine fishswarm
 ```
 
-### 开发模式
+> The `--no-quarantine` flag bypasses macOS Gatekeeper, so you won't see the "Apple cannot verify this app" warning.
+
+### Option 2: Download Installer
+
+Get the latest version from our [Releases Page](https://github.com/FishSwarm/fishswarm/releases).
+
+| Platform                  | File Type |
+| ------------------------- | --------- |
+| **Windows**               | `.exe`    |
+| **macOS** (Apple Silicon) | `.dmg`    |
+
+### Option 3: Build from Source
+
+For developers who want to contribute or modify the codebase:
 
 ```bash
-pnpm dev
+git clone https://github.com/FishSwarm/fishswarm.git
+cd fishswarm
+npm install
+npm run rebuild
+npm run dev
 ```
 
-### 生产构建
+To build the installer locally: `npm run build`
+
+### Security Configuration: 🔒 Sandbox Support
+
+FishSwarm provides **multi-level sandbox protection** to keep your system safe:
+
+| Level        | Platform | Technology | Description                                    |
+| ------------ | -------- | ---------- | ---------------------------------------------- |
+| **Basic**    | All      | Path Guard | File operations restricted to workspace folder |
+| **Enhanced** | Windows  | WSL2       | Commands execute in isolated Linux VM          |
+| **Enhanced** | macOS    | Lima       | Commands execute in isolated Linux VM          |
+
+- **Windows (WSL2)**: When WSL2 is detected, all Bash commands are automatically routed to a Linux VM. The workspace is synced bidirectionally.
+- **macOS (Lima)**: When [Lima](https://lima-vm.io/) is installed (`brew install lima`), commands run in an Ubuntu VM with `/Users` mounted.
+- **Fallback**: If no VM is available, commands run natively with path-based restrictions.
+
+**Setup (Optional, Recommended)**
+
+- **Windows**: WSL2 is auto-detected if installed. [Install WSL2](https://docs.microsoft.com/en-us/windows/wsl/install)
+
+- **macOS**:
+  Lima is auto-detected if installed. Install command:
 
 ```bash
-pnpm build
-pnpm desktop:build
+brew install lima
+# FishSwarm will automatically create and manage a Lima VM (internal Lima name: 'fishswarm-sandbox')
 ```
 
-## 项目结构
+---
+
+<a id="quick-start"></a>
+
+## 🚀 Quick Start Guide
+
+### 1. Get an API Key
+
+You need an API key to power the agent. We support **OpenRouter**, **Anthropic**, and various cost-effective **Chinese Models**.
+
+| Provider           | Get Key / Coding Plan                                                      | Base URL (Required)                      | Recommended Model    |
+| ------------------ | -------------------------------------------------------------------------- | ---------------------------------------- | -------------------- |
+| **OpenRouter**     | [OpenRouter](https://openrouter.ai/)                                       | `https://openrouter.ai/api`              | `claude-4-5-sonnet`  |
+| **Anthropic**      | [Anthropic Console](https://console.anthropic.com/)                        | (Default)                                | `claude-4-5-sonnet`  |
+| **Zhipu AI (GLM)** | [GLM Coding Plan](https://bigmodel.cn/glm-coding) (⚡️Chinese Deal)         | `https://open.bigmodel.cn/api/anthropic` | `glm-4.7`, `glm-4.6` |
+| **MiniMax**        | [MiniMax Coding Plan](https://platform.minimaxi.com/subscribe/coding-plan) | `https://api.minimaxi.com/anthropic`     | `minimax-m2`         |
+| **Kimi**           | [Kimi Coding Plan](https://www.kimi.com/membership/pricing)                | `https://api.kimi.com/coding/`           | `kimi-k2`            |
+
+### 2. Configure
+
+1. Open the app and click the ⚙️ **Settings** icon in the bottom left.
+2. Paste your **API Key**.
+3. **Crucial**: Set the **Base URL** according to the table above (especially for Zhipu/MiniMax, etc.).
+4. Enter the **Model** name you want to use.
+
+### 3. Start Using FishSwarm
+
+1. **Select a Workspace**: Choose a folder where Claude is allowed to work.
+2. **Enter a Prompt**:
+   > "Read the financial_report.csv in this folder and create a PowerPoint summary with 5 slides."
+
+### 📝 Important Notes
+
+1.  **macOS Installation**: If you downloaded the DMG directly (not via Homebrew) and see a security warning, go to **System Settings > Privacy & Security** and click **Open Anyway**. Or install via Homebrew to avoid this entirely:
+    ```bash
+    brew tap FishSwarm/tap && brew install --cask --no-quarantine fishswarm
+    ```
+2.  **Network Access**: For tools like `WebSearch`, you may need to enable "Virtual Network Interface" (TUN Mode) in your proxy settings to ensure connectivity.
+3.  **Notion Connector**: Besides setting the integration token, you also need to add connections in a root page. See https://www.notion.com/help/add-and-manage-connections-with-the-api for more details.
+
+---
+
+<a id="skills"></a>
+
+## 🧰 Skills Library
+
+FishSwarm ships with built-in skills under `.claude/skills/`, and supports user-added or custom skills, including:
+
+- `pptx` for PowerPoint generation
+- `docx` for Word document processing
+- `pdf` for PDF handling and forms
+- `xlsx` for Excel spreadsheet support
+- `skill-creator` for creating custom skills
+
+---
+
+## 🏗️ Architecture
 
 ```
 fishswarm/
-├── electron/           # Electron 主进程
-│   ├── main.cjs        # 应用入口、窗口管理
-│   ├── preload.cjs     # 预加载脚本，安全暴露 API
-│   ├── app-server.cjs  # 本地 HTTP Server
-│   └── core/           # 核心业务逻辑
-│       ├── services.cjs     # 领域服务
-│       ├── state-store.cjs  # 状态管理
-│       ├── dashboard.cjs    # Agent 状态面板
-│       ├── seed-state.cjs   # 初始数据
-│       └── ...
-├── src/                # React 渲染进程
-│   ├── main.tsx
-│   └── styles.css
-├── docs/               # 开发文档
-│   ├── development/    # 技术设计文档
-│   └── plans/          # 产品规划文档
-├── index.html
-├── vite.config.ts
-└── tsconfig.json
+├── src/
+│   ├── main/                    # Electron Main Process (Node.js)
+│   │   ├── index.ts             # Main entry point
+│   │   ├── claude/              # Agent SDK & Runner
+│   │   │   └── agent-runner.ts  # AI agent execution logic
+│   │   ├── config/              # Configuration management
+│   │   │   └── config-store.ts  # Persistent settings storage
+│   │   ├── db/                  # Database layer
+│   │   │   └── database.ts      # SQLite/data persistence
+│   │   ├── ipc/                 # IPC handlers
+│   │   ├── memory/              # Memory management
+│   │   │   └── memory-manager.ts
+│   │   ├── sandbox/             # Security & Path Resolution
+│   │   │   └── path-resolver.ts # Sandboxed file access
+│   │   ├── session/             # Session management
+│   │   │   └── session-manager.ts
+│   │   ├── skills/              # Skill Loader & Manager
+│   │   │   └── skills-manager.ts
+│   │   └── tools/               # Tool execution
+│   │       └── tool-executor.ts # Tool call handling
+│   ├── preload/                 # Electron preload scripts
+│   │   └── index.ts             # Context bridge setup
+│   └── renderer/                # Frontend UI (React + Tailwind)
+│       ├── App.tsx              # Root component
+│       ├── main.tsx             # React entry point
+│       ├── components/          # UI Components
+│       │   ├── ChatView.tsx     # Main chat interface
+│       │   ├── ConfigModal.tsx  # Settings dialog
+│       │   ├── ContextPanel.tsx # File context display
+│       │   ├── MessageCard.tsx  # Chat message component
+│       │   ├── PermissionDialog.tsx
+│       │   ├── Sidebar.tsx      # Navigation sidebar
+│       │   ├── Titlebar.tsx     # Custom window titlebar
+│       │   ├── TracePanel.tsx   # AI reasoning trace
+│       │   └── WelcomeView.tsx  # Onboarding screen
+│       ├── hooks/               # Custom React hooks
+│       │   └── useIPC.ts        # IPC communication hook
+│       ├── store/               # State management
+│       │   └── index.ts
+│       ├── styles/              # CSS styles
+│       │   └── globals.css
+│       ├── types/               # TypeScript types
+│       │   └── index.ts
+│       └── utils/               # Utility functions
+├── .claude/
+│   └── skills/                  # Default Skill Definitions
+│       ├── pptx/                # PowerPoint generation
+│       ├── docx/                # Word document processing
+│       ├── pdf/                 # PDF handling & forms
+│       ├── xlsx/                # Excel spreadsheet support
+│       └── skill-creator/       # Skill development toolkit
+├── resources/                   # Static Assets (icons, images)
+├── electron-builder.yml         # Build configuration
+├── vite.config.ts               # Vite bundler config
+└── package.json                 # Dependencies & scripts
 ```
 
-## 相关文档
+---
 
-- [MVP 开发范围](docs/development/00-mvp-scope.md)
-- [系统架构](docs/development/01-system-architecture.md)
-- [领域模型](docs/development/02-domain-model.md)
-- [Agent 运行时与编排](docs/development/03-agent-runtime-and-orchestration.md)
-- [API 设计](docs/development/04-api-design.md)
-- [前端设计](docs/development/05-frontend-design.md)
-- [开发路线图](docs/development/06-development-roadmap.md)
+## 🗺️ Roadmap
 
-## License
+See our full **[ROADMAP.md](ROADMAP.md)** for detailed plans.
 
-Private — All rights reserved
+**Completed:** Core installers · Filesystem sandboxing · VM isolation (WSL2/Lima) · Skills (PPTX/DOCX/PDF/XLSX) · MCP connectors · Multi-model support · Rich input · i18n
+
+**Coming next:** Browser skill runtime · Role management · Decision store polish · Linux support
+
+---
+
+## ❓ FAQ
+
+**What is FishSwarm?**
+FishSwarm is a free, open-source desktop application that provides a local AI agent workspace. It wraps AI models (Claude, GPT, Gemini, DeepSeek, etc.) into a GUI with one-click installers for Windows and macOS — no terminal or coding knowledge required.
+
+**What makes FishSwarm different?**
+FishSwarm adds multi-model support, GUI automation via computer use, remote control through Feishu/Slack, and VM-level sandbox isolation. See the [feature comparison table](#features) for details.
+
+**What AI models does FishSwarm support?**
+Claude (via Anthropic or OpenRouter), OpenAI-compatible APIs, and Chinese models including GLM (Zhipu AI), MiniMax, and Kimi. Any provider offering an OpenAI-compatible API endpoint can be configured.
+
+**Is FishSwarm free?**
+Yes. FishSwarm itself is completely free and open-source under the MIT license. You only need to pay for the AI model API usage from your chosen provider.
+
+**Does FishSwarm work on Linux?**
+Currently, FishSwarm provides pre-built installers for Windows and macOS only. Linux users can build from source — see the [Build from Source](#installation) section.
+
+**How does sandbox isolation work?**
+FishSwarm offers multi-level protection: basic path-based restrictions on all platforms, and enhanced VM-level isolation using WSL2 (Windows) or Lima (macOS). When a VM is available, all commands execute inside an isolated Linux environment, protecting your host system.
+
+**What are Skills and how do I create custom ones?**
+Skills are built-in workflows for specific tasks like generating PPTX, DOCX, PDF, or XLSX files. FishSwarm ships with default skills under `.claude/skills/` and includes a `skill-creator` tool to help you build your own custom skills.
+
+**What is MCP and how does it work?**
+MCP (Model Context Protocol) lets AI connect to external tools and services. FishSwarm supports MCP connectors for browsers, Notion, and other desktop apps — extending the AI's capabilities beyond just file management and code.
+
+**How do I set up remote control via Feishu or Slack?**
+FishSwarm supports remote control through Feishu (Lark) and Slack integration, allowing you to send commands and receive results from collaboration platforms. Check the app settings for remote control configuration.
+
+**Is my data safe? Does FishSwarm send data to external servers?**
+FishSwarm runs locally on your machine. Your files stay in your workspace. The only external communication is with the AI model API you configure (e.g., Anthropic, OpenRouter). No data is sent to FishSwarm servers.
+
+---
+
+## 🛠️ Contributing
+
+We welcome contributions! Whether it's a new Skill, a UI fix, or a security improvement:
+
+1. Fork the repo.
+2. Create a branch (`git checkout -b feature/NewSkill`).
+3. Submit a PR.
+
+---
+
+## 💬 Community
+
+Join our community for support and discussion:
+
+- **Discord**: [Join our Discord server](https://discord.gg/pynjtQDf) — for real-time chat, support, and development discussion.
+- **WeChat**: Scan the QR code below to join our WeChat group (Chinese community).
+
+<p align="center">
+  <img src="resources/WeChat.jpg" alt="WeChat Group" width="200" />
+</p>
+
+---
+
+## 📄 License
+
+MIT © FishSwarm Team
+
+---
+
+<p align="center">
+  Made by the FishSwarm Team
+</p>

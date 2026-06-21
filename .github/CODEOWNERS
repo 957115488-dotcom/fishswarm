@@ -1,0 +1,19 @@
+# Default owners for the entire repository
+* @FishSwarm/core
+
+# AI execution core
+src/main/claude/ @FishSwarm/core
+
+# MCP server lifecycle
+src/main/mcp/ @FishSwarm/core
+
+# Sandbox isolation (WSL / Lima)
+src/main/sandbox/ @FishSwarm/core
+
+# Frontend
+src/renderer/ @FishSwarm/core
+
+# CI/CD and build
+.github/ @FishSwarm/core
+electron-builder.yml @FishSwarm/core
+scripts/ @FishSwarm/core

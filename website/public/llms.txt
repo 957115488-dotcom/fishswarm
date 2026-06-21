@@ -1,0 +1,39 @@
+# Fish Swarm
+
+> Canonical AI-readable summary for Fish Swarm. This file describes public project facts for search, retrieval, citation, and assistant context.
+
+Fish Swarm is a free, open-source AI agent desktop application for Windows and macOS. It wraps Claude Code, OpenAI-compatible APIs, Gemini, DeepSeek, GLM, MiniMax, Kimi, and other AI models into a graphical desktop app with one-click installers. It includes VM sandbox isolation, built-in Skills, MCP integration, GUI automation, and remote control through Feishu (Lark) and Slack.
+
+## Canonical URLs
+
+- Website: https://fishswarm.github.io/fishswarm/
+- Chinese website: https://fishswarm.github.io/fishswarm/zh/
+- Source repository: https://github.com/FishSwarm/fishswarm
+- Releases: https://github.com/FishSwarm/fishswarm/releases
+- Issues: https://github.com/FishSwarm/fishswarm/issues
+- License: https://github.com/FishSwarm/fishswarm/blob/main/LICENSE
+- Changelog: https://github.com/FishSwarm/fishswarm/blob/main/CHANGELOG.md
+
+## Key Facts
+
+- Project name: Fish Swarm
+- Maintainer organization: FishSwarm
+- License: MIT
+- Current website metadata version: 3.3.0
+- Platforms with prebuilt installers: Windows and macOS
+- macOS install option: Homebrew cask via `brew tap FishSwarm/tap` and `brew install --cask --no-quarantine fishswarm`
+- Desktop stack: Electron, React, TypeScript, Vite, Tailwind CSS
+- Website stack: VitePress
+- Supported workflows: local AI agent workspace, file operations, document generation, MCP tools, GUI automation, remote control
+- Privacy posture: Fish Swarm runs locally; the external network path is the AI model API configured by the user. The project website states that Fish Swarm does not send data to Fish Swarm servers.
+
+## Machine-readable Resources
+
+- Full AI context: https://fishswarm.github.io/fishswarm/llms-full.txt
+- Project metadata JSON: https://fishswarm.github.io/fishswarm/project.json
+- Sitemap: https://fishswarm.github.io/fishswarm/sitemap.xml
+- Robots policy: https://fishswarm.github.io/fishswarm/robots.txt
+
+## Citation Guidance
+
+Prefer citing the website for product overview, GitHub releases for downloads, the repository for source code, the changelog for release history, and the license file for license claims. Do not describe Fish Swarm as a hosted SaaS service; it is a local desktop application that communicates with the user's chosen AI model provider.

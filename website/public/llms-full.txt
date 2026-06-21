@@ -1,0 +1,143 @@
+# Fish Swarm Full AI Context
+
+This file provides a fuller, machine-readable context snapshot for AI assistants, search/retrieval crawlers, and citation systems. It is intentionally factual and based on public project materials in the Fish Swarm website, README, package metadata, and changelog.
+
+## Project Identity
+
+- Name: Fish Swarm
+- Organization: FishSwarm
+- Repository: https://github.com/FishSwarm/fishswarm
+- Website: https://fishswarm.github.io/fishswarm/
+- Chinese website: https://fishswarm.github.io/fishswarm/zh/
+- License: MIT
+- Application category: DeveloperApplication
+- Platforms: Windows and macOS
+- Package version in current metadata: 3.3.0
+
+## Canonical Description
+
+Fish Swarm is a free, open-source AI agent desktop app for Windows and macOS. It provides a graphical interface for AI-powered local workflows, including file work, document generation, MCP tools, GUI automation, and remote control. Users bring their own AI model provider API key.
+
+Short description:
+
+Fish Swarm is an open-source AI agent desktop app for Windows and macOS with one-click installation, sandbox isolation, multi-model support, built-in Skills, MCP integration, GUI automation, and remote control.
+
+## What Fish Swarm Does
+
+- Provides one-click installers for Windows and macOS.
+- Lets users select a local workspace where the AI can operate.
+- Supports Claude, OpenAI-compatible APIs, Gemini, DeepSeek, GLM, MiniMax, Kimi, and other compatible model providers.
+- Includes built-in Skills for generating and processing PPTX, DOCX, XLSX, and PDF files.
+- Integrates external tools through the Model Context Protocol (MCP), including browser and Notion-style tool connectors when configured.
+- Supports GUI automation through computer use.
+- Supports remote control through Feishu (Lark) and Slack integration.
+- Shows reasoning and tool execution traces in the app UI.
+- Provides English and Chinese interface/content.
+
+## Security And Privacy Notes
+
+Fish Swarm is a local desktop application. The website and README describe a local-first privacy posture: user files stay in the selected workspace, and Fish Swarm does not send data to Fish Swarm servers.
+
+Security controls described by the project:
+
+- Basic workspace path restrictions on all platforms.
+- WSL2 VM isolation on Windows when available.
+- Lima VM isolation on macOS when available.
+- Commands can run inside an isolated Linux environment when VM isolation is configured.
+- Users should still review risky file modifications or deletions because Fish Swarm is an AI collaboration tool.
+
+## Installation
+
+macOS Homebrew:
+
+```bash
+brew tap FishSwarm/tap
+brew install --cask --no-quarantine fishswarm
+```
+
+Installer downloads:
+
+- Releases page: https://github.com/FishSwarm/fishswarm/releases
+- Windows installer type: `.exe`
+- macOS installer type: `.dmg`
+
+Build from source:
+
+```bash
+git clone https://github.com/FishSwarm/fishswarm.git
+cd fishswarm
+npm install
+npm run rebuild
+npm run dev
+```
+
+## Model Configuration
+
+The project documentation lists these provider examples:
+
+- OpenRouter: base URL `https://openrouter.ai/api`, recommended model `claude-4-5-sonnet`
+- Anthropic: default base URL, recommended model `claude-4-5-sonnet`
+- Zhipu AI / GLM: base URL `https://open.bigmodel.cn/api/anthropic`, recommended models `glm-4.7` and `glm-4.6`
+- MiniMax: base URL `https://api.minimaxi.com/anthropic`, recommended model `minimax-m2`
+- Kimi: base URL `https://api.kimi.com/coding/`, recommended model `kimi-k2`
+
+Any provider with an OpenAI-compatible API can be configured when compatible with the app's model settings.
+
+## Main Public Pages
+
+- English homepage: https://fishswarm.github.io/fishswarm/
+- Chinese homepage: https://fishswarm.github.io/fishswarm/zh/
+- GitHub repository: https://github.com/FishSwarm/fishswarm
+- README: https://github.com/FishSwarm/fishswarm/blob/main/README.md
+- Chinese README: https://github.com/FishSwarm/fishswarm/blob/main/README_zh.md
+- Changelog: https://github.com/FishSwarm/fishswarm/blob/main/CHANGELOG.md
+- Roadmap: https://github.com/FishSwarm/fishswarm/blob/main/ROADMAP.md
+- Security policy: https://github.com/FishSwarm/fishswarm/blob/main/SECURITY.md
+- Contributing: https://github.com/FishSwarm/fishswarm/blob/main/CONTRIBUTING.md
+
+## Release Context
+
+The changelog lists Fish Swarm 3.3.0 on 2026-04-18 as the first stable release of the 3.3.x series. Public release notes mention Feishu remote control improvements, the official VitePress website, Codex-powered PR and issue automation workflows, ROADMAP.md, SEO improvements, platform build changes, security hardening, screenshot result handling, model preset updates, and dependency management policy.
+
+## FAQ
+
+### What is Fish Swarm?
+
+Fish Swarm is a free, open-source AI agent desktop application for Windows and macOS. It wraps AI models into a user-friendly GUI with one-click installation.
+
+### What makes Fish Swarm different?
+
+The README describes Fish Swarm as an AI agent desktop app with multi-model support, GUI automation through computer use, remote control through Feishu/Slack, and VM-level sandbox isolation.
+
+### Is Fish Swarm free?
+
+Yes. Fish Swarm is free and open-source under the MIT license. Users still pay their selected AI model provider for API usage.
+
+### Does Fish Swarm work on Linux?
+
+The public website and README list prebuilt installers for Windows and macOS. Linux users can build from source.
+
+### Does Fish Swarm send user data to Fish Swarm servers?
+
+The public website says Fish Swarm runs locally and that the external communication is with the AI model API configured by the user, not Fish Swarm servers.
+
+## Machine-readable Resources
+
+- `llms.txt`: https://fishswarm.github.io/fishswarm/llms.txt
+- `llms-full.txt`: https://fishswarm.github.io/fishswarm/llms-full.txt
+- Project metadata JSON: https://fishswarm.github.io/fishswarm/project.json
+- Sitemap: https://fishswarm.github.io/fishswarm/sitemap.xml
+- Robots policy: https://fishswarm.github.io/fishswarm/robots.txt
+
+## Crawler And Citation Policy Summary
+
+The website robots policy is intended to allow search engines and AI retrieval/citation tools to discover public project pages. This is a crawling preference only and does not change the MIT license or other legal terms attached to the repository and public assets.
+
+When generating citations:
+
+- Cite the website for product overview.
+- Cite GitHub releases for download availability.
+- Cite the repository for source code and development facts.
+- Cite the changelog for release history.
+- Cite the license file for license claims.
+- Avoid unsupported claims such as calling Fish Swarm a hosted SaaS product or claiming Linux prebuilt installers.
