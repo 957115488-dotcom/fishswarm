@@ -1,0 +1,74 @@
+{
+  "name": "FishSwarm Low-code Operations Board",
+  "componentName": "FishSwarmOperationsBoard",
+  "description": "A generated dashboard assembled from low-code workflow style reusable low-code blocks.",
+  "theme": "ink-green",
+  "blocks": [
+    {
+      "kind": "metric-card",
+      "title": "角色在线",
+      "description": "当前可参与调度的鱼群角色数量。",
+      "accent": "#10b981",
+      "data": {
+        "value": "7",
+        "delta": "+2",
+        "label": "ready roles"
+      }
+    },
+    {
+      "kind": "metric-card",
+      "title": "技能资产",
+      "description": "已沉淀并可安装的领域技能。",
+      "accent": "#38bdf8",
+      "data": {
+        "value": "23",
+        "delta": "+1",
+        "label": "bundled skills"
+      }
+    },
+    {
+      "kind": "module-card",
+      "title": "低代码模块工厂",
+      "description": "把组件蓝图批量生成成可审查、可复制、可版本化的 React 模块。",
+      "accent": "#f59e0b",
+      "data": {
+        "status": "MVP",
+        "items": ["组件蓝图", "拖拽作坊", "批量生成脚本"]
+      }
+    },
+    {
+      "kind": "process-flow",
+      "title": "生成流程",
+      "description": "从业务意图到可运行模块的最小闭环。",
+      "accent": "#a855f7",
+      "data": {
+        "steps": ["选择蓝图", "拖拽排序", "批量生成", "验收发布"]
+      }
+    },
+    {
+      "kind": "api-connector",
+      "title": "MCP/插件连接",
+      "description": "将接口集成映射到 FishSwarm 的 MCP 与插件体系。",
+      "accent": "#fb7185",
+      "data": {
+        "method": "MCP",
+        "endpoint": "plugin.catalog.install",
+        "auth": "scoped"
+      }
+    },
+    {
+      "kind": "data-table",
+      "title": "资产中心",
+      "description": "用于展示页面、组件、接口、角色和技能资产。",
+      "accent": "#14b8a6",
+      "data": {
+        "columns": ["资产", "类型", "状态"],
+        "rows": [
+          ["Low-code Builder", "skill", "enabled"],
+          ["Module Composer", "component", "ready"],
+          ["Generator", "script", "ready"]
+        ]
+      }
+    }
+  ]
+}

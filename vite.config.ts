@@ -1,7 +1,8 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import electron from 'vite-plugin-electron';
-import { resolve } from 'path';
+import { existsSync } from 'fs';
+import { dirname, resolve } from 'path';
 import { builtinModules } from 'module';
 
 // Node built-in modules must be external for Electron main process
@@ -14,9 +15,28 @@ const ignoredWatchPaths = [
   '**/dist-lima-agent/**',
   '**/dist-mcp/**',
 ];
+const settingsSkillsFallback = resolve(
+  __dirname,
+  'renderer-shims/components/settings/SettingsSkills.tsx'
+);
+
+function settingsSkillsFallbackPlugin() {
+  return {
+    name: 'fishswarm-settings-skills-fallback',
+    enforce: 'pre' as const,
+    resolveId(source: string, importer?: string) {
+      if (source !== './settings/SettingsSkills' || !importer) return null;
+      const normalizedImporter = importer.split('?')[0].replace(/\\/g, '/');
+      if (!normalizedImporter.endsWith('/src/renderer/components/SettingsPanel.tsx')) return null;
+      const originalPath = resolve(dirname(normalizedImporter), 'settings/SettingsSkills.tsx');
+      return existsSync(originalPath) ? null : settingsSkillsFallback;
+    },
+  };
+}
 
 export default defineConfig({
   plugins: [
+    settingsSkillsFallbackPlugin(),
     react(),
     electron([
       {

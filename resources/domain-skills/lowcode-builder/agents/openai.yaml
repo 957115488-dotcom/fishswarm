@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Low-code Builder'
+  short_description: 'Apply low-code builder platform patterns to FishSwarm safely.'
+  default_prompt: 'Use the low-code builder skill to map product, workflow, and Electron runtime ideas into a safe FishSwarm implementation plan.'

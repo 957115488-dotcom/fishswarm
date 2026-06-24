@@ -287,7 +287,10 @@ export class SkillsManager {
     }
   }
 
-  private writeDeletedSkillNames(names: Set<string>, globalSkillsPath = this.getGlobalSkillsPath()): void {
+  private writeDeletedSkillNames(
+    names: Set<string>,
+    globalSkillsPath = this.getGlobalSkillsPath()
+  ): void {
     const deletedSkillsPath = this.getDeletedSkillsPath(globalSkillsPath);
     if (names.size === 0) {
       try {
@@ -1170,7 +1173,9 @@ export class SkillsManager {
       if (!isRetriableRemoveError(error)) {
         throw error;
       }
-      logWarn(`[Skills] Retrying skill directory delete after ${getFsErrorCode(error)}: ${targetPath}`);
+      logWarn(
+        `[Skills] Retrying skill directory delete after ${getFsErrorCode(error)}: ${targetPath}`
+      );
     }
 
     this.makeWritableRecursive(targetPath);
@@ -1187,6 +1192,37 @@ export class SkillsManager {
 
     validateSkillName(skill.name);
     return skill.name;
+  }
+
+  private getBundledDomainSkillsPath(): string {
+    const appPath = app.getAppPath();
+    const candidates = [
+      path.join(process.cwd(), 'resources', 'domain-skills'),
+      path.join(process.resourcesPath || '', 'domain-skills'),
+      path.join(appPath, 'resources', 'domain-skills'),
+    ];
+
+    for (const candidate of candidates) {
+      if (this.physicalDirExists(candidate)) {
+        return candidate;
+      }
+    }
+
+    throw new Error('Bundled domain skills directory not found');
+  }
+
+  async installBundledDomainSkill(skillFolderName: string): Promise<Skill> {
+    validateSkillName(skillFolderName);
+
+    const domainSkillsPath = this.getBundledDomainSkillsPath();
+    const skillPath = path.join(domainSkillsPath, skillFolderName);
+    if (!isPathWithinRoot(skillPath, domainSkillsPath)) {
+      throw new Error(`Invalid bundled domain skill path: ${skillFolderName}`);
+    }
+
+    const installedSkill = await this.installSkill(skillPath);
+    this.setSkillEnabled(installedSkill.id, true);
+    return { ...installedSkill, enabled: true };
   }
 
   /**

@@ -605,7 +605,124 @@
     "failedToLoad": "加载技能失败",
     "failedToInstall": "安装技能失败",
     "failedToDelete": "删除技能失败",
-    "failedToToggle": "切换技能失败"
+    "failedToToggle": "切换技能失败",
+    "domainSkills": "领域技能",
+    "domainSkillsDesc": "领域技能按工作场景分组。勾选领域会从项目内置资源安装并启用对应技能。",
+    "domainGroupsCount": "{{count}} 个领域",
+    "domainInstalledCount": "已安装 {{installed}} / {{total}}",
+    "domainEnabledCount": "已启用 {{count}}",
+    "skillEnabled": "已启用",
+    "skillDisabled": "已停用",
+    "notInstalled": "未安装",
+    "domainGroups": {
+      "devQuality": {
+        "title": "开发质量",
+        "description": "测试、前端资产、浏览器验证和质量工作流。"
+      },
+      "cloudInfra": {
+        "title": "云与基础设施",
+        "description": "云开发、可观测性、MCP 扩展和外部执行代理。"
+      },
+      "lowCodeRuntime": {
+        "title": "低代码与运行时",
+        "description": "沉淀 Lowcode 低代码平台模式和 Electron 容器经验，辅助 FishSwarm 安全集成。"
+      },
+      "dataResearch": {
+        "title": "数据与研究",
+        "description": "数据总结、数据库查询、深度研究和内容抓取。"
+      },
+      "securityMobile": {
+        "title": "安全与移动",
+        "description": "安全测试、专项语言审查和移动端调试能力。"
+      },
+      "businessMarketing": {
+        "title": "商业与营销",
+        "description": "品牌、增长、广告分析、销售线索和内部沟通。"
+      },
+      "agentExtension": {
+        "title": "提示与代理扩展",
+        "description": "提示工程、技能生成和终端体验增强。"
+      }
+    },
+    "domainSkillsList": {
+      "artifactsBuilder": {
+        "description": "使用 React、Tailwind 和组件库构建复杂 HTML 资产。"
+      },
+      "d3jsVisualization": {
+        "description": "生成 D3 图表和交互式数据可视化。"
+      },
+      "pypict": {
+        "description": "使用 PICT 生成成对组合测试套件。"
+      },
+      "playwright": {
+        "description": "自动化检查本地和远程 Web 应用。"
+      },
+      "awsSkills": {
+        "description": "围绕 AWS CDK、成本优化和事件驱动模式进行开发。"
+      },
+      "langsmithFetch": {
+        "description": "获取并分析 LangSmith 执行轨迹。"
+      },
+      "connect": {
+        "description": "连接 Gmail、Slack、GitHub、Notion 等外部应用。"
+      },
+      "jules": {
+        "description": "把 GitHub 仓库任务异步交给 Google Jules。"
+      },
+      "lowcodeBuilder": {
+        "description": "将 Lowcode 低代码平台能力和 desktop Electron 运行时模式转化为 FishSwarm 安全集成方案。"
+      },
+      "csvDataSummarizer": {
+        "description": "分析 CSV 文件并生成洞察和可视化。"
+      },
+      "postgres": {
+        "description": "安全执行只读 PostgreSQL 查询。"
+      },
+      "deepResearch": {
+        "description": "执行市场、竞品和文献综述等多步骤研究。"
+      },
+      "redditFetch": {
+        "description": "在普通网页抓取受限时获取 Reddit 内容。"
+      },
+      "ffufWebFuzzing": {
+        "description": "执行 Web 模糊测试并分析漏洞结果。"
+      },
+      "moveCodeQuality": {
+        "description": "按 Move Book 代码质量指南审查 Move 包。"
+      },
+      "iosSimulator": {
+        "description": "与 iOS 模拟器交互，用于应用测试和调试。"
+      },
+      "brandGuidelines": {
+        "description": "将品牌规范应用到设计素材中。"
+      },
+      "competitiveAdsExtractor": {
+        "description": "收集并分析竞争对手广告。"
+      },
+      "domainNameBrainstormer": {
+        "description": "生成域名创意并检查可用性。"
+      },
+      "internalComms": {
+        "description": "撰写通讯、FAQ、状态报告和项目更新。"
+      },
+      "leadResearchAssistant": {
+        "description": "识别潜在客户并准备 outreach 策略。"
+      },
+      "promptEngineering": {
+        "description": "使用经典提示工程模式和最佳实践。"
+      },
+      "skillSeekers": {
+        "description": "把文档网站转换成可用技能。"
+      },
+      "terminalTitle": {
+        "description": "为 Claude Code 终端窗口设置清晰的任务标题。"
+      }
+    },
+    "domainSelectHint": "勾选领域可安装并启用该领域技能；点击领域名称可在下方查看对应技能。",
+    "domainEnableAll": "安装并启用该领域，或停用该领域已安装技能",
+    "domainEnabledRatio": "已启用 {{enabled}} · 已安装 {{installed}} · 共 {{total}}",
+    "domainNoInstalledSkills": "该领域尚未安装。",
+    "domainInstallAndEnable": "安装并启用"
   },
   "logs": {
     "actionsTitle": "日志操作",
@@ -699,6 +816,26 @@
     "acceptanceFromAi": "已从 AI 回复中的验收区块提取。",
     "roleActivity": "角色协作",
     "noRoleActivityYet": "当前对话还没有角色协作记录。",
+    "swarmEvents": "鱼群事件",
+    "noSwarmEventsYet": "当前对话还没有鱼群事件。",
+    "swarmEventType": {
+      "userInput": "用户输入",
+      "xiaoyuIntent": "小鱼判断",
+      "xiaoyuDispatch": "小鱼派发",
+      "roleOnline": "角色上线",
+      "rolePlan": "角色计划",
+      "roleThinking": "角色思考",
+      "roleTool": "角色工具",
+      "roleDelivery": "角色交付",
+      "validationStarted": "开始验收",
+      "validationAccepted": "验收通过",
+      "validationNeedsRevision": "验收返工",
+      "validationBlocked": "需外部处理",
+      "xiaoyuRework": "小鱼打回",
+      "xiaoyuPause": "小鱼暂停",
+      "xiaoyuNextRole": "小鱼交接",
+      "xiaoyuFinal": "小鱼汇总"
+    },
     "roleStatus": {
       "gapDetected": "发现缺口",
       "incubatingRole": "孵化角色",
@@ -713,14 +850,19 @@
       "validating": "验收中",
       "accepted": "已通过",
       "needsRevision": "需返工",
+      "blocked": "需外部处理",
       "skipped": "已跳过",
       "failed": "失败"
     },
     "validationPassed": "已通过",
     "validationNeedsRevision": "需返工",
-    "validationBlocked": "已阻断",
+    "validationBlocked": "需外部处理",
+    "validationPassedHint": "这份交付已经通过验收，可以继续流转。",
+    "validationNeedsRevisionHint": "这份交付已打回给同一个角色返工，通过后才会继续下一个角色。",
+    "validationBlockedHint": "当前不是普通返工，而是缺少用户输入、工具权限、凭据或外部条件，流程会暂停。",
     "acceptedFindings": "通过项",
     "requiredRework": "返工项",
+    "requiredUnblock": "解除阻断项",
     "checkedRuns": "已检查运行",
     "noPendingHooks": "暂无待处理权限",
     "hooksHint": "工具权限请求会在这里等待你允许或拒绝。",

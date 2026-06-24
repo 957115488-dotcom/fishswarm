@@ -84,6 +84,7 @@ findings.md
 mcp_server.log
 adaptations/
 .index/
+reference-materials/
 
 # Development log
 DEV_LOG.md

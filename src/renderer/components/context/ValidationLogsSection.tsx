@@ -26,7 +26,9 @@ interface ValidationLogsSectionProps {
 
 function verdictLabel(verdict: ValidationLog['verdict']): { key: string; fallback: string } {
   if (verdict === 'passed') return { key: 'context.validationPassed', fallback: 'Passed' };
-  if (verdict === 'blocked') return { key: 'context.validationBlocked', fallback: 'Blocked' };
+  if (verdict === 'blocked') {
+    return { key: 'context.validationBlocked', fallback: 'External input needed' };
+  }
   return { key: 'context.validationNeedsRevision', fallback: 'Needs revision' };
 }
 
@@ -40,6 +42,31 @@ function verdictIcon(verdict: ValidationLog['verdict']) {
   if (verdict === 'passed') return CheckCircle2;
   if (verdict === 'blocked') return ShieldAlert;
   return AlertTriangle;
+}
+
+function verdictHintKey(verdict: ValidationLog['verdict']): { key: string; fallback: string } {
+  if (verdict === 'passed') {
+    return { key: 'context.validationPassedHint', fallback: 'This handoff can continue.' };
+  }
+  if (verdict === 'blocked') {
+    return {
+      key: 'context.validationBlockedHint',
+      fallback:
+        'The workflow is paused until user input, tool permission, credentials, or an external condition is available.',
+    };
+  }
+  return {
+    key: 'context.validationNeedsRevisionHint',
+    fallback:
+      'The handoff was returned to the same role for revision before the next role can continue.',
+  };
+}
+
+function reworkLabelKey(verdict: ValidationLog['verdict']): { key: string; fallback: string } {
+  if (verdict === 'blocked') {
+    return { key: 'context.requiredUnblock', fallback: 'Required unblock items' };
+  }
+  return { key: 'context.requiredRework', fallback: 'Required rework' };
 }
 
 function formatTime(value: string | number): string {
@@ -59,11 +86,10 @@ export function ValidationLogsSection({
   const language = i18n.resolvedLanguage || i18n.language;
   const sortedLogs = useMemo(
     () =>
-      [...logs].sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      ),
+      [...logs].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
     [logs]
   );
+  const validationCount = sortedLogs.length || (fallbackAcceptance ? 1 : 0);
 
   return (
     <div className="border-b border-border-muted">
@@ -71,13 +97,20 @@ export function ValidationLogsSection({
         onClick={onToggle}
         className="w-full px-4 py-2.5 flex items-center justify-between hover:bg-surface-hover transition-colors"
       >
-        <span className="text-xs font-medium text-text-muted uppercase tracking-wider">
-          {t('context.acceptance')}
+        <span className="flex min-w-0 items-center gap-1.5">
+          <span className="text-xs font-medium text-text-muted uppercase tracking-wider">
+            {t('context.acceptance')}
+          </span>
+          {validationCount > 0 && (
+            <span className="rounded-full border border-border-subtle bg-surface px-1.5 py-0.5 text-[10px] leading-none text-text-muted">
+              {validationCount}
+            </span>
+          )}
         </span>
         {open ? (
-          <ChevronUp className="w-3.5 h-3.5 text-text-muted" />
+          <ChevronUp className="w-3.5 h-3.5 shrink-0 text-text-muted" />
         ) : (
-          <ChevronDown className="w-3.5 h-3.5 text-text-muted" />
+          <ChevronDown className="w-3.5 h-3.5 shrink-0 text-text-muted" />
         )}
       </button>
 
@@ -88,6 +121,8 @@ export function ValidationLogsSection({
               {sortedLogs.map((log) => {
                 const Icon = verdictIcon(log.verdict);
                 const label = verdictLabel(log.verdict);
+                const hint = verdictHintKey(log.verdict);
+                const reworkLabel = reworkLabelKey(log.verdict);
                 const expanded = expandedId === log.validationId;
                 const validatorRoleName = getLocalizedRoleName(
                   log.validatorRoleId,
@@ -124,9 +159,8 @@ export function ValidationLogsSection({
                           {summary}
                         </p>
                         <p className="mt-1 text-[10px] text-text-muted">
-                          {log.acceptedFindings.length}{' '}
-                          {t('context.acceptedFindings', 'accepted')} ·{' '}
-                          {log.requiredRework.length} {t('context.requiredRework', 'rework')} ·{' '}
+                          {log.acceptedFindings.length} {t('context.acceptedFindings', 'accepted')}{' '}
+                          · {log.requiredRework.length} {t(reworkLabel.key, reworkLabel.fallback)} ·{' '}
                           {formatTime(log.createdAt)}
                         </p>
                       </div>
@@ -139,6 +173,7 @@ export function ValidationLogsSection({
 
                     {expanded && (
                       <div className="mt-2 space-y-2 rounded-md bg-background/60 px-2.5 py-2 text-[11px] leading-4 text-text-secondary">
+                        <p className="text-text-muted">{t(hint.key, hint.fallback)}</p>
                         {log.acceptedFindings.length > 0 && (
                           <div>
                             <p className="font-medium text-text-primary">
@@ -156,7 +191,7 @@ export function ValidationLogsSection({
                         {log.requiredRework.length > 0 && (
                           <div>
                             <p className="font-medium text-text-primary">
-                              {t('context.requiredRework', 'Required rework')}
+                              {t(reworkLabel.key, reworkLabel.fallback)}
                             </p>
                             <ul className="mt-1 list-disc space-y-1 pl-4">
                               {log.requiredRework.map((item, index) => (

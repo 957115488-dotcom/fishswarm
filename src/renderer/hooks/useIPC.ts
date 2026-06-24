@@ -1,5 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import { useAppStore } from '../store';
+import { swarmEventToMessage } from '../utils/swarm-event-message';
 import type {
   AppConfig,
   ClientEvent,
@@ -219,6 +220,16 @@ export function useIPC() {
           case 'role.validation':
             if (event.payload.sessionId) {
               store.addValidationLog(event.payload.sessionId, event.payload);
+            }
+            break;
+
+          case 'swarm.event':
+            if (event.payload.sessionId) {
+              store.addSwarmEvent(event.payload.sessionId, event.payload);
+              const swarmMessage = swarmEventToMessage(event.payload);
+              if (swarmMessage) {
+                store.addMessage(event.payload.sessionId, swarmMessage);
+              }
             }
             break;
 

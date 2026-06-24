@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "source": "lowcode-builder",
+  "blocks": [
+    {
+      "kind": "metric-card",
+      "displayName": "指标卡",
+      "description": "展示关键数值、趋势和状态，是管理看板最小可复用块。",
+      "defaultTitle": "关键指标",
+      "defaultData": {
+        "value": "128",
+        "delta": "+12%",
+        "label": "本周"
+      }
+    },
+    {
+      "kind": "module-card",
+      "displayName": "功能模块卡",
+      "description": "把一组业务能力封装成可拖拽的入口模块。",
+      "defaultTitle": "业务模块",
+      "defaultData": {
+        "status": "Ready",
+        "items": ["配置", "执行", "验收"]
+      }
+    },
+    {
+      "kind": "process-flow",
+      "displayName": "流程编排",
+      "description": "把业务流程、角色交接或自动化步骤表现为可排序流程。",
+      "defaultTitle": "流程设计",
+      "defaultData": {
+        "steps": ["输入", "生成", "校验", "发布"]
+      }
+    },
+    {
+      "kind": "api-connector",
+      "displayName": "接口连接器",
+      "description": "描述外部 API、MCP、数据库或文件存储的集成入口。",
+      "defaultTitle": "接口集成",
+      "defaultData": {
+        "method": "POST",
+        "endpoint": "/api/example",
+        "auth": "scoped-token"
+      }
+    },
+    {
+      "kind": "data-table",
+      "displayName": "数据表格",
+      "description": "展示实体、资产、任务或运行记录的结构化列表。",
+      "defaultTitle": "数据模型",
+      "defaultData": {
+        "columns": ["名称", "类型", "状态"],
+        "rows": [
+          ["Role", "entity", "active"],
+          ["Skill", "asset", "enabled"]
+        ]
+      }
+    },
+    {
+      "kind": "form-section",
+      "displayName": "表单区块",
+      "description": "收集模型字段、API 参数或流程配置。",
+      "defaultTitle": "配置表单",
+      "defaultData": {
+        "fields": ["名称", "描述", "负责人"]
+      }
+    }
+  ]
+}

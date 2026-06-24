@@ -1,4 +1,11 @@
 export type {
+  A2AAgentCard,
+  A2AAgentSkill,
+  A2AArtifact,
+  A2AMessage,
+  A2APart,
+  A2ATask,
+  A2ATaskState,
   IncubateRoleInput,
   IncubateRoleResult,
   RejectRoleCandidateInput,
@@ -18,6 +25,7 @@ export type {
   RoleLifecycleStatus,
   RoleNextAction,
   RoleRegistrySnapshot,
+  RoleRunArtifact,
   RoleRunFinding,
   RoleRunMode,
   RoleRunResult,
@@ -26,5 +34,8 @@ export type {
   RoleTriggerMode,
   SaveRoleCandidateInput,
   SaveRoleInput,
+  SwarmEvent,
+  SwarmEventStatus,
+  SwarmEventType,
   ValidationLog,
 } from '../../shared/ipc-types';

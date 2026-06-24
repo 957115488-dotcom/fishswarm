@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef, type ChangeEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   AlertCircle,
@@ -13,14 +13,234 @@ import {
   Globe,
   RefreshCw,
   X,
+  Layers3,
 } from 'lucide-react';
 import type { Skill, PluginCatalogItemV2, InstalledPlugin, PluginComponentKind } from '../../types';
 import { useAppStore } from '../../store';
 import { useAppDialog } from '../AppDialog';
+import { LowcodeModuleComposer } from '../lowcode/LowcodeModuleComposer';
 import { SettingsContentSection } from './shared';
 import type { LocalizedBanner } from './shared';
 
 const isElectron = typeof window !== 'undefined' && window.electronAPI !== undefined;
+
+interface DomainSkillDefinition {
+  id: string;
+  name: string;
+  aliases?: string[];
+  descriptionKey: string;
+}
+
+interface DomainSkillGroup {
+  id: string;
+  titleKey: string;
+  descriptionKey: string;
+  skills: DomainSkillDefinition[];
+}
+
+const DOMAIN_SKILL_GROUPS: DomainSkillGroup[] = [
+  {
+    id: 'dev-quality',
+    titleKey: 'skills.domainGroups.devQuality.title',
+    descriptionKey: 'skills.domainGroups.devQuality.description',
+    skills: [
+      {
+        id: 'artifacts-builder',
+        name: 'artifacts-builder',
+        aliases: ['web-artifacts-builder'],
+        descriptionKey: 'skills.domainSkillsList.artifactsBuilder.description',
+      },
+      {
+        id: 'd3js-visualization',
+        name: 'D3.js Visualization',
+        aliases: ['claude-d3js-skill', 'd3-visualization', 'd3-viz'],
+        descriptionKey: 'skills.domainSkillsList.d3jsVisualization.description',
+      },
+      {
+        id: 'pypict-claude-skill',
+        name: 'pypict-claude-skill',
+        aliases: ['pypict', 'pict-test-designer'],
+        descriptionKey: 'skills.domainSkillsList.pypict.description',
+      },
+      {
+        id: 'playwright-browser-automation',
+        name: 'Playwright Browser Automation',
+        aliases: ['playwright-skill', 'webapp-testing'],
+        descriptionKey: 'skills.domainSkillsList.playwright.description',
+      },
+    ],
+  },
+  {
+    id: 'cloud-infra',
+    titleKey: 'skills.domainGroups.cloudInfra.title',
+    descriptionKey: 'skills.domainGroups.cloudInfra.description',
+    skills: [
+      {
+        id: 'aws-skills',
+        name: 'aws-skills',
+        aliases: ['aws-agentic-ai'],
+        descriptionKey: 'skills.domainSkillsList.awsSkills.description',
+      },
+      {
+        id: 'langsmith-fetch',
+        name: 'LangSmith Fetch',
+        aliases: ['langsmith-fetch'],
+        descriptionKey: 'skills.domainSkillsList.langsmithFetch.description',
+      },
+      {
+        id: 'connect',
+        name: 'Connect',
+        aliases: ['connect'],
+        descriptionKey: 'skills.domainSkillsList.connect.description',
+      },
+      {
+        id: 'jules',
+        name: 'jules',
+        descriptionKey: 'skills.domainSkillsList.jules.description',
+      },
+    ],
+  },
+  {
+    id: 'low-code-runtime',
+    titleKey: 'skills.domainGroups.lowCodeRuntime.title',
+    descriptionKey: 'skills.domainGroups.lowCodeRuntime.description',
+    skills: [
+      {
+        id: 'lowcode-builder',
+        name: 'Low-code Builder',
+        aliases: ['Lowcode', 'desktop runtime', 'low-code-platform', 'lowcode-builder'],
+        descriptionKey: 'skills.domainSkillsList.lowcodeBuilder.description',
+      },
+    ],
+  },
+  {
+    id: 'data-research',
+    titleKey: 'skills.domainGroups.dataResearch.title',
+    descriptionKey: 'skills.domainGroups.dataResearch.description',
+    skills: [
+      {
+        id: 'csv-data-summarizer',
+        name: 'CSV Data Summarizer',
+        aliases: ['csv-data-summarizer-claude-skill'],
+        descriptionKey: 'skills.domainSkillsList.csvDataSummarizer.description',
+      },
+      {
+        id: 'postgres',
+        name: 'postgres',
+        descriptionKey: 'skills.domainSkillsList.postgres.description',
+      },
+      {
+        id: 'deep-research',
+        name: 'deep-research',
+        descriptionKey: 'skills.domainSkillsList.deepResearch.description',
+      },
+      {
+        id: 'reddit-fetch',
+        name: 'reddit-fetch',
+        descriptionKey: 'skills.domainSkillsList.redditFetch.description',
+      },
+    ],
+  },
+  {
+    id: 'security-mobile',
+    titleKey: 'skills.domainGroups.securityMobile.title',
+    descriptionKey: 'skills.domainGroups.securityMobile.description',
+    skills: [
+      {
+        id: 'ffuf-web-fuzzing',
+        name: 'FFUF Web Fuzzing',
+        aliases: ['ffuf-claude-skill', 'ffuf_claude_skill'],
+        descriptionKey: 'skills.domainSkillsList.ffufWebFuzzing.description',
+      },
+      {
+        id: 'move-code-quality-skill',
+        name: 'move-code-quality-skill',
+        aliases: ['move-code-quality'],
+        descriptionKey: 'skills.domainSkillsList.moveCodeQuality.description',
+      },
+      {
+        id: 'ios-simulator',
+        name: 'iOS Simulator',
+        aliases: ['ios-simulator-skill'],
+        descriptionKey: 'skills.domainSkillsList.iosSimulator.description',
+      },
+    ],
+  },
+  {
+    id: 'business-marketing',
+    titleKey: 'skills.domainGroups.businessMarketing.title',
+    descriptionKey: 'skills.domainGroups.businessMarketing.description',
+    skills: [
+      {
+        id: 'brand-guidelines',
+        name: 'Brand Guidelines',
+        descriptionKey: 'skills.domainSkillsList.brandGuidelines.description',
+      },
+      {
+        id: 'competitive-ads-extractor',
+        name: 'Competitive Ads Extractor',
+        descriptionKey: 'skills.domainSkillsList.competitiveAdsExtractor.description',
+      },
+      {
+        id: 'domain-name-brainstormer',
+        name: 'Domain Name Brainstormer',
+        descriptionKey: 'skills.domainSkillsList.domainNameBrainstormer.description',
+      },
+      {
+        id: 'internal-comms',
+        name: 'Internal Comms',
+        descriptionKey: 'skills.domainSkillsList.internalComms.description',
+      },
+      {
+        id: 'lead-research-assistant',
+        name: 'Lead Research Assistant',
+        descriptionKey: 'skills.domainSkillsList.leadResearchAssistant.description',
+      },
+    ],
+  },
+  {
+    id: 'agent-extension',
+    titleKey: 'skills.domainGroups.agentExtension.title',
+    descriptionKey: 'skills.domainGroups.agentExtension.description',
+    skills: [
+      {
+        id: 'prompt-engineering',
+        name: 'prompt-engineering',
+        descriptionKey: 'skills.domainSkillsList.promptEngineering.description',
+      },
+      {
+        id: 'skill-seekers',
+        name: 'Skill Seekers',
+        aliases: ['skill-seekers', 'Skill_Seekers', 'skill-builder'],
+        descriptionKey: 'skills.domainSkillsList.skillSeekers.description',
+      },
+      {
+        id: 'claude-code-terminal-title',
+        name: 'Claude Code Terminal Title',
+        aliases: ['claude-code-terminal-title', 'terminal-title'],
+        descriptionKey: 'skills.domainSkillsList.terminalTitle.description',
+      },
+    ],
+  },
+];
+
+function normalizeSkillLookupValue(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function getDomainSkillLookupKeys(skill: DomainSkillDefinition): string[] {
+  return [skill.id, skill.name, ...(skill.aliases || [])]
+    .map(normalizeSkillLookupValue)
+    .filter(Boolean);
+}
+
+function getInstalledSkillLookupKeys(skill: Skill): string[] {
+  const sourceFreeId = skill.id.replace(/^(builtin|global|project)-/, '');
+  return [skill.name, sourceFreeId].map(normalizeSkillLookupValue).filter(Boolean);
+}
 
 export function SettingsSkills({ isActive }: { isActive: boolean }) {
   const { t } = useTranslation();
@@ -46,6 +266,7 @@ export function SettingsSkills({ isActive }: { isActive: boolean }) {
   const [error, setError] = useState<LocalizedBanner | null>(null);
   const [success, setSuccess] = useState<LocalizedBanner | null>(null);
   const [builtinSkillsMaxHeight, setBuiltinSkillsMaxHeight] = useState<number | undefined>();
+  const [activeDomainId, setActiveDomainId] = useState(DOMAIN_SKILL_GROUPS[0]?.id || '');
   const pluginToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const componentOrder: PluginComponentKind[] = ['skills', 'commands', 'agents', 'hooks', 'mcp'];
 
@@ -344,6 +565,75 @@ export function SettingsSkills({ isActive }: { isActive: boolean }) {
     }
   }
 
+  function getInstalledSkillForDomainSkill(
+    domainSkill: DomainSkillDefinition,
+    installedSkillsByKey: Map<string, Skill>
+  ): Skill | undefined {
+    return getDomainSkillLookupKeys(domainSkill)
+      .map((key) => installedSkillsByKey.get(key))
+      .find((skill): skill is Skill => Boolean(skill));
+  }
+
+  async function handleInstallAndEnableDomainSkill(
+    domainSkill: DomainSkillDefinition,
+    installedSkill?: Skill
+  ) {
+    setIsLoading(true);
+    try {
+      if (installedSkill) {
+        await window.electronAPI.skills.setEnabled(installedSkill.id, !installedSkill.enabled);
+      } else {
+        await window.electronAPI.skills.installBundledDomainSkill(domainSkill.id);
+      }
+      await loadSkills();
+      setError(null);
+    } catch (err) {
+      setError({ text: err instanceof Error ? err.message : t('skills.failedToInstall') });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function handleSetDomainEnabled(group: DomainSkillGroup, enabled: boolean) {
+    setIsLoading(true);
+    try {
+      if (enabled) {
+        for (const domainSkill of group.skills) {
+          const installedSkill = getInstalledSkillForDomainSkill(
+            domainSkill,
+            installedDomainSkillsByKey
+          );
+          if (installedSkill) {
+            if (!installedSkill.enabled) {
+              await window.electronAPI.skills.setEnabled(installedSkill.id, true);
+            }
+          } else {
+            await window.electronAPI.skills.installBundledDomainSkill(domainSkill.id);
+          }
+        }
+      } else {
+        const installedSkills = group.skills
+          .map((domainSkill) =>
+            getInstalledSkillForDomainSkill(domainSkill, installedDomainSkillsByKey)
+          )
+          .filter((skill): skill is Skill => Boolean(skill));
+
+        await Promise.all(
+          installedSkills
+            .filter((skill) => skill.enabled)
+            .map((skill) => window.electronAPI.skills.setEnabled(skill.id, false))
+        );
+      }
+
+      await loadSkills();
+      setError(null);
+    } catch (err) {
+      setError({ text: err instanceof Error ? err.message : t('skills.failedToInstall') });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   async function handleInstallPlugin(plugin: PluginCatalogItemV2) {
     const installTarget = plugin.pluginId ?? plugin.name;
     setPluginActionKey(`install:${installTarget}`);
@@ -420,7 +710,45 @@ export function SettingsSkills({ isActive }: { isActive: boolean }) {
   const builtinSkills = skills
     .filter((s) => s.type === 'builtin')
     .sort((a, b) => a.createdAt - b.createdAt || a.name.localeCompare(b.name));
-  const customSkills = skills.filter((s) => s.type !== 'builtin');
+  const domainSkillLookupKeys = useMemo(() => {
+    const keys = new Set<string>();
+    DOMAIN_SKILL_GROUPS.forEach((group) =>
+      group.skills.forEach((domainSkill) => {
+        getDomainSkillLookupKeys(domainSkill).forEach((key) => keys.add(key));
+      })
+    );
+    return keys;
+  }, []);
+  const installedDomainSkillsByKey = useMemo(() => {
+    const next = new Map<string, Skill>();
+    skills
+      .filter((skill) => skill.type !== 'builtin')
+      .forEach((skill) => {
+        getInstalledSkillLookupKeys(skill).forEach((key) => {
+          if (domainSkillLookupKeys.has(key) && !next.has(key)) {
+            next.set(key, skill);
+          }
+        });
+      });
+    return next;
+  }, [domainSkillLookupKeys, skills]);
+  const domainManagedSkillIds = useMemo(() => {
+    const ids = new Set<string>();
+    skills
+      .filter((skill) => skill.type !== 'builtin')
+      .forEach((skill) => {
+        const isDomainSkill = getInstalledSkillLookupKeys(skill).some((key) =>
+          domainSkillLookupKeys.has(key)
+        );
+        if (isDomainSkill) {
+          ids.add(skill.id);
+        }
+      });
+    return ids;
+  }, [domainSkillLookupKeys, skills]);
+  const customSkills = skills.filter(
+    (s) => s.type !== 'builtin' && !domainManagedSkillIds.has(s.id)
+  );
 
   useEffect(() => {
     const list = builtinSkillsListRef.current;
@@ -529,6 +857,31 @@ export function SettingsSkills({ isActive }: { isActive: boolean }) {
               isLoading={isLoading}
             />
           ))}
+        </div>
+      </SettingsContentSection>
+
+      <SettingsContentSection
+        title={t('skills.domainSkills')}
+        description={t('skills.domainSkillsDesc')}
+      >
+        <div className="overflow-hidden rounded-lg border border-border bg-surface">
+          <DomainSkillSelectorPanel
+            groups={DOMAIN_SKILL_GROUPS}
+            activeDomainId={activeDomainId}
+            installedSkillsByKey={installedDomainSkillsByKey}
+            isLoading={isLoading}
+            onSelectDomain={setActiveDomainId}
+            onSetDomainEnabled={handleSetDomainEnabled}
+          />
+          <DomainSkillDetailPanel
+            group={
+              DOMAIN_SKILL_GROUPS.find((group) => group.id === activeDomainId) ||
+              DOMAIN_SKILL_GROUPS[0]
+            }
+            installedSkillsByKey={installedDomainSkillsByKey}
+            isLoading={isLoading}
+            onToggleSkill={handleInstallAndEnableDomainSkill}
+          />
         </div>
       </SettingsContentSection>
 
@@ -796,6 +1149,208 @@ export function SettingsSkills({ isActive }: { isActive: boolean }) {
             <CheckCircle className="w-4 h-4 mt-0.5 shrink-0" />
             <span>{pluginToastMessage}</span>
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DomainSkillSelectorPanel({
+  groups,
+  activeDomainId,
+  installedSkillsByKey,
+  isLoading,
+  onSelectDomain,
+  onSetDomainEnabled,
+}: {
+  groups: DomainSkillGroup[];
+  activeDomainId: string;
+  installedSkillsByKey: Map<string, Skill>;
+  isLoading: boolean;
+  onSelectDomain: (domainId: string) => void;
+  onSetDomainEnabled: (group: DomainSkillGroup, enabled: boolean) => void;
+}) {
+  const { t } = useTranslation();
+
+  return (
+    <div className="border-b border-border bg-surface-muted/30 px-3 py-3">
+      <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-text-muted">
+        <span className="inline-flex items-center gap-1 rounded-md bg-surface px-2.5 py-1">
+          <Layers3 className="h-3.5 w-3.5" />
+          {t('skills.domainGroupsCount', { count: groups.length })}
+        </span>
+        <span>{t('skills.domainSelectHint')}</span>
+      </div>
+      <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
+        {groups.map((group) => {
+          const installedSkills = group.skills
+            .map((domainSkill) =>
+              getDomainSkillLookupKeys(domainSkill)
+                .map((key) => installedSkillsByKey.get(key))
+                .find((skill): skill is Skill => Boolean(skill))
+            )
+            .filter((skill): skill is Skill => Boolean(skill));
+          const enabledCount = installedSkills.filter((skill) => skill.enabled).length;
+          const isChecked = installedSkills.length > 0 && enabledCount === installedSkills.length;
+          const isIndeterminate = enabledCount > 0 && enabledCount < installedSkills.length;
+          const isActive = activeDomainId === group.id;
+
+          return (
+            <div
+              key={group.id}
+              className={
+                'flex min-h-[54px] items-center gap-3 rounded-md border px-3 py-2 transition-colors ' +
+                (isActive
+                  ? 'border-accent bg-accent/5'
+                  : 'border-border-subtle bg-surface hover:border-accent/60')
+              }
+            >
+              <input
+                type="checkbox"
+                checked={isChecked}
+                disabled={isLoading}
+                ref={(element) => {
+                  if (element) element.indeterminate = isIndeterminate;
+                }}
+                onClick={(event) => event.stopPropagation()}
+                onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                  event.stopPropagation();
+                  onSetDomainEnabled(group, !isChecked);
+                }}
+                className="h-4 w-4 shrink-0 cursor-pointer rounded border-border accent-accent focus:ring-accent disabled:cursor-wait disabled:opacity-60"
+                title={t('skills.domainEnableAll')}
+              />
+              <button
+                type="button"
+                onClick={() => onSelectDomain(group.id)}
+                className="min-w-0 flex-1 text-left"
+              >
+                <div className="truncate text-sm font-medium text-text-primary">
+                  {t(group.titleKey)}
+                </div>
+                <div className="mt-0.5 text-xs text-text-muted">
+                  {t('skills.domainEnabledRatio', {
+                    enabled: enabledCount,
+                    installed: installedSkills.length,
+                    total: group.skills.length,
+                  })}
+                </div>
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function DomainSkillDetailPanel({
+  group,
+  installedSkillsByKey,
+  isLoading,
+  onToggleSkill,
+}: {
+  group: DomainSkillGroup | undefined;
+  installedSkillsByKey: Map<string, Skill>;
+  isLoading: boolean;
+  onToggleSkill: (domainSkill: DomainSkillDefinition, installedSkill?: Skill) => void;
+}) {
+  const { t } = useTranslation();
+
+  if (!group) return null;
+
+  return (
+    <div className="px-3 py-4">
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold text-text-primary">{t(group.titleKey)}</h3>
+          <p className="mt-1 text-xs leading-5 text-text-muted">{t(group.descriptionKey)}</p>
+        </div>
+        <span className="shrink-0 rounded-md bg-surface-muted px-2 py-1 text-xs text-text-muted">
+          {group.skills.length}
+        </span>
+      </div>
+      <div className="max-h-[294px] space-y-2 overflow-y-auto pr-2">
+        {group.skills.map((domainSkill) => {
+          const installedSkill = getDomainSkillLookupKeys(domainSkill)
+            .map((key) => installedSkillsByKey.get(key))
+            .find((skill): skill is Skill => Boolean(skill));
+          const isInstalled = Boolean(installedSkill);
+          const rowClassName = isInstalled
+            ? 'border-border-subtle bg-surface hover:border-accent hover:bg-accent/5'
+            : 'border-border-muted bg-surface-muted/30';
+          const badgeClassName = installedSkill?.enabled
+            ? 'bg-success/10 text-success'
+            : isInstalled
+              ? 'bg-surface-active text-text-secondary'
+              : 'bg-warning/10 text-warning';
+          const actionTitle = isInstalled
+            ? installedSkill?.enabled
+              ? t('common.disable')
+              : t('common.enable')
+            : t('skills.domainInstallAndEnable');
+
+          return (
+            <div
+              key={domainSkill.id}
+              className={
+                'min-h-[88px] rounded-md border px-3 py-3 transition-colors ' + rowClassName
+              }
+            >
+              <div className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  checked={installedSkill?.enabled || false}
+                  disabled={isLoading}
+                  onChange={() => onToggleSkill(domainSkill, installedSkill)}
+                  className="mt-1 h-4 w-4 shrink-0 cursor-pointer rounded border-border accent-accent focus:ring-accent disabled:cursor-wait disabled:opacity-60"
+                  title={actionTitle}
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm font-medium text-text-primary">
+                      {domainSkill.name}
+                    </span>
+                    <span className={'rounded px-2 py-0.5 text-xs ' + badgeClassName}>
+                      {installedSkill?.enabled
+                        ? t('skills.skillEnabled')
+                        : isInstalled
+                          ? t('skills.skillDisabled')
+                          : t('skills.notInstalled')}
+                    </span>
+                  </div>
+                  <p className="mt-1 line-clamp-2 text-xs leading-5 text-text-muted">
+                    {t(domainSkill.descriptionKey)}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onToggleSkill(domainSkill, installedSkill)}
+                  disabled={isLoading}
+                  className={
+                    'shrink-0 rounded-lg p-2 transition-colors ' +
+                    (installedSkill?.enabled
+                      ? 'bg-success/10 text-success hover:bg-success/20'
+                      : isInstalled
+                        ? 'bg-surface-muted text-text-muted hover:bg-surface-active'
+                        : 'bg-accent/10 text-accent hover:bg-accent/20')
+                  }
+                  title={actionTitle}
+                >
+                  {installedSkill?.enabled ? (
+                    <Power className="h-4 w-4" />
+                  ) : (
+                    <PowerOff className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {group.id === 'low-code-runtime' && (
+        <div className="mt-4">
+          <LowcodeModuleComposer />
         </div>
       )}
     </div>

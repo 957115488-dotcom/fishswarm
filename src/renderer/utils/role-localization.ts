@@ -8,6 +8,10 @@ interface RoleNamePair {
 const ROLE_NAMES_BY_ID: Record<string, RoleNamePair> = {
   'product-strategist': { en: 'Product Strategist', zh: '\u4ea7\u54c1\u7b56\u7565\u5e08' },
   'engineering-architect': { en: 'Engineering Architect', zh: '\u5de5\u7a0b\u67b6\u6784\u5e08' },
+  'implementation-engineer': {
+    en: 'Implementation Engineer',
+    zh: '\u5b9e\u65bd\u5de5\u7a0b\u5e08',
+  },
   'product-designer': { en: 'Product Designer', zh: '\u4ea7\u54c1\u8bbe\u8ba1\u5e08' },
   'developer-experience': {
     en: 'Developer Experience Lead',
@@ -19,6 +23,7 @@ const ROLE_NAMES_BY_ID: Record<string, RoleNamePair> = {
     zh: 'QA / \u53d1\u5e03\u8d1f\u8d23\u4eba',
   },
   'role-incubator': { en: 'Role Incubator', zh: '\u89d2\u8272\u5b75\u5316\u5668' },
+  'handoff-compressor': { en: 'Handoff Compressor', zh: '\u4ea4\u4ed8\u538b\u7f29\u5458' },
   'database-migration-specialist': {
     en: 'Database Migration Specialist',
     zh: '\u6570\u636e\u5e93\u8fc1\u79fb\u4e13\u5bb6',
@@ -80,8 +85,36 @@ export function getLocalizedRoleName(
 export function localizeRoleText(text: string, language?: string): string {
   if (!text) return text;
   const locale = roleLocale(language);
-  return replacementPairs(locale).reduce(
+  const roleLocalized = replacementPairs(locale).reduce(
     (value, [source, target]) => value.replace(new RegExp(escapeRegExp(source), 'g'), target),
     text
   );
+  if (locale !== 'zh') return roleLocalized;
+  return localizeChineseRuntimeText(roleLocalized);
+}
+
+export function localizeSpeakerName(name: string, language?: string): string {
+  if (roleLocale(language) !== 'zh') return name;
+  if (name === 'xiaoyu') return '小鱼';
+  return localizeRoleText(name, language);
+}
+
+function localizeChineseRuntimeText(text: string): string {
+  return text
+    .replace(/Xiaoyu/g, '小鱼')
+    .replace(/returned validation:/g, '返回验收结果：')
+    .replace(/validation failed:/g, '验收失败：')
+    .replace(/ failed:/g, ' 执行失败：')
+    .replace(/Validation needs revision:/g, '验收需要返工：')
+    .replace(/Validation passed:/g, '验收通过：')
+    .replace(
+      /Validation blocked by external input or runtime constraint:/g,
+      '验收被外部输入或运行时限制阻塞：'
+    )
+    .replace(/Role response is empty\./g, '角色没有返回内容。')
+    .replace(/Role response is too large\./g, '角色返回内容过大，请压缩为结构化摘要后重试。')
+    .replace(/Invalid role result JSON:/g, '角色返回的 JSON 无法解析：')
+    .replace(/No role run summaries\./g, '没有角色运行摘要。')
+    .replace(/\.\.\.\[truncated\]/g, '...[已截断]')
+    .replace(/：\s+/g, '：');
 }

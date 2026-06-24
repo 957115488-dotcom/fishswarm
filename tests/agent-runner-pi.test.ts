@@ -4,6 +4,13 @@ import path from 'node:path';
 
 const agentRunnerPath = path.resolve(process.cwd(), 'src/main/claude/agent-runner.ts');
 const agentRunnerContent = readFileSync(agentRunnerPath, 'utf8');
+const roleRuntimeStorePath = path.resolve(process.cwd(), 'src/main/roles/role-runtime-store.ts');
+const roleRuntimeStoreContent = readFileSync(roleRuntimeStorePath, 'utf8');
+const roleRuntimeServicePath = path.resolve(
+  process.cwd(),
+  'src/main/roles/role-runtime-service.ts'
+);
+const roleRuntimeServiceContent = readFileSync(roleRuntimeServicePath, 'utf8');
 
 describe('ClaudeAgentRunner FishSwarm SDK integration', () => {
   it('avoids dynamic re-import shadowing for config store singletons', () => {
@@ -131,5 +138,90 @@ describe('ClaudeAgentRunner FishSwarm SDK integration', () => {
       'Do NOT create, write, or edit files unless the user explicitly asks'
     );
     expect(agentRunnerContent).toContain('START DOING IT');
+  });
+
+  it('enforces mandatory role delegation instead of advisory role output', () => {
+    expect(agentRunnerContent).toContain('XIAOYU FIRST: You are Xiaoyu');
+    expect(agentRunnerContent).toContain('two-step visible protocol');
+    expect(agentRunnerContent).toContain('After every role handoff');
+    expect(agentRunnerContent).toContain('send it back for rework');
+    expect(agentRunnerContent).toContain('Implementation Engineer');
+    expect(agentRunnerContent).toContain('IMPLEMENTATION EXECUTION ROLE ACTIVE');
+    expect(agentRunnerContent).toContain('Xiaoyu must not personally write files');
+    expect(agentRunnerContent).toContain('Xiaoyu must not personally claim the execution');
+    expect(agentRunnerContent).toContain("this.sendToRenderer({ type: 'swarm.event'");
+    expect(agentRunnerContent).toContain('emitRoleThinkingSwarmEvent');
+    expect(agentRunnerContent).toContain("type: 'role.thinking'");
+    expect(roleRuntimeStoreContent).toContain('这个任务交给你处理');
+    expect(roleRuntimeStoreContent).toContain('收到');
+    expect(roleRuntimeStoreContent).toContain('预计交付给你');
+    expect(roleRuntimeStoreContent).toContain('验收通过');
+    expect(roleRuntimeStoreContent).toContain('需要返工');
+    expect(roleRuntimeServiceContent).toContain('这版我先打回');
+    expect(roleRuntimeServiceContent).toContain('先不交给下一个角色');
+    expect(agentRunnerContent).not.toContain('ROLE_DIALOGUE_MESSAGE_DELAY_MS');
+    expect(agentRunnerContent).not.toContain('splitVisibleRoleDialogueMessage');
+    expect(agentRunnerContent).not.toContain('queueRoleDialogueMessages');
+    expect(agentRunnerContent).not.toContain('flushRoleDialogueQueue');
+    expect(agentRunnerContent).toContain('Failed Xiaoyu acceptance logs');
+    expect(agentRunnerContent).toContain('must not present downstream plans');
+    expect(agentRunnerContent).toContain('emitRunResult: (result, handoff)');
+    expect(agentRunnerContent).toContain('Internal role result');
+    expect(agentRunnerContent).toContain('## Role Orchestration - Mandatory Delegation');
+    expect(agentRunnerContent).toContain(
+      '## Internal Role Coordination Digest - Mandatory Delegation'
+    );
+    expect(agentRunnerContent).toContain(
+      'MANDATORY XIAOYU COORDINATOR MODE: You are Xiaoyu, the user-facing coordinator.'
+    );
+    expect(agentRunnerContent).toContain('Do not dump raw role notes');
+    expect(agentRunnerContent).toContain(
+      'Do not independently perform substantive implementation, research, architecture, review, or file-operation work'
+    );
+    expect(agentRunnerContent).toContain(
+      'While this gate is not passed, do not call write/edit/bash/read/list tools'
+    );
+    expect(agentRunnerContent).toContain('Role outputs are binding task contributions.');
+    expect(agentRunnerContent).not.toContain('Role outputs are advisory.');
+  });
+
+  it('blocks normal fallback when the role runtime fails', () => {
+    expect(agentRunnerContent).toContain('function buildRoleRuntimeFailurePrompt');
+    expect(agentRunnerContent).toContain('## Role Collaboration Gate - Failed');
+    expect(agentRunnerContent).toContain(
+      'Because the role runtime failed, do not continue with implementation, research, architecture, review, file edits, or tool-use planning as the main AI.'
+    );
+    expect(agentRunnerContent).toContain(
+      "logWarn('[ClaudeAgentRunner] Role runtime failed; returning delegation gate prompt:'"
+    );
+    expect(agentRunnerContent).toContain('prompt: buildRoleRuntimeFailurePrompt(summary)');
+    expect(agentRunnerContent).not.toContain(
+      "logWarn('[ClaudeAgentRunner] Role runtime failed; continuing normal run:'"
+    );
+  });
+
+  it('runs delegated role workers through complete agent sessions', () => {
+    expect(agentRunnerContent).toContain('runDelegatedRoleAgentSession');
+    expect(agentRunnerContent).toContain('createAgentSession');
+    expect(agentRunnerContent).toContain('buildRoleAgentAppendSystemPrompt');
+    expect(agentRunnerContent).toContain('ROLE_AGENT_SESSION_TIMEOUT_MS');
+    expect(agentRunnerContent).not.toContain('runXiaoyuRoleModelTurn');
+  });
+
+  it('surfaces delegated role thinking as separate thinking messages', () => {
+    expect(agentRunnerContent).toContain('function buildVisibleRoleThinkingText');
+    expect(agentRunnerContent).toContain('emitRoleThinkingSwarmEvent');
+    expect(agentRunnerContent).toContain('appendRoleThinking');
+    expect(agentRunnerContent).toContain('flushRoleThinking');
+    expect(agentRunnerContent).toContain("type: 'role.thinking'");
+    expect(agentRunnerContent).toContain("this.sendToRenderer({ type: 'swarm.event'");
+  });
+
+  it('prevents the coordinator from pretending to restart roles mid-response', () => {
+    expect(agentRunnerContent).toContain(
+      'If a role found a problem that can be handled with the available role outputs'
+    );
+    expect(agentRunnerContent).toContain('which specialist role should handle it next');
+    expect(agentRunnerContent).toContain('Use this compact internal digest');
   });
 });

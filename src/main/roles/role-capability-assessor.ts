@@ -69,7 +69,16 @@ export const CAPABILITY_DEFINITIONS: CapabilityDefinition[] = [
   {
     id: 'browser-automation',
     label: 'browser automation',
-    keywords: ['browser', 'automation', 'web form', 'click', 'screenshot', '浏览器', '网页', '截图'],
+    keywords: [
+      'browser',
+      'automation',
+      'web form',
+      'click',
+      'screenshot',
+      '浏览器',
+      '网页',
+      '截图',
+    ],
     specialistRoleIds: ['browser-automation-specialist'],
   },
   {
@@ -132,11 +141,18 @@ export function assessRoleCapabilityAdequacy(
       }
     }
 
-    let score = requiredCapabilities.length === 0 ? 0 : matchedCapabilities.length / requiredCapabilities.length;
+    let score =
+      requiredCapabilities.length === 0
+        ? 0
+        : matchedCapabilities.length / requiredCapabilities.length;
     if (requiredCapabilities.length > 0 && isBroadRole(role.id)) {
       score = Math.min(score, 0.55);
     }
-    if (requiredCapabilities.length > 0 && matchedCapabilities.length === 0 && isBroadRole(role.id)) {
+    if (
+      requiredCapabilities.length > 0 &&
+      matchedCapabilities.length === 0 &&
+      isBroadRole(role.id)
+    ) {
       score = 0.35;
     }
 
@@ -149,7 +165,9 @@ export function assessRoleCapabilityAdequacy(
       reasons:
         matchedCapabilities.length > 0
           ? [`Matched ${matchedCapabilities.join(', ')}.`]
-          : [`Missing specialist capability for ${requiredCapabilities.map((item) => item.label).join(', ') || 'task specialist'}.`],
+          : [
+              `Missing specialist capability for ${requiredCapabilities.map((item) => item.label).join(', ') || 'task specialist'}.`,
+            ],
     };
   });
   const bestScore = routedRoleScores.reduce((best, item) => Math.max(best, item.score), 0);
@@ -182,5 +200,10 @@ export function capabilityLabelsFromText(text: string): string[] {
 }
 
 function isBroadRole(roleId: string): boolean {
-  return ['engineering-architect', 'product-strategist', 'developer-experience'].includes(roleId);
+  return [
+    'engineering-architect',
+    'implementation-engineer',
+    'product-strategist',
+    'developer-experience',
+  ].includes(roleId);
 }

@@ -16,6 +16,9 @@
  */
 
 import { describe, expect, it, vi } from 'vitest';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 
 // agent-runner.ts pulls a wide tree of Electron + native deps via its
 // constructor; we only need a pure helper, so stub the heaviest imports.
@@ -29,11 +32,18 @@ vi.mock('../../main/claude/shared-auth', () => ({
   ModelRegistry: vi.fn(),
 }));
 
-import type { ContentBlock } from '../../renderer/types';
+import type { ContentBlock, Message, Session } from '../../renderer/types';
 import {
+  buildShortRoleContext,
   getColdStartHistoryTokenBudget,
   serializeMessageContentForHistory,
+  shouldStopMainRunAfterRoleRuntime,
 } from '../../main/claude/agent-runner';
+import type {
+  RoleRuntimeExecutionResult,
+  RoleRunResult,
+  ValidationLog,
+} from '../../shared/ipc-types';
 
 describe('getColdStartHistoryTokenBudget', () => {
   it('caps OpenAI-compatible cold-start history below common TPM limits', () => {
@@ -48,6 +58,86 @@ describe('getColdStartHistoryTokenBudget', () => {
 
   it('allows a larger but bounded budget for non-OpenAI remote providers', () => {
     expect(getColdStartHistoryTokenBudget('anthropic', 'anthropic', 200000)).toBe(24000);
+  });
+});
+
+describe('shouldStopMainRunAfterRoleRuntime', () => {
+  const makeRun = (
+    runId: string,
+    roleId: string,
+    status: RoleRunResult['status']
+  ): RoleRunResult => ({
+    runId,
+    roleId,
+    roleName: roleId,
+    taskId: 'task-1',
+    sessionId: 's1',
+    status,
+    summary: `${roleId} ${status}`,
+    findings: [],
+    decisions: [],
+    nextActions: [],
+    validationHints: [],
+    startedAt: '2026-06-21T00:00:00.000Z',
+    completedAt: '2026-06-21T00:00:01.000Z',
+  });
+
+  const makeValidation = (
+    validationId: string,
+    verdict: ValidationLog['verdict'],
+    checkedRoleRunIds: string[]
+  ): ValidationLog => ({
+    validationId,
+    taskId: 'task-1',
+    sessionId: 's1',
+    validatorRoleId: 'qa-release-steward',
+    validatorRoleName: 'QA / Release Steward',
+    checkedRoleRunIds,
+    verdict,
+    summary: `${verdict} ${checkedRoleRunIds.join(',')}`,
+    acceptedFindings: [],
+    requiredRework: [],
+    createdAt: '2026-06-21T00:00:02.000Z',
+  });
+
+  const makeExecution = (
+    results: RoleRunResult[],
+    validationLogs: ValidationLog[] = []
+  ): RoleRuntimeExecutionResult => ({
+    taskId: 'task-1',
+    routedRoleIds: ['product-strategist'],
+    results,
+    validationLogs,
+    incubationStatus: 'no_gap',
+  });
+
+  it('stops the main model when the latest role handoff still needs rework', () => {
+    expect(
+      shouldStopMainRunAfterRoleRuntime(
+        makeExecution([makeRun('run-1', 'product-strategist', 'needs_revision')])
+      )
+    ).toBe(true);
+  });
+
+  it('ignores old failed validation once the same role has a later passed handoff', () => {
+    const execution = makeExecution(
+      [
+        makeRun('run-1', 'product-strategist', 'needs_revision'),
+        makeRun('run-2', 'product-strategist', 'completed'),
+      ],
+      [makeValidation('validation-1', 'needs_revision', ['run-1'])]
+    );
+
+    expect(shouldStopMainRunAfterRoleRuntime(execution)).toBe(false);
+  });
+
+  it('stops when validation rejects the latest terminal handoff', () => {
+    const execution = makeExecution(
+      [makeRun('run-2', 'product-strategist', 'completed')],
+      [makeValidation('validation-2', 'needs_revision', ['run-2'])]
+    );
+
+    expect(shouldStopMainRunAfterRoleRuntime(execution)).toBe(true);
   });
 });
 
@@ -259,5 +349,65 @@ describe('serializeMessageContentForHistory', () => {
     expect(serializeMessageContentForHistory(blocks)).toBe(
       '<tool_result tool_use_id="call-3"></tool_result>'
     );
+  });
+});
+
+describe('buildShortRoleContext', () => {
+  it('carries recent tool-created file paths into role worker context', () => {
+    const prdName = 'PRD-\u684c\u5ba0\u5e94\u7528.md';
+    const cwd = fs.mkdtempSync(path.join(os.tmpdir(), 'fishswarm-role-context-'));
+    fs.writeFileSync(
+      path.join(cwd, prdName),
+      [
+        '# PRD',
+        '目标：实现桌宠应用。',
+        '核心功能：桌宠展示、交互动作、设置入口。',
+        '验收标准：启动后展示桌宠并可响应点击。',
+      ].join('\n'),
+      'utf-8'
+    );
+    const session: Session = {
+      id: 's1',
+      title: 'desktop pet app',
+      status: 'running',
+      cwd,
+      mountedPaths: [],
+      allowedTools: [],
+      memoryEnabled: false,
+      createdAt: 0,
+      updatedAt: 0,
+    };
+    const messages: Message[] = [
+      {
+        id: 'm1',
+        sessionId: 's1',
+        role: 'assistant',
+        timestamp: 1,
+        content: [
+          {
+            type: 'tool_result',
+            toolUseId: 'tool-1',
+            content: `File written: ${path.join(cwd, prdName)}`,
+          },
+        ],
+      },
+      {
+        id: 'm2',
+        sessionId: 's1',
+        role: 'user',
+        timestamp: 2,
+        content: [{ type: 'text', text: 'Use that PRD to start the dev doc.' }],
+      },
+    ];
+
+    const context = buildShortRoleContext(session, messages);
+
+    expect(context).toContain('Recorded workspace evidence');
+    expect(context).toContain('Recent workspace file excerpts');
+    expect(context).toContain(prdName);
+    expect(context).toContain('核心功能');
+    expect(context).toContain('source: tool result');
+    expect(context).toContain('Role workers run as complete agent sessions');
+    expect(context).toContain('do not claim the file is absent from disk');
   });
 });

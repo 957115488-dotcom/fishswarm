@@ -31,6 +31,7 @@ const STATUS_LABELS: Record<RoleLifecycleEvent['status'], string> = {
   validating: 'context.roleStatus.validating',
   accepted: 'context.roleStatus.accepted',
   needs_revision: 'context.roleStatus.needsRevision',
+  blocked: 'context.roleStatus.blocked',
   skipped: 'context.roleStatus.skipped',
   failed: 'context.roleStatus.failed',
 };
@@ -49,6 +50,7 @@ const STATUS_FALLBACKS: Record<RoleLifecycleEvent['status'], string> = {
   validating: 'Validating',
   accepted: 'Accepted',
   needs_revision: 'Needs revision',
+  blocked: 'External input needed',
   skipped: 'Skipped',
   failed: 'Failed',
 };
@@ -59,14 +61,21 @@ function statusIcon(status: RoleLifecycleEvent['status']) {
   if (status === 'candidate_ready') return CheckCircle2;
   if (status === 'candidate_blocked') return AlertTriangle;
   if (status === 'mounting_handbook') return BookOpen;
-  if (status === 'failed' || status === 'needs_revision') return AlertTriangle;
+  if (status === 'failed' || status === 'needs_revision' || status === 'blocked') {
+    return AlertTriangle;
+  }
   if (status === 'returned' || status === 'accepted') return CheckCircle2;
   if (status === 'working' || status === 'validating') return Loader2;
   return UsersRound;
 }
 
 function statusClass(status: RoleLifecycleEvent['status']): string {
-  if (status === 'failed' || status === 'needs_revision' || status === 'candidate_blocked') {
+  if (
+    status === 'failed' ||
+    status === 'needs_revision' ||
+    status === 'blocked' ||
+    status === 'candidate_blocked'
+  ) {
     return 'border-red-200 bg-red-50 text-red-700';
   }
   if (status === 'approval_required' || status === 'gap_detected') {
@@ -90,9 +99,7 @@ export function RoleActivitySection({ events, sessionId }: RoleActivitySectionPr
   const language = i18n.resolvedLanguage || i18n.language;
   const visibleEvents = useMemo(
     () =>
-      [...events]
-        .sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime())
-        .slice(0, 8),
+      [...events].sort((a, b) => new Date(b.ts).getTime() - new Date(a.ts).getTime()).slice(0, 8),
     [events]
   );
   const roleCount = useMemo(

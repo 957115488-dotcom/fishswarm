@@ -316,7 +316,7 @@ function buildCandidateHandbook(template: CandidateTemplate): RoleDefinition['ha
       'Identify validation evidence needed before the task is considered done.',
     ],
     boundaries: [
-      'Role output is advisory and must not bypass FishSwarm permissions.',
+      'Role output is a specialist handoff to Xiaoyu and must not bypass FishSwarm permissions.',
       'Do not persist decisions, credentials, or preferences directly.',
       'Do not execute tools or claim external actions were completed.',
       'Escalate safety, privacy, compliance, or destructive-change concerns.',

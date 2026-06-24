@@ -856,10 +856,12 @@ export interface ChangeScopeReport {
 export type RoleId =
   | 'product-strategist'
   | 'engineering-architect'
+  | 'implementation-engineer'
   | 'product-designer'
   | 'developer-experience'
   | 'security-officer'
   | 'qa-release-steward'
+  | 'handoff-compressor'
   | string;
 
 export type RoleTriggerMode = 'automatic' | 'manual' | 'disabled';
@@ -915,6 +917,42 @@ export interface RoleRegistrySnapshot {
   };
 }
 
+export interface A2AAgentSkill {
+  id: string;
+  name: string;
+  description: string;
+  tags: string[];
+}
+
+export interface A2AAgentCard {
+  protocolVersion: 'fishswarm-a2a-lite/0.1';
+  name: string;
+  description: string;
+  url?: string;
+  provider: {
+    organization: string;
+    url?: string;
+  };
+  capabilities: {
+    streaming: boolean;
+    pushNotifications: boolean;
+    stateTransitionHistory: boolean;
+    artifacts: boolean;
+  };
+  defaultInputModes: string[];
+  defaultOutputModes: string[];
+  skills: A2AAgentSkill[];
+  metadata: {
+    roleId: string;
+    roleName: string;
+    triggerMode: RoleTriggerMode;
+    defaultRunMode: RoleRunMode;
+    triggerScopes: ChangeScope[];
+    builtIn: boolean;
+    enabled: boolean;
+  };
+}
+
 export type RoleLifecycleStatus =
   | 'gap_detected'
   | 'incubating_role'
@@ -929,6 +967,7 @@ export type RoleLifecycleStatus =
   | 'validating'
   | 'accepted'
   | 'needs_revision'
+  | 'blocked'
   | 'skipped'
   | 'failed';
 
@@ -965,6 +1004,13 @@ export interface RoleNextAction {
   action: string;
 }
 
+export interface RoleRunArtifact {
+  type: 'markdown';
+  path: string;
+  title: string;
+  summary?: string;
+}
+
 export interface RoleRunResult {
   runId: string;
   roleId: string;
@@ -973,10 +1019,12 @@ export interface RoleRunResult {
   sessionId?: string;
   status: 'completed' | 'needs_revision' | 'blocked' | 'failed';
   summary: string;
+  visibleMessage?: string;
   findings: RoleRunFinding[];
   decisions: RoleDecisionCandidate[];
   nextActions: RoleNextAction[];
   validationHints: string[];
+  artifacts?: RoleRunArtifact[];
   startedAt: string;
   completedAt: string;
 }
@@ -995,6 +1043,108 @@ export interface ValidationLog {
   createdAt: string;
 }
 
+export type A2ATaskState =
+  | 'submitted'
+  | 'working'
+  | 'input-required'
+  | 'completed'
+  | 'failed'
+  | 'canceled';
+
+export interface A2ATextPart {
+  kind: 'text';
+  text: string;
+}
+
+export interface A2AFilePart {
+  kind: 'file';
+  file: {
+    name: string;
+    uri: string;
+    mimeType: string;
+  };
+}
+
+export type A2APart = A2ATextPart | A2AFilePart;
+
+export interface A2AMessage {
+  role: 'user' | 'agent';
+  parts: A2APart[];
+  metadata?: Record<string, unknown>;
+}
+
+export interface A2AArtifact {
+  artifactId: string;
+  name: string;
+  description?: string;
+  parts: A2APart[];
+  metadata?: Record<string, unknown>;
+}
+
+export interface A2ATask {
+  id: string;
+  contextId?: string;
+  status: {
+    state: A2ATaskState;
+    message?: A2AMessage;
+    timestamp: string;
+  };
+  history: A2AMessage[];
+  artifacts: A2AArtifact[];
+  metadata: {
+    taskId: string;
+    roleId?: string;
+    roleName?: string;
+    runId?: string;
+    validationId?: string;
+    validationVerdict?: ValidationLog['verdict'];
+  };
+}
+
+export type SwarmEventType =
+  | 'user.input'
+  | 'xiaoyu.intent'
+  | 'xiaoyu.dispatch'
+  | 'role.online'
+  | 'role.plan'
+  | 'role.thinking'
+  | 'role.tool'
+  | 'role.delivery'
+  | 'validation.started'
+  | 'validation.accepted'
+  | 'validation.needs_revision'
+  | 'validation.blocked'
+  | 'xiaoyu.rework'
+  | 'xiaoyu.pause'
+  | 'xiaoyu.next_role'
+  | 'xiaoyu.final';
+
+export type SwarmEventStatus =
+  | 'pending'
+  | 'running'
+  | 'completed'
+  | 'needs_revision'
+  | 'blocked'
+  | 'failed';
+
+export interface SwarmEvent {
+  id: string;
+  runId: string;
+  parentRunId?: string;
+  sessionId?: string;
+  type: SwarmEventType;
+  speaker: 'user' | 'xiaoyu' | string;
+  target?: string;
+  roleId?: string;
+  roleName?: string;
+  taskId?: string;
+  validationId?: string;
+  status?: SwarmEventStatus;
+  content: string;
+  data?: Record<string, unknown>;
+  createdAt: string;
+}
+
 export interface RoleRuntimeSnapshot {
   workspaceKey: string;
   cwd?: string;
@@ -1002,6 +1152,7 @@ export interface RoleRuntimeSnapshot {
   activeEvents: RoleLifecycleEvent[];
   recentRuns: RoleRunResult[];
   validationLogs: ValidationLog[];
+  swarmEvents: SwarmEvent[];
 }
 
 export type RoleCandidateStatus =
@@ -1099,6 +1250,7 @@ export interface RoleRuntimeExecutionResult {
   taskId: string;
   routedRoleIds: string[];
   results: RoleRunResult[];
+  validationLogs?: ValidationLog[];
   gap?: RoleCapabilityGap;
   assessment?: RoleCapabilityAssessment;
   candidate?: RoleCandidate;

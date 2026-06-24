@@ -2218,6 +2218,20 @@ ipcMain.handle('skills.install', async (_event, skillPath: string) => {
   }
 });
 
+ipcMain.handle('skills.installBundledDomainSkill', async (_event, skillFolderName: string) => {
+  try {
+    if (!skillsManager) {
+      throw new Error('SkillsManager not initialized');
+    }
+    const skill = await skillsManager.installBundledDomainSkill(skillFolderName);
+    sessionManager?.invalidateSkillsSetup();
+    return { success: true, skill };
+  } catch (error) {
+    logError('[Skills] Error installing bundled domain skill:', error);
+    throw error;
+  }
+});
+
 ipcMain.handle('skills.delete', async (_event, skillId: string) => {
   try {
     if (!skillsManager) {

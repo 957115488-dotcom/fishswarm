@@ -220,9 +220,10 @@ describe('probeWithClaudeSdk', () => {
 
     expect(result.ok).toBe(true);
     expect(mocks.completeSimple).toHaveBeenCalledTimes(1);
-    expect(mocks.completeSimple.mock.calls[0]?.[2]).toEqual({
+    expect(mocks.completeSimple.mock.calls[0]?.[2]).toMatchObject({
       apiKey: 'sk-ant-local-proxy',
     });
+    expect(mocks.completeSimple.mock.calls[0]?.[2]?.signal).toBeInstanceOf(AbortSignal);
   });
 
   it('treats thinking-only response as successful probe', async () => {

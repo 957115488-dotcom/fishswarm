@@ -11,7 +11,7 @@ import type {
   SandboxSyncStatus,
   SkillsStorageChangeEvent,
 } from '../types';
-import type { RoleLifecycleEvent, ValidationLog } from '../../shared/ipc-types';
+import type { RoleLifecycleEvent, SwarmEvent, ValidationLog } from '../../shared/ipc-types';
 import { applySessionUpdate } from '../utils/session-update';
 
 export type GlobalNoticeType = 'info' | 'warning' | 'error' | 'success';
@@ -42,6 +42,7 @@ export interface SessionState {
   executionClock: SessionExecutionClock;
   traceSteps: TraceStep[];
   roleEvents: RoleLifecycleEvent[];
+  swarmEvents: SwarmEvent[];
   validationLogs: ValidationLog[];
   contextWindow: number;
 }
@@ -55,6 +56,7 @@ const DEFAULT_SESSION_STATE: SessionState = {
   executionClock: { startAt: null, endAt: null },
   traceSteps: [],
   roleEvents: [],
+  swarmEvents: [],
   validationLogs: [],
   contextWindow: 0,
 };
@@ -75,6 +77,35 @@ function patchSession(
 // Helper to get a session's state with safe defaults
 function getSession(states: Record<string, SessionState>, sessionId: string): SessionState {
   return states[sessionId] ?? DEFAULT_SESSION_STATE;
+}
+
+function dedupeValidationLogs(logs: ValidationLog[]): ValidationLog[] {
+  const byKey = new Map<string, ValidationLog>();
+  for (const log of logs) {
+    const key = validationLogDedupeKey(log);
+    if (byKey.has(key)) {
+      byKey.delete(key);
+    }
+    byKey.set(key, log);
+  }
+  return Array.from(byKey.values());
+}
+
+function validationLogDedupeKey(log: ValidationLog): string {
+  const checkedRuns = [...log.checkedRoleRunIds].sort().join(',');
+  if (checkedRuns) {
+    return [log.sessionId || '', log.taskId, log.validatorRoleId, checkedRuns].join('|');
+  }
+  return `id:${log.validationId}`;
+}
+
+function dedupeSwarmEvents(events: SwarmEvent[]): SwarmEvent[] {
+  const byId = new Map<string, SwarmEvent>();
+  for (const event of events) {
+    if (byId.has(event.id)) byId.delete(event.id);
+    byId.set(event.id, event);
+  }
+  return Array.from(byId.values());
 }
 
 interface AppState {
@@ -152,10 +183,15 @@ interface AppState {
   updateTraceStep: (sessionId: string, stepId: string, updates: Partial<TraceStep>) => void;
   setTraceSteps: (sessionId: string, steps: TraceStep[]) => void;
   addRoleLifecycleEvent: (sessionId: string, event: RoleLifecycleEvent) => void;
+  addSwarmEvent: (sessionId: string, event: SwarmEvent) => void;
   addValidationLog: (sessionId: string, log: ValidationLog) => void;
   setRoleRuntimeState: (
     sessionId: string,
-    payload: { roleEvents?: RoleLifecycleEvent[]; validationLogs?: ValidationLog[] }
+    payload: {
+      roleEvents?: RoleLifecycleEvent[];
+      validationLogs?: ValidationLog[];
+      swarmEvents?: SwarmEvent[];
+    }
   ) => void;
 
   setLoading: (loading: boolean) => void;
@@ -305,6 +341,14 @@ export const useAppStore = create<AppState>((set) => ({
     set((state) => {
       const ss = getSession(state.sessionStates, sessionId);
       const messages = ss.messages;
+      const existingIndex = messages.findIndex((item) => item.id === message.id);
+      if (existingIndex >= 0) {
+        return {
+          sessionStates: patchSession(state.sessionStates, sessionId, {
+            messages: messages.map((item, index) => (index === existingIndex ? message : item)),
+          }),
+        };
+      }
       let updatedMessages = messages;
       let updatedPendingTurns = ss.pendingTurns;
 
@@ -555,12 +599,22 @@ export const useAppStore = create<AppState>((set) => ({
       };
     }),
 
+  addSwarmEvent: (sessionId, event) =>
+    set((state) => {
+      const ss = getSession(state.sessionStates, sessionId);
+      return {
+        sessionStates: patchSession(state.sessionStates, sessionId, {
+          swarmEvents: dedupeSwarmEvents([...ss.swarmEvents, event]).slice(-100),
+        }),
+      };
+    }),
+
   addValidationLog: (sessionId, log) =>
     set((state) => {
       const ss = getSession(state.sessionStates, sessionId);
       return {
         sessionStates: patchSession(state.sessionStates, sessionId, {
-          validationLogs: [...ss.validationLogs, log].slice(-50),
+          validationLogs: dedupeValidationLogs([...ss.validationLogs, log]).slice(-50),
         }),
       };
     }),
@@ -569,7 +623,12 @@ export const useAppStore = create<AppState>((set) => ({
     set((state) => ({
       sessionStates: patchSession(state.sessionStates, sessionId, {
         ...(payload.roleEvents ? { roleEvents: payload.roleEvents.slice(-100) } : {}),
-        ...(payload.validationLogs ? { validationLogs: payload.validationLogs.slice(-50) } : {}),
+        ...(payload.validationLogs
+          ? { validationLogs: dedupeValidationLogs(payload.validationLogs).slice(-50) }
+          : {}),
+        ...(payload.swarmEvents
+          ? { swarmEvents: dedupeSwarmEvents(payload.swarmEvents).slice(-100) }
+          : {}),
       }),
     })),
 

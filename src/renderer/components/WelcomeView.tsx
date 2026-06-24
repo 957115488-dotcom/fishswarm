@@ -1,10 +1,21 @@
-import { useState, useRef, useEffect } from 'react';
+import { useCallback, useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAppStore } from '../store';
 import { useIPC } from '../hooks/useIPC';
-import type { ContentBlock } from '../types';
+import type { ApiConfigSet, ContentBlock } from '../types';
 import { getInitialSessionTitle } from '../../shared/session-title';
-import { FileText, BarChart3, FolderOpen, ArrowRight, X, Paperclip } from 'lucide-react';
+import {
+  FileText,
+  BarChart3,
+  FolderOpen,
+  ArrowRight,
+  X,
+  Paperclip,
+  ChevronDown,
+  Check,
+  Loader2,
+} from 'lucide-react';
+import welcomeLogoSrc from '../assets/logo-transparent.png';
 
 type AttachedFile = {
   name: string;
@@ -14,7 +25,17 @@ type AttachedFile = {
   inlineDataBase64?: string;
 };
 
-import welcomeLogoSrc from '../assets/logo-transparent.png';
+function getConfigSetModel(configSet: ApiConfigSet): string {
+  const activeProfile = configSet.profiles?.[configSet.activeProfileKey];
+  return activeProfile?.model?.trim() || '';
+}
+
+function getConfigSetProviderLabel(configSet: ApiConfigSet): string {
+  if (configSet.provider !== 'custom') {
+    return configSet.provider;
+  }
+  return `custom:${configSet.customProtocol}`;
+}
 
 export function WelcomeView() {
   const { t } = useTranslation();
@@ -27,14 +48,66 @@ export function WelcomeView() {
   >([]);
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
+  const [isSwitchingConfigSet, setIsSwitchingConfigSet] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const modelMenuRef = useRef<HTMLDivElement>(null);
   const { startSession, changeWorkingDir, isElectron } = useIPC();
   const workingDir = useAppStore((state) => state.workingDir);
   const setGlobalNotice = useAppStore((state) => state.setGlobalNotice);
   const isConfigured = useAppStore((state) => state.isConfigured);
+  const appConfig = useAppStore((state) => state.appConfig);
+  const setAppConfig = useAppStore((state) => state.setAppConfig);
+  const setIsConfigured = useAppStore((state) => state.setIsConfigured);
   const setShowSettings = useAppStore((state) => state.setShowSettings);
   const setSettingsTab = useAppStore((state) => state.setSettingsTab);
   const canSubmit = prompt.trim().length > 0 || pastedImages.length > 0 || attachedFiles.length > 0;
+  const configSets = appConfig?.configSets || [];
+  const activeConfigSetId = appConfig?.activeConfigSetId || '';
+  const activeConfigSet =
+    configSets.find((configSet) => configSet.id === activeConfigSetId) || configSets[0] || null;
+  const activeModelLabel =
+    (activeConfigSet ? getConfigSetModel(activeConfigSet) : '') ||
+    appConfig?.model ||
+    t('chat.noModel');
+  const hasConfigSetChoices = configSets.length > 0;
+
+  useEffect(() => {
+    if (!isModelMenuOpen) return;
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!modelMenuRef.current?.contains(event.target as Node)) {
+        setIsModelMenuOpen(false);
+      }
+    };
+    window.addEventListener('pointerdown', handlePointerDown);
+    return () => window.removeEventListener('pointerdown', handlePointerDown);
+  }, [isModelMenuOpen]);
+
+  const handleSwitchConfigSet = useCallback(
+    async (configSetId: string) => {
+      if (!isElectron || !window.electronAPI || configSetId === activeConfigSetId) {
+        setIsModelMenuOpen(false);
+        return;
+      }
+
+      setIsSwitchingConfigSet(true);
+      try {
+        const result = await window.electronAPI.config.switchSet({ id: configSetId });
+        setAppConfig(result.config);
+        setIsConfigured(await window.electronAPI.config.isConfigured());
+        setIsModelMenuOpen(false);
+      } catch (error) {
+        setGlobalNotice({
+          id: `welcome-config-set-switch-failed-${Date.now()}`,
+          type: 'error',
+          message: error instanceof Error ? error.message : t('api.saveFailed'),
+        });
+      } finally {
+        setIsSwitchingConfigSet(false);
+      }
+    },
+    [activeConfigSetId, isElectron, setAppConfig, setGlobalNotice, setIsConfigured, t]
+  );
 
   const handleSelectFolder = async () => {
     try {
@@ -583,14 +656,76 @@ export function WelcomeView() {
               )}
             </div>
 
-            <button
-              type="submit"
-              disabled={!canSubmit || isSubmitting}
-              className="btn btn-primary px-5 py-2.5 rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <span>{isSubmitting ? t('welcome.starting') : t('welcome.letsGo')}</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
+            <div className="flex min-w-0 items-center gap-3">
+              <div ref={modelMenuRef} className="relative min-w-0">
+                <button
+                  type="button"
+                  onClick={() => setIsModelMenuOpen((open) => !open)}
+                  disabled={!hasConfigSetChoices || isSwitchingConfigSet}
+                  className="inline-flex max-w-[11rem] items-center gap-1.5 rounded-full border border-border-subtle bg-background/60 px-3 py-2 text-sm text-text-secondary transition-colors hover:border-accent/35 hover:text-text-primary disabled:cursor-not-allowed disabled:opacity-60"
+                  title={t('chat.switchModelConfigSet', '切换模型方案')}
+                  aria-haspopup="menu"
+                  aria-expanded={isModelMenuOpen}
+                >
+                  {isSwitchingConfigSet ? (
+                    <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
+                  ) : (
+                    <ChevronDown className="h-3.5 w-3.5 shrink-0" />
+                  )}
+                  <span className="truncate">{activeModelLabel}</span>
+                </button>
+
+                {isModelMenuOpen && (
+                  <div
+                    role="menu"
+                    className="absolute bottom-full right-0 z-30 mb-2 w-[19rem] overflow-hidden rounded-lg border border-border bg-background shadow-lg"
+                  >
+                    <div className="border-b border-border-muted px-3 py-2">
+                      <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-text-muted">
+                        {t('chat.modelConfigSets', '模型方案')}
+                      </p>
+                    </div>
+                    <div className="max-h-72 overflow-y-auto py-1">
+                      {configSets.map((configSet) => {
+                        const modelLabel = getConfigSetModel(configSet) || t('chat.noModel');
+                        const isActive = configSet.id === activeConfigSetId;
+                        return (
+                          <button
+                            key={configSet.id}
+                            type="button"
+                            role="menuitemradio"
+                            aria-checked={isActive}
+                            onClick={() => void handleSwitchConfigSet(configSet.id)}
+                            className="flex w-full items-start gap-2 px-3 py-2.5 text-left transition-colors hover:bg-surface-hover"
+                          >
+                            <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center text-accent">
+                              {isActive && <Check className="h-3.5 w-3.5" />}
+                            </span>
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate text-sm text-text-primary">
+                                {configSet.name}
+                              </span>
+                              <span className="mt-0.5 block truncate text-xs text-text-muted">
+                                {getConfigSetProviderLabel(configSet)} · {modelLabel}
+                              </span>
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <button
+                type="submit"
+                disabled={!canSubmit || isSubmitting}
+                className="btn btn-primary px-5 py-2.5 rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span>{isSubmitting ? t('welcome.starting') : t('welcome.letsGo')}</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </form>
       </div>

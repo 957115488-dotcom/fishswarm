@@ -19,9 +19,18 @@ describe('WelcomeView Claude-style layout', () => {
 
   it('shows an inline API setup hint on the welcome screen when config is missing', () => {
     const source = fs.readFileSync(welcomeViewPath, 'utf8');
-    expect(source).toContain("!isConfigured && (");
+    expect(source).toContain('!isConfigured && (');
     expect(source).toContain("t('welcome.apiNotConfigured')");
     expect(source).toContain("setSettingsTab('api');");
     expect(source).toContain('setShowSettings(true);');
+  });
+
+  it('includes a compact model selector beside the start button', () => {
+    const source = fs.readFileSync(welcomeViewPath, 'utf8');
+    expect(source).toContain('const activeModelLabel =');
+    expect(source).toContain('window.electronAPI.config.switchSet');
+    expect(source).toContain("t('chat.switchModelConfigSet', '切换模型方案')");
+    expect(source).toContain('aria-haspopup="menu"');
+    expect(source).toContain('role="menuitemradio"');
   });
 });

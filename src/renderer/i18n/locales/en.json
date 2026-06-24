@@ -605,7 +605,124 @@
     "failedToLoad": "Failed to load skills",
     "failedToInstall": "Failed to install skill",
     "failedToDelete": "Failed to delete skill",
-    "failedToToggle": "Failed to toggle skill"
+    "failedToToggle": "Failed to toggle skill",
+    "domainSkills": "Domain Skills",
+    "domainSkillsDesc": "Domain skills are grouped by work area. Checking a domain installs its bundled local skills and enables them.",
+    "domainGroupsCount": "{{count}} domains",
+    "domainInstalledCount": "Installed {{installed}} / {{total}}",
+    "domainEnabledCount": "Enabled {{count}}",
+    "skillEnabled": "Enabled",
+    "skillDisabled": "Disabled",
+    "notInstalled": "Not installed",
+    "domainGroups": {
+      "devQuality": {
+        "title": "Development Quality",
+        "description": "Testing, frontend assets, browser validation, and quality workflows."
+      },
+      "cloudInfra": {
+        "title": "Cloud & Infrastructure",
+        "description": "Cloud development, observability, MCP extension, and external execution agents."
+      },
+      "lowCodeRuntime": {
+        "title": "Low-code & Runtime",
+        "description": "low-code builder platform patterns and Electron container lessons for safe FishSwarm integration."
+      },
+      "dataResearch": {
+        "title": "Data & Research",
+        "description": "Data summaries, database queries, deep research, and content fetching."
+      },
+      "securityMobile": {
+        "title": "Security & Mobile",
+        "description": "Security testing, language-specific audits, and mobile debugging."
+      },
+      "businessMarketing": {
+        "title": "Business & Marketing",
+        "description": "Brand, growth, ad analysis, lead research, and internal communications."
+      },
+      "agentExtension": {
+        "title": "Prompt & Agent Extension",
+        "description": "Prompting, skill generation, and terminal experience enhancements."
+      }
+    },
+    "domainSkillsList": {
+      "artifactsBuilder": {
+        "description": "Build complex HTML artifacts with React, Tailwind, and component libraries."
+      },
+      "d3jsVisualization": {
+        "description": "Generate D3 charts and interactive data visualizations."
+      },
+      "pypict": {
+        "description": "Create pairwise combinatorial test suites with PICT."
+      },
+      "playwright": {
+        "description": "Automate browser checks for local and remote web apps."
+      },
+      "awsSkills": {
+        "description": "AWS development with CDK, cost optimization, and event-driven patterns."
+      },
+      "langsmithFetch": {
+        "description": "Fetch and analyze LangSmith traces."
+      },
+      "connect": {
+        "description": "Connect to Gmail, Slack, GitHub, Notion, and other external apps."
+      },
+      "jules": {
+        "description": "Delegate GitHub repository tasks to Google Jules asynchronously."
+      },
+      "lowcodeBuilder": {
+        "description": "Turn low-code builder platform capabilities and desktop Electron runtime patterns into safe FishSwarm plans."
+      },
+      "csvDataSummarizer": {
+        "description": "Analyze CSV files and generate insights with visualizations."
+      },
+      "postgres": {
+        "description": "Run safe read-only PostgreSQL queries."
+      },
+      "deepResearch": {
+        "description": "Run multi-step research for markets, competitors, and literature reviews."
+      },
+      "redditFetch": {
+        "description": "Fetch Reddit content when ordinary web fetching is blocked."
+      },
+      "ffufWebFuzzing": {
+        "description": "Run web fuzzing and analyze vulnerability findings."
+      },
+      "moveCodeQuality": {
+        "description": "Review Move packages against Move Book code quality guidance."
+      },
+      "iosSimulator": {
+        "description": "Interact with the iOS Simulator for app testing and debugging."
+      },
+      "brandGuidelines": {
+        "description": "Apply brand guidelines to design materials."
+      },
+      "competitiveAdsExtractor": {
+        "description": "Collect and analyze competitor ads."
+      },
+      "domainNameBrainstormer": {
+        "description": "Generate domain ideas and check availability."
+      },
+      "internalComms": {
+        "description": "Draft newsletters, FAQs, status reports, and project updates."
+      },
+      "leadResearchAssistant": {
+        "description": "Identify leads and prepare outreach strategy."
+      },
+      "promptEngineering": {
+        "description": "Use classic prompt engineering patterns and best practices."
+      },
+      "skillSeekers": {
+        "description": "Turn documentation websites into usable skills."
+      },
+      "terminalTitle": {
+        "description": "Set descriptive task titles for Claude Code terminal windows."
+      }
+    },
+    "domainSelectHint": "Check a domain to install and enable its skills; click the domain name to view its skills below.",
+    "domainEnableAll": "Install and enable this domain, or disable its installed skills",
+    "domainEnabledRatio": "{{enabled}} enabled ? {{installed}} installed ? {{total}} listed",
+    "domainNoInstalledSkills": "This domain has not been installed yet.",
+    "domainInstallAndEnable": "Install and enable"
   },
   "logs": {
     "actionsTitle": "Log Actions",
@@ -699,6 +816,26 @@
     "acceptanceFromAi": "Extracted from the acceptance section in the AI response.",
     "roleActivity": "Role Activity",
     "noRoleActivityYet": "No role activity yet",
+    "swarmEvents": "Swarm Events",
+    "noSwarmEventsYet": "No swarm events yet",
+    "swarmEventType": {
+      "userInput": "User input",
+      "xiaoyuIntent": "Xiaoyu intent",
+      "xiaoyuDispatch": "Xiaoyu dispatch",
+      "roleOnline": "Role online",
+      "rolePlan": "Role plan",
+      "roleThinking": "Role thinking",
+      "roleTool": "Role tool",
+      "roleDelivery": "Role delivery",
+      "validationStarted": "Validation started",
+      "validationAccepted": "Validation accepted",
+      "validationNeedsRevision": "Validation revision",
+      "validationBlocked": "External input needed",
+      "xiaoyuRework": "Xiaoyu rework",
+      "xiaoyuPause": "Xiaoyu pause",
+      "xiaoyuNextRole": "Xiaoyu handoff",
+      "xiaoyuFinal": "Xiaoyu summary"
+    },
     "roleStatus": {
       "gapDetected": "Gap detected",
       "incubatingRole": "Incubating role",
@@ -713,14 +850,19 @@
       "validating": "Validating",
       "accepted": "Accepted",
       "needsRevision": "Needs revision",
+      "blocked": "External input needed",
       "skipped": "Skipped",
       "failed": "Failed"
     },
     "validationPassed": "Passed",
     "validationNeedsRevision": "Needs revision",
-    "validationBlocked": "Blocked",
+    "validationBlocked": "External input needed",
+    "validationPassedHint": "This handoff passed validation and can continue.",
+    "validationNeedsRevisionHint": "This handoff was returned to the same role for revision before the next role can continue.",
+    "validationBlockedHint": "This is not ordinary revision. The workflow is paused until user input, tool permission, credentials, or an external condition is available.",
     "acceptedFindings": "Accepted findings",
     "requiredRework": "Required rework",
+    "requiredUnblock": "Required unblock items",
     "checkedRuns": "Checked runs",
     "noPendingHooks": "No pending permissions",
     "hooksHint": "Tool permission requests will wait here for allow or deny.",

@@ -23,7 +23,7 @@ const DETECTORS: Array<{
     kind: 'requirement',
     weight: 3,
     pattern:
-      /(start|build|implement|add|create|develop|adapt|integrate|fix|complete|design|plan|migrate|帮我|做|完成|实现|开发|设计|迁移|生成|新增|添加|修复)/i,
+      /(start|run|launch|serve|build|implement|add|create|develop|adapt|integrate|fix|complete|design|plan|migrate|帮我|做|完成|实现|开发|设计|迁移|生成|新增|添加|修复|运行|启动|跑起来|拉起)/i,
     reason: 'The message asks FishSwarm to create, adapt, fix, design, or complete work.',
   },
   {
@@ -36,8 +36,7 @@ const DETECTORS: Array<{
   {
     kind: 'validation',
     weight: 3,
-    pattern:
-      /(verify|validation|acceptance|qa|test|check|验收|验证|测试|检查|怎么验证|如何验证)/i,
+    pattern: /(verify|validation|acceptance|qa|test|check|验收|验证|测试|检查|怎么验证|如何验证)/i,
     reason: 'The message asks for validation, acceptance, testing, or checking.',
   },
   {

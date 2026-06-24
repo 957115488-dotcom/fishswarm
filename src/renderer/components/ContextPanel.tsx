@@ -52,6 +52,7 @@ import type {
 } from '../types';
 import { getMcpToolDisplayName } from './message/toolHelpers';
 import { RoleActivitySection } from './context/RoleActivitySection';
+import { SwarmEventsSection } from './context/SwarmEventsSection';
 import { ValidationLogsSection } from './context/ValidationLogsSection';
 
 const EMPTY_STEPS: TraceStep[] = [];
@@ -153,6 +154,7 @@ export function ContextPanel() {
   const ss = activeSessionId ? sessionStates[activeSessionId] : undefined;
   const steps = ss?.traceSteps ?? EMPTY_STEPS;
   const roleEvents = ss?.roleEvents ?? [];
+  const swarmEvents = ss?.swarmEvents ?? [];
   const validationLogs = ss?.validationLogs ?? [];
   const activeSession = activeSessionId ? sessions.find((s) => s.id === activeSessionId) : null;
   const currentWorkingDir = activeSession?.cwd || workingDir;
@@ -202,12 +204,6 @@ export function ContextPanel() {
   }, [messages]);
 
   useEffect(() => {
-    if (acceptanceEntry?.messageId || validationLogs.length > 0) {
-      setAcceptanceOpen(true);
-    }
-  }, [acceptanceEntry?.messageId, validationLogs.length]);
-
-  useEffect(() => {
     if (
       contextPanelCollapsed ||
       !activeSessionId ||
@@ -229,6 +225,7 @@ export function ContextPanel() {
         setRoleRuntimeState(activeSessionId, {
           roleEvents: snapshot.activeEvents,
           validationLogs: snapshot.validationLogs,
+          swarmEvents: snapshot.swarmEvents,
         });
       })
       .catch((error) => {
@@ -610,6 +607,7 @@ export function ContextPanel() {
         </div>
 
         <RoleActivitySection events={roleEvents} sessionId={activeSessionId} />
+        <SwarmEventsSection events={swarmEvents} sessionId={activeSessionId} />
 
         {/* Artifacts Section */}
         <div className="border-b border-border-muted">
@@ -617,13 +615,20 @@ export function ContextPanel() {
             onClick={() => setArtifactsOpen(!artifactsOpen)}
             className="w-full px-4 py-2.5 flex items-center justify-between hover:bg-surface-hover transition-colors"
           >
-            <span className="text-xs font-medium text-text-muted uppercase tracking-wider">
-              {t('context.artifacts')}
+            <span className="flex min-w-0 items-center gap-1.5">
+              <span className="text-xs font-medium text-text-muted uppercase tracking-wider">
+                {t('context.artifacts')}
+              </span>
+              {displayArtifacts.length > 0 && (
+                <span className="rounded-full border border-border-subtle bg-surface px-1.5 py-0.5 text-[10px] leading-none text-text-muted">
+                  {displayArtifacts.length}
+                </span>
+              )}
             </span>
             {artifactsOpen ? (
-              <ChevronUp className="w-3.5 h-3.5 text-text-muted" />
+              <ChevronUp className="w-3.5 h-3.5 shrink-0 text-text-muted" />
             ) : (
-              <ChevronDown className="w-3.5 h-3.5 text-text-muted" />
+              <ChevronDown className="w-3.5 h-3.5 shrink-0 text-text-muted" />
             )}
           </button>
 
@@ -706,13 +711,20 @@ export function ContextPanel() {
             onClick={() => setMcpOpen(!mcpOpen)}
             className="w-full px-4 py-2.5 flex items-center justify-between hover:bg-surface-hover transition-colors"
           >
-            <span className="text-xs font-medium text-text-muted uppercase tracking-wider">
-              {t('context.mcpConnectors')}
+            <span className="flex min-w-0 items-center gap-1.5">
+              <span className="text-xs font-medium text-text-muted uppercase tracking-wider">
+                {t('context.mcpConnectors')}
+              </span>
+              {mcpServers.length > 0 && (
+                <span className="rounded-full border border-border-subtle bg-surface px-1.5 py-0.5 text-[10px] leading-none text-text-muted">
+                  {mcpServers.length}
+                </span>
+              )}
             </span>
             {mcpOpen ? (
-              <ChevronUp className="w-3.5 h-3.5 text-text-muted" />
+              <ChevronUp className="w-3.5 h-3.5 shrink-0 text-text-muted" />
             ) : (
-              <ChevronDown className="w-3.5 h-3.5 text-text-muted" />
+              <ChevronDown className="w-3.5 h-3.5 shrink-0 text-text-muted" />
             )}
           </button>
 

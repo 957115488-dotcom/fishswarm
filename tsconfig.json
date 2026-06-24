@@ -19,13 +19,13 @@
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
+    "rootDirs": ["src/renderer", "renderer-shims"],
     "paths": {
       "@/*": ["src/*"],
       "@main/*": ["src/main/*"],
       "@renderer/*": ["src/renderer/*"]
     }
   },
-  "include": ["src"],
+  "include": ["src", "renderer-shims"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
-
