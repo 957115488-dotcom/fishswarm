@@ -62,7 +62,9 @@
     "logsDesc": "View and export application logs",
     "panelDesc": "Configure your workspace, tools, and account behavior.",
     "general": "General",
-    "generalDesc": "Appearance, language & preferences"
+    "generalDesc": "Appearance, language & preferences",
+    "assets": "Assets",
+    "assetsDesc": "Browse reusable assets and delivery artifacts"
   },
   "general": {
     "appearance": "Appearance",

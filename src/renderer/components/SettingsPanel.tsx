@@ -14,6 +14,7 @@ import {
   Activity,
   SlidersHorizontal,
   UsersRound,
+  Layers3,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useWindowSize } from '../hooks/useWindowSize';
@@ -30,6 +31,7 @@ import { SettingsMemory } from './settings/SettingsMemory';
 import { SettingsObservability } from './settings/SettingsObservability';
 import { SettingsWorkHabits } from './settings/SettingsWorkHabits';
 import { SettingsRoles } from './settings/SettingsRoles';
+import { SettingsAssets } from './settings/SettingsAssets';
 
 interface SettingsPanelProps {
   onClose: () => void;
@@ -38,6 +40,7 @@ interface SettingsPanelProps {
     | 'sandbox'
     | 'connectors'
     | 'skills'
+    | 'assets'
     | 'memory'
     | 'work-habits'
     | 'roles'
@@ -53,6 +56,7 @@ type TabId =
   | 'sandbox'
   | 'connectors'
   | 'skills'
+  | 'assets'
   | 'memory'
   | 'work-habits'
   | 'roles'
@@ -67,6 +71,7 @@ const VALID_TABS = new Set<TabId>([
   'sandbox',
   'connectors',
   'skills',
+  'assets',
   'memory',
   'work-habits',
   'roles',
@@ -134,6 +139,12 @@ export function SettingsPanel({ onClose, initialTab = 'api' }: SettingsPanelProp
       label: t('settings.skills'),
       icon: Package,
       description: t('settings.skillsDesc'),
+    },
+    {
+      id: 'assets' as TabId,
+      label: t('settings.assets', '资源库'),
+      icon: Layers3,
+      description: t('settings.assetsDesc', '统一浏览可复用资产与交付物'),
     },
     {
       id: 'memory' as TabId,
@@ -286,6 +297,9 @@ export function SettingsPanel({ onClose, initialTab = 'api' }: SettingsPanelProp
               </div>
               <div className={activeTab === 'skills' ? '' : 'hidden'}>
                 {viewedTabs.has('skills') && <SettingsSkills isActive={activeTab === 'skills'} />}
+              </div>
+              <div className={activeTab === 'assets' ? '' : 'hidden'}>
+                {viewedTabs.has('assets') && <SettingsAssets isActive={activeTab === 'assets'} />}
               </div>
               <div className={activeTab === 'memory' ? '' : 'hidden'}>
                 {viewedTabs.has('memory') && <SettingsMemory />}

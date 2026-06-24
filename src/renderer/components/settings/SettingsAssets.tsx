@@ -1,0 +1,438 @@
+﻿import { useCallback, useEffect, useMemo, useState } from 'react';
+import { AlertTriangle, Loader2, RefreshCw, Search, ShieldCheck } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import type {
+  AssetCenterSnapshot,
+  AssetKind,
+  AssetSource,
+  AssetStatus,
+} from '../../types/asset-center';
+import {
+  ASSET_GROUPS,
+  buildAssetCenterViewModel,
+  type AssetCenterFilters,
+  type AssetCenterViewItem,
+  type AssetGroupId,
+} from '../../utils/asset-center-view-model';
+import { AssetCard } from '../presets/AssetCard';
+import { AssetStatusPill } from '../presets/AssetStatusPill';
+import { EmptyState } from '../presets/EmptyState';
+import { SectionCard } from '../presets/SectionCard';
+import { SettingsContentSection } from './shared';
+
+const isElectron = typeof window !== 'undefined' && window.electronAPI !== undefined;
+
+type SelectValue<T extends string> = T | 'all';
+
+function formatDate(value: string): string {
+  if (!value) return '-';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString();
+}
+
+function sourceRefText(item: AssetCenterViewItem): string {
+  return item.sourceRef.path || item.sourceRef.uri || item.sourceRef.id || item.sourceRef.type;
+}
+
+function MetadataRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="grid grid-cols-[88px_minmax(0,1fr)] gap-2 text-xs">
+      <dt className="text-text-muted">{label}</dt>
+      <dd className="min-w-0 break-words font-mono text-text-secondary">{value || '-'}</dd>
+    </div>
+  );
+}
+
+function AssetDetailPanel({ item }: { item: AssetCenterViewItem | null }) {
+  const { t } = useTranslation();
+
+  if (!item) {
+    return (
+      <SectionCard title={t('assetCenter.detail', '详情')}>
+        <EmptyState
+          title={t('assetCenter.noSelection', '选择一个资产')}
+          description={t(
+            'assetCenter.noSelectionDesc',
+            '在左侧选择卡片后，这里会显示元数据、来源、警告和只读动作。'
+          )}
+        />
+      </SectionCard>
+    );
+  }
+
+  return (
+    <SectionCard title={t('assetCenter.detail', '详情')} description={item.title}>
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <AssetStatusPill label={item.statusLabel} tone={item.statusTone} />
+          <span className="rounded-md bg-surface-muted px-2 py-1 text-xs text-text-secondary">
+            {item.kindLabel}
+          </span>
+          <span className="rounded-md bg-surface-muted px-2 py-1 text-xs text-text-muted">
+            {item.sourceLabel}
+          </span>
+        </div>
+
+        <p className="text-sm leading-6 text-text-secondary">{item.summary}</p>
+
+        <div className="space-y-2 rounded-lg border border-border-muted bg-background/60 p-3">
+          <MetadataRow label="ID" value={item.id} />
+          <MetadataRow label={t('assetCenter.scope', '作用域')} value={item.scope} />
+          <MetadataRow label={t('assetCenter.source', '来源')} value={sourceRefText(item)} />
+          <MetadataRow
+            label={t('assetCenter.updatedAt', '更新时间')}
+            value={formatDate(item.updatedAt || '')}
+          />
+          <MetadataRow label="Hash" value={item.contentHash || ''} />
+        </div>
+
+        <div>
+          <h5 className="mb-2 text-xs font-semibold text-text-primary">
+            {t('assetCenter.actions', '只读动作')}
+          </h5>
+          <div className="flex flex-wrap gap-2">
+            {item.actions.map((action) => (
+              <span
+                key={action}
+                className="rounded-md border border-border bg-surface px-2.5 py-1 text-xs text-text-secondary"
+              >
+                {action}
+              </span>
+            ))}
+          </div>
+          <p className="mt-2 text-[11px] leading-4 text-text-muted">
+            {t(
+              'assetCenter.readOnlyHint',
+              '当前阶段仅支持查看详情、预览和来源提示，不会安装、运行、导出或写入文件。'
+            )}
+          </p>
+        </div>
+
+        {item.tags.length > 0 && (
+          <div>
+            <h5 className="mb-2 text-xs font-semibold text-text-primary">Tags</h5>
+            <div className="flex flex-wrap gap-1.5">
+              {item.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded bg-background px-2 py-0.5 text-[11px] text-text-muted"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {item.warnings.length > 0 && (
+          <div className="rounded-lg border border-warning/25 bg-warning/10 p-3">
+            <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-warning">
+              <AlertTriangle className="h-3.5 w-3.5" />
+              {t('assetCenter.warnings', '警告')}
+            </div>
+            <ul className="list-disc space-y-1 pl-4 text-xs leading-5 text-text-secondary">
+              {item.warnings.map((warning) => (
+                <li key={warning}>{warning}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    </SectionCard>
+  );
+}
+
+export function SettingsAssets({ isActive }: { isActive: boolean }) {
+  const { t } = useTranslation();
+  const [snapshot, setSnapshot] = useState<AssetCenterSnapshot | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [filters, setFilters] = useState<AssetCenterFilters>({
+    keyword: '',
+    groupId: 'all',
+    kind: 'all',
+    source: 'all',
+    status: 'all',
+  });
+
+  const baseViewModel = useMemo(() => buildAssetCenterViewModel(snapshot), [snapshot]);
+  const viewModel = useMemo(
+    () => buildAssetCenterViewModel(snapshot, filters),
+    [snapshot, filters]
+  );
+  const selectedItem = useMemo(
+    () => viewModel.items.find((item) => item.id === selectedId) || viewModel.items[0] || null,
+    [selectedId, viewModel.items]
+  );
+
+  useEffect(() => {
+    if (!selectedItem) {
+      setSelectedId(null);
+      return;
+    }
+    if (selectedItem.id !== selectedId) {
+      setSelectedId(selectedItem.id);
+    }
+  }, [selectedId, selectedItem]);
+
+  const loadSnapshot = useCallback(async () => {
+    if (!isElectron) {
+      setError(t('assetCenter.desktopOnly', '资源库需要在 Electron 桌面端读取。'));
+      return;
+    }
+    setIsLoading(true);
+    setError(null);
+    try {
+      const nextSnapshot = await window.electronAPI.assetCenter.getSnapshot();
+      setSnapshot(nextSnapshot);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('assetCenter.loadFailed', '资源库加载失败'));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [t]);
+
+  useEffect(() => {
+    if (!isActive) return;
+    void loadSnapshot();
+  }, [isActive, loadSnapshot]);
+
+  function updateFilter<K extends keyof AssetCenterFilters>(key: K, value: AssetCenterFilters[K]) {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  }
+
+  const resetFilters = () =>
+    setFilters({ keyword: '', groupId: 'all', kind: 'all', source: 'all', status: 'all' });
+
+  return (
+    <div className="space-y-5">
+      <SettingsContentSection
+        title={t('assetCenter.title', '资源库 / Assets')}
+        description={t(
+          'assetCenter.description',
+          '统一浏览 Lowcode 概念、Skills、Roles、MCP、Plugins、模型提供商与工作流交付物。当前为只读模式。'
+        )}
+      >
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+          <div className="rounded-xl border border-border bg-surface p-4">
+            <div className="text-[11px] uppercase tracking-[0.12em] text-text-muted">Total</div>
+            <div className="mt-1 text-2xl font-semibold text-text-primary">
+              {baseViewModel.stats.total}
+            </div>
+          </div>
+          <div className="rounded-xl border border-border bg-surface p-4">
+            <div className="text-[11px] uppercase tracking-[0.12em] text-text-muted">Filtered</div>
+            <div className="mt-1 text-2xl font-semibold text-text-primary">
+              {viewModel.stats.filtered}
+            </div>
+          </div>
+          <div className="rounded-xl border border-border bg-surface p-4">
+            <div className="text-[11px] uppercase tracking-[0.12em] text-text-muted">Warnings</div>
+            <div className="mt-1 text-2xl font-semibold text-warning">
+              {baseViewModel.stats.warnings}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => void loadSnapshot()}
+            disabled={isLoading}
+            className="flex items-center justify-center gap-2 rounded-xl border border-border bg-surface p-4 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-hover disabled:cursor-wait disabled:opacity-60"
+          >
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+            {t('assetCenter.refresh', '刷新')}
+          </button>
+        </div>
+
+        <div className="rounded-xl border border-accent/20 bg-accent/5 p-3">
+          <div className="flex items-start gap-2 text-xs leading-5 text-text-secondary">
+            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+            <span>
+              {t(
+                'assetCenter.securityHint',
+                '安全边界：此页只调用 assetCenter.getSnapshot；不会暴露 install/run/export/apply，也不会从 renderer 执行命令或写文件。'
+              )}
+            </span>
+          </div>
+        </div>
+      </SettingsContentSection>
+
+      <SectionCard title={t('assetCenter.filters', '搜索与筛选')}>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <label className="relative md:col-span-2">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+            <input
+              value={filters.keyword || ''}
+              onChange={(event) => updateFilter('keyword', event.target.value)}
+              placeholder={t('assetCenter.searchPlaceholder', '搜索标题、摘要、tag、来源或 ID...')}
+              className="w-full rounded-lg border border-border bg-background py-2.5 pl-9 pr-3 text-sm text-text-primary outline-none transition-colors focus:border-accent"
+            />
+          </label>
+
+          <select
+            value={filters.kind || 'all'}
+            onChange={(event) => updateFilter('kind', event.target.value as SelectValue<AssetKind>)}
+            className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent"
+          >
+            <option value="all">{t('assetCenter.allKinds', '全部类型')}</option>
+            {baseViewModel.kindOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label} ({option.count})
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={filters.source || 'all'}
+            onChange={(event) =>
+              updateFilter('source', event.target.value as SelectValue<AssetSource>)
+            }
+            className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent"
+          >
+            <option value="all">{t('assetCenter.allSources', '全部来源')}</option>
+            {baseViewModel.sourceOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label} ({option.count})
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={filters.status || 'all'}
+            onChange={(event) =>
+              updateFilter('status', event.target.value as SelectValue<AssetStatus>)
+            }
+            className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none focus:border-accent"
+          >
+            <option value="all">{t('assetCenter.allStatuses', '全部状态')}</option>
+            {baseViewModel.statusOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label} ({option.count})
+              </option>
+            ))}
+          </select>
+
+          <button
+            type="button"
+            onClick={resetFilters}
+            className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-text-secondary transition-colors hover:bg-surface-hover"
+          >
+            {t('assetCenter.resetFilters', '重置筛选')}
+          </button>
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => updateFilter('groupId', 'all')}
+            className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${
+              (filters.groupId || 'all') === 'all'
+                ? 'border-accent bg-accent/10 text-accent'
+                : 'border-border bg-background text-text-secondary hover:bg-surface-hover'
+            }`}
+          >
+            {t('assetCenter.allGroups', '全部分组')}
+          </button>
+          {ASSET_GROUPS.map((group) => {
+            const count = baseViewModel.groups.find((entry) => entry.id === group.id)?.count || 0;
+            return (
+              <button
+                type="button"
+                key={group.id}
+                onClick={() => updateFilter('groupId', group.id)}
+                className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${
+                  filters.groupId === group.id
+                    ? 'border-accent bg-accent/10 text-accent'
+                    : 'border-border bg-background text-text-secondary hover:bg-surface-hover'
+                }`}
+              >
+                {t(group.labelKey, group.fallbackLabel)} ({count})
+              </button>
+            );
+          })}
+        </div>
+      </SectionCard>
+
+      {error && (
+        <div className="rounded-xl border border-error/25 bg-error/10 p-4 text-sm text-error">
+          {error}
+        </div>
+      )}
+
+      {baseViewModel.warnings.length > 0 && (
+        <div className="rounded-xl border border-warning/25 bg-warning/10 p-4">
+          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-warning">
+            <AlertTriangle className="h-4 w-4" />
+            {t('assetCenter.snapshotWarnings', 'Snapshot 警告')}
+          </div>
+          <ul className="list-disc space-y-1 pl-5 text-xs leading-5 text-text-secondary">
+            {baseViewModel.warnings.slice(0, 8).map((warning) => (
+              <li key={warning}>{warning}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {isLoading && !snapshot ? (
+        <SectionCard title={t('assetCenter.loadingTitle', '正在加载资源库')}>
+          <div className="flex items-center gap-2 text-sm text-text-muted">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            {t('common.loading')}
+          </div>
+        </SectionCard>
+      ) : viewModel.items.length === 0 ? (
+        <EmptyState
+          title={t('assetCenter.empty', '没有匹配的资产')}
+          description={t('assetCenter.emptyDesc', '请尝试清空搜索词或切换筛选条件。')}
+          action={
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="rounded-lg bg-accent px-3 py-2 text-sm font-medium text-white hover:bg-accent-hover"
+            >
+              {t('assetCenter.resetFilters', '重置筛选')}
+            </button>
+          }
+        />
+      ) : (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div className="space-y-4">
+            {viewModel.groups
+              .filter((group) => group.count > 0)
+              .map((group) => (
+                <SectionCard
+                  key={group.id}
+                  title={t(group.labelKey, group.fallbackLabel)}
+                  description={t(group.descriptionKey, group.fallbackDescription)}
+                >
+                  <div className="space-y-3">
+                    {viewModel.groupedItems[group.id as AssetGroupId].map((item) => (
+                      <AssetCard
+                        key={item.id}
+                        item={item}
+                        selected={selectedItem?.id === item.id}
+                        onSelect={() => setSelectedId(item.id)}
+                      />
+                    ))}
+                  </div>
+                </SectionCard>
+              ))}
+          </div>
+          <div className="lg:sticky lg:top-0 lg:self-start">
+            <AssetDetailPanel item={selectedItem} />
+            {snapshot?.generatedAt && (
+              <p className="mt-2 text-center text-[11px] text-text-muted">
+                {t('assetCenter.generatedAt', '生成时间')}: {formatDate(snapshot.generatedAt)}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

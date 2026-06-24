@@ -62,7 +62,9 @@
     "logsDesc": "查看和导出应用日志",
     "panelDesc": "配置工作区、工具以及账号相关行为。",
     "general": "通用",
-    "generalDesc": "外观、语言等通用偏好"
+    "generalDesc": "外观、语言等通用偏好",
+    "assets": "???",
+    "assetsDesc": "?????????????"
   },
   "general": {
     "appearance": "外观",
