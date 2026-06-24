@@ -5,6 +5,7 @@ import type {
   AssetSourceAdapter,
   AssetSourceAdapterResult,
 } from './asset-center-types';
+import { indexBuiltInSkillAssets } from './built-in-skill-asset-index';
 import { getLowcodeConceptAssets } from './lowcode-concepts';
 import { indexBundledDomainSkillAssets } from './domain-skill-asset-index';
 import { indexProviderAssets } from './provider-asset-index';
@@ -12,6 +13,7 @@ import { indexRoleAssets } from './role-asset-index';
 
 export interface BuildAssetCenterSnapshotInput {
   domainSkillsRoot?: string;
+  builtInSkillsRoot?: string;
   now?: Date;
   cwd?: string;
   adapters?: AssetSourceAdapter[];
@@ -19,6 +21,10 @@ export interface BuildAssetCenterSnapshotInput {
 
 function defaultDomainSkillsRoot(cwd: string): string {
   return path.join(cwd, 'resources', 'domain-skills');
+}
+
+function defaultBuiltInSkillsRoot(cwd: string): string {
+  return path.join(cwd, '.claude', 'skills');
 }
 
 function buildStats(items: AssetCenterItem[]): Record<string, number> {
@@ -63,8 +69,10 @@ export function buildAssetCenterSnapshot(
 ): AssetCenterSnapshot {
   const cwd = input.cwd || process.cwd();
   const domainSkillsRoot = input.domainSkillsRoot || defaultDomainSkillsRoot(cwd);
+  const builtInSkillsRoot = input.builtInSkillsRoot || defaultBuiltInSkillsRoot(cwd);
   const conceptItems = getLowcodeConceptAssets();
   const domainSkillIndex = indexBundledDomainSkillAssets({ domainSkillsRoot });
+  const builtInSkillIndex = indexBuiltInSkillAssets({ skillsRoot: builtInSkillsRoot });
   const providerIndex = indexProviderAssets();
   const roleIndex = indexRoleAssets();
   const adapterResults = (input.adapters || []).map(listAdapterAssets);
@@ -73,6 +81,7 @@ export function buildAssetCenterSnapshot(
   const deduped = dedupeItems([
     ...conceptItems,
     ...domainSkillIndex.items,
+    ...builtInSkillIndex.items,
     ...providerIndex.items,
     ...roleIndex.items,
     ...adapterItems,
@@ -86,6 +95,7 @@ export function buildAssetCenterSnapshot(
     stats: buildStats(items),
     warnings: [
       ...domainSkillIndex.warnings,
+      ...builtInSkillIndex.warnings,
       ...providerIndex.warnings,
       ...roleIndex.warnings,
       ...adapterWarnings,

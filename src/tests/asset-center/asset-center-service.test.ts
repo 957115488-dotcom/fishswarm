@@ -19,6 +19,13 @@ beforeEach(() => {
     '---\nname: Lowcode Lowcode\ndescription: Blueprints\n---\n# Skill',
     'utf8'
   );
+  const builtInSkillDir = path.join(root, 'built-in-skills', 'gstack-review');
+  fs.mkdirSync(builtInSkillDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(builtInSkillDir, 'SKILL.md'),
+    '---\nname: gstack-review\ndescription: Review skill\n---\n# Review',
+    'utf8'
+  );
 });
 
 afterEach(() => {
@@ -46,6 +53,7 @@ describe('asset center service', () => {
   it('builds a snapshot with concepts, domain skills, stats, and warnings', () => {
     const snapshot = buildAssetCenterSnapshot({
       domainSkillsRoot: path.join(root, 'domain-skills'),
+      builtInSkillsRoot: path.join(root, 'built-in-skills'),
       now: new Date('2026-06-24T00:00:00.000Z'),
     });
 
@@ -65,6 +73,16 @@ describe('asset center service', () => {
     const ids = snapshot.items.map((item) => item.id);
 
     expect(ids).toEqual([...ids].sort((a, b) => a.localeCompare(b)));
+  });
+
+  it('includes built-in skill assets by default when a skills root is available', () => {
+    const snapshot = buildAssetCenterSnapshot({
+      domainSkillsRoot: path.join(root, 'domain-skills'),
+      builtInSkillsRoot: path.join(root, 'built-in-skills'),
+    });
+
+    expect(snapshot.items.some((item) => item.id === 'built-in-skill:gstack-review')).toBe(true);
+    expect(snapshot.stats['skill.builtIn']).toBe(1);
   });
 
   it('includes role assets by default', () => {
@@ -90,7 +108,10 @@ describe('asset center service', () => {
   });
 
   it('includes scanner warnings without throwing', () => {
-    const snapshot = buildAssetCenterSnapshot({ domainSkillsRoot: path.join(root, 'missing') });
+    const snapshot = buildAssetCenterSnapshot({
+      domainSkillsRoot: path.join(root, 'missing'),
+      builtInSkillsRoot: path.join(root, 'built-in-skills'),
+    });
 
     expect(snapshot.items.some((item) => item.kind === 'concept.lowcode')).toBe(true);
     expect(snapshot.warnings.some((warning) => warning.includes('not found'))).toBe(true);
