@@ -1,5 +1,10 @@
 import path from 'node:path';
-import type { AssetCenterItem, AssetCenterSnapshot } from './asset-center-types';
+import type {
+  AssetCenterItem,
+  AssetCenterSnapshot,
+  AssetSourceAdapter,
+  AssetSourceAdapterResult,
+} from './asset-center-types';
 import { getLowcodeConceptAssets } from './lowcode-concepts';
 import { indexBundledDomainSkillAssets } from './domain-skill-asset-index';
 
@@ -7,6 +12,7 @@ export interface BuildAssetCenterSnapshotInput {
   domainSkillsRoot?: string;
   now?: Date;
   cwd?: string;
+  adapters?: AssetSourceAdapter[];
 }
 
 function defaultDomainSkillsRoot(cwd: string): string {
@@ -24,6 +30,32 @@ function sortItems(items: AssetCenterItem[]): AssetCenterItem[] {
   return [...items].sort((a, b) => a.id.localeCompare(b.id));
 }
 
+function listAdapterAssets(adapter: AssetSourceAdapter): AssetSourceAdapterResult {
+  try {
+    return adapter.listAssets();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return { items: [], warnings: [`Asset adapter failed (${adapter.id}): ${message}`] };
+  }
+}
+
+function dedupeItems(items: AssetCenterItem[]): { items: AssetCenterItem[]; warnings: string[] } {
+  const seen = new Set<string>();
+  const deduped: AssetCenterItem[] = [];
+  const warnings: string[] = [];
+
+  for (const item of items) {
+    if (seen.has(item.id)) {
+      warnings.push(`Duplicate asset id skipped: ${item.id}`);
+      continue;
+    }
+    seen.add(item.id);
+    deduped.push(item);
+  }
+
+  return { items: deduped, warnings };
+}
+
 export function buildAssetCenterSnapshot(
   input: BuildAssetCenterSnapshotInput = {}
 ): AssetCenterSnapshot {
@@ -31,13 +63,17 @@ export function buildAssetCenterSnapshot(
   const domainSkillsRoot = input.domainSkillsRoot || defaultDomainSkillsRoot(cwd);
   const conceptItems = getLowcodeConceptAssets();
   const domainSkillIndex = indexBundledDomainSkillAssets({ domainSkillsRoot });
-  const items = sortItems([...conceptItems, ...domainSkillIndex.items]);
+  const adapterResults = (input.adapters || []).map(listAdapterAssets);
+  const adapterItems = adapterResults.flatMap((result) => result.items);
+  const adapterWarnings = adapterResults.flatMap((result) => result.warnings);
+  const deduped = dedupeItems([...conceptItems, ...domainSkillIndex.items, ...adapterItems]);
+  const items = sortItems(deduped.items);
 
   return {
     schemaVersion: 1,
     generatedAt: (input.now || new Date()).toISOString(),
     items,
     stats: buildStats(items),
-    warnings: [...domainSkillIndex.warnings],
+    warnings: [...domainSkillIndex.warnings, ...adapterWarnings, ...deduped.warnings],
   };
 }
