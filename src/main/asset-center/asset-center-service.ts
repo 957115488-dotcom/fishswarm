@@ -8,6 +8,7 @@ import type {
 import { getLowcodeConceptAssets } from './lowcode-concepts';
 import { indexBundledDomainSkillAssets } from './domain-skill-asset-index';
 import { indexProviderAssets } from './provider-asset-index';
+import { indexRoleAssets } from './role-asset-index';
 
 export interface BuildAssetCenterSnapshotInput {
   domainSkillsRoot?: string;
@@ -65,6 +66,7 @@ export function buildAssetCenterSnapshot(
   const conceptItems = getLowcodeConceptAssets();
   const domainSkillIndex = indexBundledDomainSkillAssets({ domainSkillsRoot });
   const providerIndex = indexProviderAssets();
+  const roleIndex = indexRoleAssets();
   const adapterResults = (input.adapters || []).map(listAdapterAssets);
   const adapterItems = adapterResults.flatMap((result) => result.items);
   const adapterWarnings = adapterResults.flatMap((result) => result.warnings);
@@ -72,6 +74,7 @@ export function buildAssetCenterSnapshot(
     ...conceptItems,
     ...domainSkillIndex.items,
     ...providerIndex.items,
+    ...roleIndex.items,
     ...adapterItems,
   ]);
   const items = sortItems(deduped.items);
@@ -84,6 +87,7 @@ export function buildAssetCenterSnapshot(
     warnings: [
       ...domainSkillIndex.warnings,
       ...providerIndex.warnings,
+      ...roleIndex.warnings,
       ...adapterWarnings,
       ...deduped.warnings,
     ],

@@ -3,3 +3,4 @@ export * from './asset-center-types';
 export * from './lowcode-concepts';
 export * from './domain-skill-asset-index';
 export * from './provider-asset-index';
+export * from './role-asset-index';

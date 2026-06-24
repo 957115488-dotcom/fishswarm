@@ -1,4 +1,4 @@
-import fs from 'node:fs';
+﻿import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -67,6 +67,15 @@ describe('asset center service', () => {
     expect(ids).toEqual([...ids].sort((a, b) => a.localeCompare(b)));
   });
 
+  it('includes role assets by default', () => {
+    const snapshot = buildAssetCenterSnapshot({
+      domainSkillsRoot: path.join(root, 'domain-skills'),
+    });
+
+    expect(snapshot.items.some((item) => item.id.startsWith('role:'))).toBe(true);
+    expect(snapshot.stats.role).toBeGreaterThan(0);
+  });
+
   it('includes provider assets by default without leaking credentials', () => {
     const snapshot = buildAssetCenterSnapshot({
       domainSkillsRoot: path.join(root, 'domain-skills'),
@@ -102,7 +111,7 @@ describe('asset center service', () => {
     });
 
     expect(snapshot.items.some((item) => item.id === 'role:test-reviewer')).toBe(true);
-    expect(snapshot.stats.role).toBe(1);
+    expect(snapshot.stats.role).toBeGreaterThan(1);
     expect(snapshot.warnings).toContain('adapter warning');
   });
 
