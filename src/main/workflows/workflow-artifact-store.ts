@@ -21,7 +21,20 @@ export type WorkflowArtifactKind =
   | 'browser_skill_evidence'
   | 'devex_audit'
   | 'benchmark_run'
-  | 'browser_auth_import';
+  | 'browser_auth_import'
+  | 'feature_blueprint'
+  | 'data_model_draft'
+  | 'component_tree_draft'
+  | 'logic_flow_draft'
+  | 'api_contract_draft'
+  | 'implementation_plan_dsl'
+  | 'patch_proposal'
+  | 'diff_review'
+  | 'human_review_gate'
+  | 'apply_result'
+  | 'qa_result'
+  | 'rollback_checkpoint'
+  | 'concept_application_map';
 
 export type WorkflowArtifactStatus =
   | 'draft'
