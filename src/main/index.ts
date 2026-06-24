@@ -60,6 +60,7 @@ import type {
   DiagnosticInput,
   ProviderModelInfo,
   PermissionRule,
+  InstalledPlugin,
 } from '../renderer/types';
 import type { SessionGuardUpdate } from '../shared/ipc-types';
 import type {
@@ -194,6 +195,7 @@ import {
   rejectRoleCandidate,
 } from './roles/role-candidate-store';
 import { incubateRoleForGap } from './roles/role-incubation-service';
+import { buildAssetCenterSnapshot } from './asset-center/asset-center-service';
 
 // Current working directory (persisted between sessions)
 let currentWorkingDir: string | null = null;
@@ -1833,6 +1835,29 @@ ipcMain.handle('workflowArtifacts.list', (_event, payload?: WorkflowArtifactList
   const cwd =
     payload?.cwd || currentWorkingDir || configStore.get('defaultWorkdir') || process.cwd();
   return listWorkflowArtifacts({ ...payload, cwd });
+});
+
+ipcMain.handle('assetCenter.getSnapshot', () => {
+  const cwd = currentWorkingDir || configStore.get('defaultWorkdir') || process.cwd();
+  const warnings: string[] = [];
+  let installedPlugins: InstalledPlugin[] = [];
+
+  try {
+    installedPlugins = pluginRuntimeService?.listInstalled() || [];
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    warnings.push(`Installed plugin asset indexing unavailable: ${message}`);
+  }
+
+  const snapshot = buildAssetCenterSnapshot({
+    cwd,
+    pluginAssets: { installed: installedPlugins },
+    workflowArtifacts: { cwd, limit: 80 },
+  });
+
+  return warnings.length > 0
+    ? { ...snapshot, warnings: [...snapshot.warnings, ...warnings] }
+    : snapshot;
 });
 
 ipcMain.handle('spec.createArtifact', (_event, payload: BacklogSpecInput) => {
