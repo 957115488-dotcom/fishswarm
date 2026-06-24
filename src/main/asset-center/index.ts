@@ -8,3 +8,7 @@ export * from './built-in-skill-asset-index';
 export * from './mcp-asset-index';
 export * from './plugin-asset-index';
 export * from './workflow-artifact-asset-index';
+
+export * from './asset-policy-types';
+export * from './asset-audit-types';
+export * from './asset-policy-service';
