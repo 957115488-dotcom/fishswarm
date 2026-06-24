@@ -7,6 +7,7 @@ import type {
 } from './asset-center-types';
 import { getLowcodeConceptAssets } from './lowcode-concepts';
 import { indexBundledDomainSkillAssets } from './domain-skill-asset-index';
+import { indexProviderAssets } from './provider-asset-index';
 
 export interface BuildAssetCenterSnapshotInput {
   domainSkillsRoot?: string;
@@ -63,10 +64,16 @@ export function buildAssetCenterSnapshot(
   const domainSkillsRoot = input.domainSkillsRoot || defaultDomainSkillsRoot(cwd);
   const conceptItems = getLowcodeConceptAssets();
   const domainSkillIndex = indexBundledDomainSkillAssets({ domainSkillsRoot });
+  const providerIndex = indexProviderAssets();
   const adapterResults = (input.adapters || []).map(listAdapterAssets);
   const adapterItems = adapterResults.flatMap((result) => result.items);
   const adapterWarnings = adapterResults.flatMap((result) => result.warnings);
-  const deduped = dedupeItems([...conceptItems, ...domainSkillIndex.items, ...adapterItems]);
+  const deduped = dedupeItems([
+    ...conceptItems,
+    ...domainSkillIndex.items,
+    ...providerIndex.items,
+    ...adapterItems,
+  ]);
   const items = sortItems(deduped.items);
 
   return {
@@ -74,6 +81,11 @@ export function buildAssetCenterSnapshot(
     generatedAt: (input.now || new Date()).toISOString(),
     items,
     stats: buildStats(items),
-    warnings: [...domainSkillIndex.warnings, ...adapterWarnings, ...deduped.warnings],
+    warnings: [
+      ...domainSkillIndex.warnings,
+      ...providerIndex.warnings,
+      ...adapterWarnings,
+      ...deduped.warnings,
+    ],
   };
 }

@@ -67,6 +67,19 @@ describe('asset center service', () => {
     expect(ids).toEqual([...ids].sort((a, b) => a.localeCompare(b)));
   });
 
+  it('includes provider assets by default without leaking credentials', () => {
+    const snapshot = buildAssetCenterSnapshot({
+      domainSkillsRoot: path.join(root, 'domain-skills'),
+    });
+    const serialized = JSON.stringify(snapshot.items);
+
+    expect(snapshot.items.some((item) => item.id === 'ai.provider:openai')).toBe(true);
+    expect(snapshot.items.some((item) => item.kind === 'ai.modelPreset')).toBe(true);
+    expect(serialized).not.toMatch(/apiKey/i);
+    expect(serialized).not.toMatch(/sk-[A-Za-z0-9_-]{3,}/);
+    expect(serialized).not.toMatch(/AIza[0-9A-Za-z_-]*/);
+  });
+
   it('includes scanner warnings without throwing', () => {
     const snapshot = buildAssetCenterSnapshot({ domainSkillsRoot: path.join(root, 'missing') });
 
