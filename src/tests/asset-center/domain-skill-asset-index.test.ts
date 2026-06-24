@@ -1,0 +1,78 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { indexBundledDomainSkillAssets } from '../../main/asset-center/domain-skill-asset-index';
+
+let root: string;
+
+beforeEach(() => {
+  root = fs.mkdtempSync(path.join(os.tmpdir(), 'fishswarm-domain-skills-'));
+});
+
+afterEach(() => {
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+function writeSkill(name: string, body: string): void {
+  const dir = path.join(root, name);
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, 'SKILL.md'), body, 'utf8');
+}
+
+describe('domain skill asset index', () => {
+  it('returns a warning instead of throwing when the root is missing', () => {
+    const result = indexBundledDomainSkillAssets({ domainSkillsRoot: path.join(root, 'missing') });
+
+    expect(result.items).toEqual([]);
+    expect(result.warnings[0]).toContain('not found');
+  });
+
+  it('returns empty items for an empty root', () => {
+    const result = indexBundledDomainSkillAssets({ domainSkillsRoot: root });
+
+    expect(result.items).toEqual([]);
+    expect(result.warnings).toEqual([]);
+  });
+
+  it('indexes SKILL.md files in deterministic order', () => {
+    writeSkill('zeta', '---\nname: Zeta\ndescription: Last\n---\n# Zeta');
+    writeSkill('alpha', '---\nname: Alpha\ndescription: First\n---\n# Alpha');
+
+    const result = indexBundledDomainSkillAssets({ domainSkillsRoot: root });
+
+    expect(result.items.map((item) => item.id)).toEqual([
+      'domain-skill:alpha',
+      'domain-skill:zeta',
+    ]);
+    expect(result.items[0]?.title).toBe('Alpha');
+    expect(result.items[0]?.summary).toBe('First');
+  });
+
+  it('returns warnings for directories without SKILL.md', () => {
+    fs.mkdirSync(path.join(root, 'broken'), { recursive: true });
+
+    const result = indexBundledDomainSkillAssets({ domainSkillsRoot: root });
+
+    expect(result.items).toEqual([]);
+    expect(result.warnings.some((warning) => warning.includes('broken'))).toBe(true);
+  });
+
+  it('does not expose install, run, configure, or export actions in the read-only MVP', () => {
+    writeSkill('safe', '---\nname: Safe\ndescription: Safe skill\n---\n# Safe');
+
+    const result = indexBundledDomainSkillAssets({ domainSkillsRoot: root });
+
+    expect(result.items[0]?.actions).toEqual(['viewDetails', 'openSource']);
+  });
+
+  it('adds a stable content hash for indexed skills', () => {
+    writeSkill('hashed', '---\nname: Hashed\ndescription: Stable\n---\n# Hashed');
+
+    const first = indexBundledDomainSkillAssets({ domainSkillsRoot: root });
+    const second = indexBundledDomainSkillAssets({ domainSkillsRoot: root });
+
+    expect(first.items[0]?.contentHash).toMatch(/^[a-f0-9]{64}$/);
+    expect(first.items[0]?.contentHash).toBe(second.items[0]?.contentHash);
+  });
+});
