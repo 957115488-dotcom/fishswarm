@@ -8,6 +8,7 @@ import type {
 import { indexBuiltInSkillAssets } from './built-in-skill-asset-index';
 import { getLowcodeConceptAssets } from './lowcode-concepts';
 import { indexBundledDomainSkillAssets } from './domain-skill-asset-index';
+import { indexMcpAssets } from './mcp-asset-index';
 import { indexProviderAssets } from './provider-asset-index';
 import { indexRoleAssets } from './role-asset-index';
 
@@ -74,6 +75,7 @@ export function buildAssetCenterSnapshot(
   const domainSkillIndex = indexBundledDomainSkillAssets({ domainSkillsRoot });
   const builtInSkillIndex = indexBuiltInSkillAssets({ skillsRoot: builtInSkillsRoot });
   const providerIndex = indexProviderAssets();
+  const mcpIndex = indexMcpAssets();
   const roleIndex = indexRoleAssets();
   const adapterResults = (input.adapters || []).map(listAdapterAssets);
   const adapterItems = adapterResults.flatMap((result) => result.items);
@@ -83,6 +85,7 @@ export function buildAssetCenterSnapshot(
     ...domainSkillIndex.items,
     ...builtInSkillIndex.items,
     ...providerIndex.items,
+    ...mcpIndex.items,
     ...roleIndex.items,
     ...adapterItems,
   ]);
@@ -97,6 +100,7 @@ export function buildAssetCenterSnapshot(
       ...domainSkillIndex.warnings,
       ...builtInSkillIndex.warnings,
       ...providerIndex.warnings,
+      ...mcpIndex.warnings,
       ...roleIndex.warnings,
       ...adapterWarnings,
       ...deduped.warnings,

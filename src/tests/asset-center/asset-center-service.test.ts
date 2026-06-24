@@ -94,6 +94,18 @@ describe('asset center service', () => {
     expect(snapshot.stats.role).toBeGreaterThan(0);
   });
 
+  it('includes MCP server assets by default without leaking env values', () => {
+    const snapshot = buildAssetCenterSnapshot({
+      domainSkillsRoot: path.join(root, 'domain-skills'),
+      builtInSkillsRoot: path.join(root, 'built-in-skills'),
+    });
+    const serialized = JSON.stringify(snapshot.items);
+
+    expect(snapshot.items.some((item) => item.id.startsWith('mcp.server:'))).toBe(true);
+    expect(snapshot.stats['mcp.server']).toBeGreaterThan(0);
+    expect(serialized).not.toContain('NOTION_TOKEN=');
+  });
+
   it('includes provider assets by default without leaking credentials', () => {
     const snapshot = buildAssetCenterSnapshot({
       domainSkillsRoot: path.join(root, 'domain-skills'),
