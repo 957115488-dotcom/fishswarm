@@ -7,6 +7,8 @@ import type {
   AssetCenterItem,
   AssetSourceAdapter,
 } from '../../main/asset-center/asset-center-types';
+import type { WorkflowArtifactEnvelope } from '../../main/workflows/workflow-artifact-store';
+import type { InstalledPlugin } from '../../renderer/types';
 
 let root: string;
 
@@ -117,6 +119,52 @@ describe('asset center service', () => {
     expect(serialized).not.toMatch(/apiKey/i);
     expect(serialized).not.toMatch(/sk-[A-Za-z0-9_-]{3,}/);
     expect(serialized).not.toMatch(/AIza[0-9A-Za-z_-]*/);
+  });
+
+  it('includes explicitly supplied plugin assets in the unified snapshot', () => {
+    const installed: InstalledPlugin = {
+      pluginId: 'review-tools',
+      name: 'Review Tools',
+      enabled: true,
+      sourcePath: 'C:/plugins/source/review-tools',
+      runtimePath: 'C:/plugins/runtime/review-tools',
+      componentCounts: { skills: 1, commands: 0, agents: 0, hooks: 0, mcp: 0 },
+      componentsEnabled: { skills: true, commands: false, agents: false, hooks: false, mcp: false },
+      installedAt: 1,
+      updatedAt: 2,
+    };
+
+    const snapshot = buildAssetCenterSnapshot({
+      domainSkillsRoot: path.join(root, 'domain-skills'),
+      pluginAssets: { installed: [installed] },
+    });
+
+    expect(snapshot.items.some((item) => item.id === 'plugin:installed:review-tools')).toBe(true);
+    expect(snapshot.stats.plugin).toBe(1);
+  });
+
+  it('includes explicitly supplied workflow artifacts in the unified snapshot', () => {
+    const artifact: WorkflowArtifactEnvelope = {
+      id: '12345678-1234-1234-1234-123456789abc',
+      kind: 'review_gate',
+      ts: '2026-06-25T00:00:00.000Z',
+      workspaceKey: 'workspace-key',
+      title: 'Review Gate',
+      status: 'ready',
+      artifact: {},
+    };
+
+    const snapshot = buildAssetCenterSnapshot({
+      domainSkillsRoot: path.join(root, 'domain-skills'),
+      workflowArtifacts: { artifacts: [artifact] },
+    });
+
+    expect(
+      snapshot.items.some(
+        (item) => item.id === 'workflow.artifact:review_gate:12345678-1234-1234-1234-123456789abc'
+      )
+    ).toBe(true);
+    expect(snapshot.stats['workflow.artifact']).toBe(1);
   });
 
   it('includes scanner warnings without throwing', () => {

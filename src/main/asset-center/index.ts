@@ -6,3 +6,5 @@ export * from './provider-asset-index';
 export * from './role-asset-index';
 export * from './built-in-skill-asset-index';
 export * from './mcp-asset-index';
+export * from './plugin-asset-index';
+export * from './workflow-artifact-asset-index';

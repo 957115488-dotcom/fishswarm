@@ -9,14 +9,20 @@ import { indexBuiltInSkillAssets } from './built-in-skill-asset-index';
 import { getLowcodeConceptAssets } from './lowcode-concepts';
 import { indexBundledDomainSkillAssets } from './domain-skill-asset-index';
 import { indexMcpAssets } from './mcp-asset-index';
+import type { PluginAssetIndexInput } from './plugin-asset-index';
+import { indexPluginAssets } from './plugin-asset-index';
 import { indexProviderAssets } from './provider-asset-index';
 import { indexRoleAssets } from './role-asset-index';
+import type { WorkflowArtifactAssetIndexInput } from './workflow-artifact-asset-index';
+import { indexWorkflowArtifactAssets } from './workflow-artifact-asset-index';
 
 export interface BuildAssetCenterSnapshotInput {
   domainSkillsRoot?: string;
   builtInSkillsRoot?: string;
   now?: Date;
   cwd?: string;
+  pluginAssets?: PluginAssetIndexInput;
+  workflowArtifacts?: WorkflowArtifactAssetIndexInput | false;
   adapters?: AssetSourceAdapter[];
 }
 
@@ -77,6 +83,13 @@ export function buildAssetCenterSnapshot(
   const providerIndex = indexProviderAssets();
   const mcpIndex = indexMcpAssets();
   const roleIndex = indexRoleAssets();
+  const pluginIndex = indexPluginAssets(input.pluginAssets);
+  const workflowArtifactIndex =
+    input.workflowArtifacts === false
+      ? { items: [], warnings: [] }
+      : input.workflowArtifacts
+        ? indexWorkflowArtifactAssets({ cwd, ...input.workflowArtifacts })
+        : { items: [], warnings: [] };
   const adapterResults = (input.adapters || []).map(listAdapterAssets);
   const adapterItems = adapterResults.flatMap((result) => result.items);
   const adapterWarnings = adapterResults.flatMap((result) => result.warnings);
@@ -87,6 +100,8 @@ export function buildAssetCenterSnapshot(
     ...providerIndex.items,
     ...mcpIndex.items,
     ...roleIndex.items,
+    ...pluginIndex.items,
+    ...workflowArtifactIndex.items,
     ...adapterItems,
   ]);
   const items = sortItems(deduped.items);
@@ -102,6 +117,8 @@ export function buildAssetCenterSnapshot(
       ...providerIndex.warnings,
       ...mcpIndex.warnings,
       ...roleIndex.warnings,
+      ...pluginIndex.warnings,
+      ...workflowArtifactIndex.warnings,
       ...adapterWarnings,
       ...deduped.warnings,
     ],
