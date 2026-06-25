@@ -59,3 +59,32 @@ export interface ExportDryRunResult {
   warnings: string[];
   blockers: ExportBlocker[];
 }
+
+export interface CreateExportPackageInput extends ExportDryRunInput {
+  dryRun?: ExportDryRunResult;
+  expectedDryRunSha256?: string;
+  stagingDir?: string;
+  packageFileName?: string;
+}
+
+export interface ExportRedactionReport {
+  schemaVersion: 1;
+  packageId: string;
+  createdAt: string;
+  dryRunSha256: string;
+  findings: RedactionFinding[];
+  warnings: string[];
+  blockers: ExportBlocker[];
+}
+
+export interface CreateExportPackageResult {
+  ok: true;
+  packageId: string;
+  packagePath: string;
+  checksumPath: string;
+  size: number;
+  sha256: string;
+  dryRunSha256: string;
+  manifest: ExportPackageManifest;
+  redactionReport: ExportRedactionReport;
+}
