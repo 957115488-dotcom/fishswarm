@@ -1,5 +1,5 @@
 ﻿import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, Loader2, RefreshCw, Search, ShieldCheck } from 'lucide-react';
+import { AlertTriangle, Loader2, RefreshCw, Search, Send, ShieldCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type {
   AssetCenterSnapshot,
@@ -7,6 +7,8 @@ import type {
   AssetSource,
   AssetStatus,
 } from '../../types/asset-center';
+import { useAppStore } from '../../store';
+import { canUseAssetInTask, formatAssetTaskReference } from '../../utils/asset-task-reference';
 import {
   ASSET_GROUPS,
   buildAssetCenterViewModel,
@@ -44,7 +46,13 @@ function MetadataRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function AssetDetailPanel({ item }: { item: AssetCenterViewItem | null }) {
+function AssetDetailPanel({
+  item,
+  onUseInTask,
+}: {
+  item: AssetCenterViewItem | null;
+  onUseInTask: (item: AssetCenterViewItem) => void;
+}) {
   const { t } = useTranslation();
 
   if (!item) {
@@ -89,7 +97,7 @@ function AssetDetailPanel({ item }: { item: AssetCenterViewItem | null }) {
 
         <div>
           <h5 className="mb-2 text-xs font-semibold text-text-primary">
-            {t('assetCenter.actions', '只读动作')}
+            {t('assetCenter.actions', '动作')}
           </h5>
           <div className="flex flex-wrap gap-2">
             {item.actions.map((action) => (
@@ -101,10 +109,20 @@ function AssetDetailPanel({ item }: { item: AssetCenterViewItem | null }) {
               </span>
             ))}
           </div>
+          {canUseAssetInTask(item) && (
+            <button
+              type="button"
+              onClick={() => onUseInTask(item)}
+              className="mt-3 inline-flex items-center gap-2 rounded-lg border border-accent/30 bg-accent/10 px-3 py-2 text-xs font-medium text-accent transition-colors hover:bg-accent/15"
+            >
+              <Send className="h-3.5 w-3.5" />
+              {t('assetCenter.useInTask', '插入到任务输入框')}
+            </button>
+          )}
           <p className="mt-2 text-[11px] leading-4 text-text-muted">
             {t(
               'assetCenter.readOnlyHint',
-              '当前阶段仅支持查看详情、预览和来源提示，不会安装、运行、导出或写入文件。'
+              '当前阶段不会安装、运行、导出或写入文件；“插入到任务输入框”只生成结构化引用，仍需用户手动发送。'
             )}
           </p>
         </div>
@@ -145,6 +163,9 @@ function AssetDetailPanel({ item }: { item: AssetCenterViewItem | null }) {
 
 export function SettingsAssets({ isActive }: { isActive: boolean }) {
   const { t } = useTranslation();
+  const queuePromptInsert = useAppStore((state) => state.queuePromptInsert);
+  const setShowSettings = useAppStore((state) => state.setShowSettings);
+  const setGlobalNotice = useAppStore((state) => state.setGlobalNotice);
   const [snapshot, setSnapshot] = useState<AssetCenterSnapshot | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -205,6 +226,24 @@ export function SettingsAssets({ isActive }: { isActive: boolean }) {
 
   const resetFilters = () =>
     setFilters({ keyword: '', groupId: 'all', kind: 'all', source: 'all', status: 'all' });
+
+  const handleUseInTask = useCallback(
+    (item: AssetCenterViewItem) => {
+      if (!canUseAssetInTask(item)) return;
+      queuePromptInsert({
+        text: formatAssetTaskReference(item),
+        source: 'assetCenter',
+        assetId: item.id,
+      });
+      setGlobalNotice({
+        id: `asset-use-in-task-${Date.now()}`,
+        type: 'success',
+        message: t('assetCenter.useInTaskQueued', '已将资产引用插入任务输入框，请检查后手动发送。'),
+      });
+      setShowSettings(false);
+    },
+    [queuePromptInsert, setGlobalNotice, setShowSettings, t]
+  );
 
   return (
     <div className="space-y-5">
@@ -424,7 +463,7 @@ export function SettingsAssets({ isActive }: { isActive: boolean }) {
               ))}
           </div>
           <div className="lg:sticky lg:top-0 lg:self-start">
-            <AssetDetailPanel item={selectedItem} />
+            <AssetDetailPanel item={selectedItem} onUseInTask={handleUseInTask} />
             {snapshot?.generatedAt && (
               <p className="mt-2 text-center text-[11px] text-text-muted">
                 {t('assetCenter.generatedAt', '生成时间')}: {formatDate(snapshot.generatedAt)}

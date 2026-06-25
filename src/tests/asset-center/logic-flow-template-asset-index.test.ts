@@ -27,7 +27,7 @@ describe('LogicFlow template asset index', () => {
     expect(result.items[0]?.id).toBe('workflow.template:logic-flow:example-review-flow');
     expect(result.items[0]?.kind).toBe('workflow.template');
     expect(result.items[0]?.sourceRef).toEqual({ type: 'generated', id: 'Example Review Flow' });
-    expect(result.items[0]?.actions).toEqual(['viewDetails', 'preview']);
+    expect(result.items[0]?.actions).toEqual(['viewDetails', 'preview', 'useInTask']);
     expect(result.items[0]?.warnings[0]).toContain('not executed directly');
     expect(result.items[0]?.tags).toContain('node:manual');
     expect(result.items[0]?.tags).toContain('node:role');

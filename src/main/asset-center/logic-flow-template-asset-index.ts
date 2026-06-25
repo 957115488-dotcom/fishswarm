@@ -47,7 +47,7 @@ function templateToAsset(template: LogicFlowBuiltinTemplate): AssetCenterItem {
     },
     schemaVersion: 1,
     contentHash: documentHash,
-    actions: ['viewDetails', 'preview'],
+    actions: ['viewDetails', 'preview', 'useInTask'],
     warnings: ['LogicFlow templates are preview-only and are not executed directly.'],
   };
 }

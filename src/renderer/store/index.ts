@@ -32,6 +32,14 @@ export interface SessionExecutionClock {
   endAt: number | null;
 }
 
+export interface PendingPromptInsert {
+  id: string;
+  text: string;
+  source: 'assetCenter';
+  assetId?: string;
+  createdAt: number;
+}
+
 // Unified per-session state that replaces 8 parallel xxxBySession Maps
 export interface SessionState {
   messages: Message[];
@@ -122,6 +130,7 @@ interface AppState {
   contextPanelCollapsed: boolean;
   showSettings: boolean;
   settingsTab: string | null;
+  pendingPromptInsert: PendingPromptInsert | null;
 
   // Permission
   pendingPermission: PermissionRequest | null;
@@ -201,6 +210,12 @@ interface AppState {
   setContextPanelCollapsed: (collapsed: boolean) => void;
   setShowSettings: (show: boolean) => void;
   setSettingsTab: (tab: string | null) => void;
+  queuePromptInsert: (input: {
+    text: string;
+    source: PendingPromptInsert['source'];
+    assetId?: string;
+  }) => void;
+  clearPromptInsert: (id?: string) => void;
 
   setPendingPermission: (permission: PermissionRequest | null) => void;
 
@@ -274,6 +289,7 @@ export const useAppStore = create<AppState>((set) => ({
   contextPanelCollapsed: false,
   showSettings: false,
   settingsTab: null,
+  pendingPromptInsert: null,
   pendingPermission: null,
   pendingSudoPassword: null,
   settings: defaultSettings,
@@ -641,6 +657,22 @@ export const useAppStore = create<AppState>((set) => ({
   setContextPanelCollapsed: (collapsed) => set({ contextPanelCollapsed: collapsed }),
   setShowSettings: (show) => set({ showSettings: show }),
   setSettingsTab: (tab) => set({ settingsTab: tab }),
+  queuePromptInsert: (input) =>
+    set({
+      pendingPromptInsert: {
+        id: `prompt-insert-${Date.now()}`,
+        text: input.text,
+        source: input.source,
+        assetId: input.assetId,
+        createdAt: Date.now(),
+      },
+    }),
+  clearPromptInsert: (id) =>
+    set((state) => {
+      if (!state.pendingPromptInsert) return {};
+      if (id && state.pendingPromptInsert.id !== id) return {};
+      return { pendingPromptInsert: null };
+    }),
 
   // Permission actions
   setPendingPermission: (permission) => set({ pendingPermission: permission }),

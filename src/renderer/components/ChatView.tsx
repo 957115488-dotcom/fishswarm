@@ -15,6 +15,7 @@ import { useIPC } from '../hooks/useIPC';
 import { MessageCard } from './MessageCard';
 import type { ApiConfigSet, Message, ContentBlock } from '../types';
 import { Send, Square, Plus, Loader2, Plug, X, Clock, ChevronDown, Check } from 'lucide-react';
+import { appendPromptInsert } from '../utils/asset-task-reference';
 
 type AttachedFile = {
   name: string;
@@ -50,6 +51,8 @@ export function ChatView() {
   const setGlobalNotice = useAppStore((s) => s.setGlobalNotice);
   const setAppConfig = useAppStore((s) => s.setAppConfig);
   const setIsConfigured = useAppStore((s) => s.setIsConfigured);
+  const pendingPromptInsert = useAppStore((s) => s.pendingPromptInsert);
+  const clearPromptInsert = useAppStore((s) => s.clearPromptInsert);
   const { continueSession, stopSession, isElectron } = useIPC();
   const [prompt, setPrompt] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -270,6 +273,13 @@ export function ChatView() {
   useEffect(() => {
     textareaRef.current?.focus();
   }, [activeSessionId]);
+
+  useEffect(() => {
+    if (!pendingPromptInsert) return;
+    setPrompt((current) => appendPromptInsert(current, pendingPromptInsert.text));
+    clearPromptInsert(pendingPromptInsert.id);
+    requestAnimationFrame(() => textareaRef.current?.focus());
+  }, [clearPromptInsert, pendingPromptInsert]);
 
   useEffect(() => {
     if (!isModelMenuOpen) return;

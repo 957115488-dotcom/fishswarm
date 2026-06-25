@@ -4,6 +4,7 @@ import { useAppStore } from '../store';
 import { useIPC } from '../hooks/useIPC';
 import type { ApiConfigSet, ContentBlock } from '../types';
 import { getInitialSessionTitle } from '../../shared/session-title';
+import { appendPromptInsert } from '../utils/asset-task-reference';
 import {
   FileText,
   BarChart3,
@@ -61,6 +62,8 @@ export function WelcomeView() {
   const setIsConfigured = useAppStore((state) => state.setIsConfigured);
   const setShowSettings = useAppStore((state) => state.setShowSettings);
   const setSettingsTab = useAppStore((state) => state.setSettingsTab);
+  const pendingPromptInsert = useAppStore((state) => state.pendingPromptInsert);
+  const clearPromptInsert = useAppStore((state) => state.clearPromptInsert);
   const canSubmit = prompt.trim().length > 0 || pastedImages.length > 0 || attachedFiles.length > 0;
   const configSets = appConfig?.configSets || [];
   const activeConfigSetId = appConfig?.activeConfigSetId || '';
@@ -440,7 +443,7 @@ export function WelcomeView() {
   };
 
   // Auto-adjust textarea height based on content
-  const adjustTextareaHeight = () => {
+  const adjustTextareaHeight = useCallback(() => {
     const textarea = textareaRef.current;
     if (textarea) {
       // Reset height to auto to get the correct scrollHeight
@@ -452,12 +455,23 @@ export function WelcomeView() {
       // Show scrollbar if content exceeds max height
       textarea.style.overflowY = textarea.scrollHeight > maxHeight ? 'auto' : 'hidden';
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!pendingPromptInsert) return;
+    setSelectedTag(null);
+    setPrompt((current) => appendPromptInsert(current, pendingPromptInsert.text));
+    clearPromptInsert(pendingPromptInsert.id);
+    requestAnimationFrame(() => {
+      textareaRef.current?.focus();
+      adjustTextareaHeight();
+    });
+  }, [adjustTextareaHeight, clearPromptInsert, pendingPromptInsert]);
 
   // Adjust height when prompt changes
   useEffect(() => {
     adjustTextareaHeight();
-  }, [prompt]);
+  }, [adjustTextareaHeight, prompt]);
 
   const quickTags = [
     {

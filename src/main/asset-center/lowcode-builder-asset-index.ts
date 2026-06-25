@@ -211,7 +211,7 @@ function indexExampleModule(realRoot: string): { item?: AssetCenterItem; warning
       },
       schemaVersion: 1,
       contentHash: sha256Text(content),
-      actions: ['viewDetails', 'preview'],
+      actions: ['viewDetails', 'preview', 'useInTask'],
       warnings: [],
     },
   };
@@ -301,7 +301,7 @@ export function indexLowcodeBuilderAssets(
               },
               schemaVersion: 1,
               contentHash,
-              actions: ['viewDetails', 'preview'],
+              actions: ['viewDetails', 'preview', 'useInTask'],
               warnings: [],
             } satisfies AssetCenterItem;
           })

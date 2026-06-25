@@ -38,9 +38,8 @@ describe('role asset index', () => {
     expect(result.warnings).toEqual([]);
     expect(result.items.length).toBe(BUILT_IN_ROLES.length);
     expect(result.items.every((item) => item.kind === 'role')).toBe(true);
-    expect(
-      result.items.every((item) => item.actions.every((action) => action === 'viewDetails'))
-    ).toBe(true);
+    expect(result.items.every((item) => item.actions.includes('viewDetails'))).toBe(true);
+    expect(result.items.every((item) => item.actions.includes('useInTask'))).toBe(true);
   });
 
   it('keeps role ids stable and deterministic', () => {

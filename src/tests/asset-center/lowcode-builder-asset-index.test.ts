@@ -79,12 +79,12 @@ describe('low-code builder asset index', () => {
     expect(result.items[0]?.summary).toContain('dashboard block');
   });
 
-  it('keeps component blueprint assets read-only and preview-only', () => {
+  it('keeps component blueprint assets controlled and non-executable', () => {
     writeBlueprints([{ kind: 'api-connector', displayName: 'API Connector' }]);
 
     const result = indexLowcodeBuilderAssets({ lowcodeBuilderRoot: root });
 
-    expect(result.items[0]?.actions).toEqual(['viewDetails', 'preview']);
+    expect(result.items[0]?.actions).toEqual(['viewDetails', 'preview', 'useInTask']);
     expect(result.items[0]?.actions).not.toContain('run');
     expect(result.items[0]?.actions).not.toContain('install');
     expect(result.items[0]?.sourceRef.path).toContain('component-blueprints.json');
@@ -111,7 +111,7 @@ describe('low-code builder asset index', () => {
     expect(result.items[0]?.id).toBe('workflow.template:lowcode-builder:fishswarmoperationsboard');
     expect(result.items[0]?.kind).toBe('workflow.template');
     expect(result.items[0]?.title).toBe('FishSwarm Low-code Operations Board');
-    expect(result.items[0]?.actions).toEqual(['viewDetails', 'preview']);
+    expect(result.items[0]?.actions).toEqual(['viewDetails', 'preview', 'useInTask']);
   });
 
   it('indexes the generator script as a read-only workflow template reference', () => {

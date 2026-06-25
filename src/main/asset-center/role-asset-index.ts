@@ -29,7 +29,7 @@ export function indexRoleAssets(input: RoleAssetIndexInput = {}): RoleAssetIndex
     sourceRef: { type: 'generated', id: role.id },
     schemaVersion: 1,
     updatedAt: role.updatedAt,
-    actions: ['viewDetails'],
+    actions: ['viewDetails', 'useInTask'],
     warnings: [],
   })) satisfies AssetCenterItem[];
 

@@ -172,7 +172,7 @@ describe('asset center service', () => {
     );
 
     expect(logicFlowAsset?.kind).toBe('workflow.template');
-    expect(logicFlowAsset?.actions).toEqual(['viewDetails', 'preview']);
+    expect(logicFlowAsset?.actions).toEqual(['viewDetails', 'preview', 'useInTask']);
     expect(logicFlowAsset?.warnings[0]).toContain('not executed directly');
     expect(logicFlowAsset?.tags).toContain('logic-flow');
   });
