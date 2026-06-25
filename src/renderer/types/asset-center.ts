@@ -2,6 +2,8 @@
   AssetAction,
   AssetCenterItem,
   AssetCenterSnapshot,
+  AssetExportCreatePackageResponse,
+  AssetExportDryRunResponse,
   AssetKind,
   AssetScope,
   AssetSource,

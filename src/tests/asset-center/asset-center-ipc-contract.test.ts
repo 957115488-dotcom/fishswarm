@@ -22,6 +22,10 @@ describe('asset center IPC contract', () => {
 
     expect(preload).toContain("ipcRenderer.invoke('assetCenter.getSnapshot')");
     expect(main).toContain("ipcMain.handle('assetCenter.getSnapshot'");
+    expect(preload).toContain("ipcRenderer.invoke('assetExport.dryRun'");
+    expect(preload).toContain("ipcRenderer.invoke('assetExport.createPackage'");
+    expect(main).toContain('assetExport.dryRun');
+    expect(main).toContain('assetExport.createPackage');
 
     for (const channel of forbiddenChannels) {
       expect(preload).not.toContain(channel);

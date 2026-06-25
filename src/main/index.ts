@@ -65,6 +65,11 @@ import type {
 import type { SessionGuardUpdate } from '../shared/ipc-types';
 import type {
   AddDecisionInput,
+  AssetExportCreatePackageRequest,
+  AssetExportCreatePackageResponse,
+  AssetExportDryRunRequest,
+  AssetExportDryRunResponse,
+  AssetExportPolicyDecisionSummary,
   BacklogSpecInput,
   BrowserSkillifyInput,
   BenchmarkRunInput,
@@ -196,9 +201,33 @@ import {
 } from './roles/role-candidate-store';
 import { incubateRoleForGap } from './roles/role-incubation-service';
 import { buildAssetCenterSnapshot } from './asset-center/asset-center-service';
+import { decideAssetPolicy } from './asset-center/asset-policy-service';
+import type { AssetPolicyDecision } from './asset-center/asset-policy-types';
+import { runAssetExportDryRun } from './release/asset-export-dry-run';
+import {
+  computeExportDryRunSnapshotSha256,
+  createAssetExportPackage,
+} from './release/asset-export-package';
 
 // Current working directory (persisted between sessions)
 let currentWorkingDir: string | null = null;
+
+function getActiveWorkspaceDir(): string {
+  return currentWorkingDir || configStore.get('defaultWorkdir') || process.cwd();
+}
+
+function summarizeExportPolicyDecision(
+  decision: AssetPolicyDecision
+): AssetExportPolicyDecisionSummary {
+  return {
+    effect: decision.effect,
+    reason: decision.reason,
+    risk: decision.risk,
+    policyId: decision.policyId,
+    policyVersion: decision.policyVersion,
+    requiresHumanApproval: decision.requiresHumanApproval,
+  };
+}
 
 // Load .env file from project root (for development)
 const envPath = resolve(__dirname, '../../.env');
@@ -1838,7 +1867,7 @@ ipcMain.handle('workflowArtifacts.list', (_event, payload?: WorkflowArtifactList
 });
 
 ipcMain.handle('assetCenter.getSnapshot', () => {
-  const cwd = currentWorkingDir || configStore.get('defaultWorkdir') || process.cwd();
+  const cwd = getActiveWorkspaceDir();
   const warnings: string[] = [];
   let installedPlugins: InstalledPlugin[] = [];
 
@@ -1859,6 +1888,72 @@ ipcMain.handle('assetCenter.getSnapshot', () => {
     ? { ...snapshot, warnings: [...snapshot.warnings, ...warnings] }
     : snapshot;
 });
+
+ipcMain.handle(
+  'assetExport.dryRun',
+  (_event, payload?: AssetExportDryRunRequest): AssetExportDryRunResponse => {
+    const cwd = getActiveWorkspaceDir();
+    const result = runAssetExportDryRun({
+      cwd,
+      mode: payload?.mode,
+      includeRules: payload?.includeRules,
+      excludeRules: payload?.excludeRules,
+      artifactRefs: payload?.artifactRefs,
+      fishSwarmVersion: payload?.fishSwarmVersion || app.getVersion(),
+    });
+
+    return {
+      result,
+      dryRunSha256: computeExportDryRunSnapshotSha256(result),
+    };
+  }
+);
+
+ipcMain.handle(
+  'assetExport.createPackage',
+  async (
+    _event,
+    payload: AssetExportCreatePackageRequest
+  ): Promise<AssetExportCreatePackageResponse> => {
+    if (!payload?.dryRun || !payload.expectedDryRunSha256) {
+      throw new Error('A dry-run snapshot and expectedDryRunSha256 are required.');
+    }
+
+    const assetId = payload.artifactRefs?.[0] || payload.dryRun.manifest.artifactRefs[0];
+    const policyDecision = decideAssetPolicy({
+      action: 'asset.export',
+      subject: { type: 'user', id: 'local-user', displayName: 'Local user' },
+      resource: {
+        type: 'asset',
+        id: assetId || 'workspace-export-package',
+        assetId,
+      },
+    });
+
+    if (policyDecision.effect === 'deny') {
+      throw new Error(`Export package blocked by policy: ${policyDecision.reason}`);
+    }
+
+    if (policyDecision.requiresHumanApproval && !payload.approved) {
+      throw new Error('Human approval is required before creating an export package.');
+    }
+
+    const cwd = getActiveWorkspaceDir();
+    const packageResult = await createAssetExportPackage({
+      cwd,
+      dryRun: payload.dryRun,
+      expectedDryRunSha256: payload.expectedDryRunSha256,
+      stagingDir: join(app.getPath('userData'), 'asset-exports'),
+      packageFileName: payload.packageFileName,
+      fishSwarmVersion: app.getVersion(),
+    });
+
+    return {
+      ...packageResult,
+      policyDecision: summarizeExportPolicyDecision(policyDecision),
+    };
+  }
+);
 
 ipcMain.handle('spec.createArtifact', (_event, payload: BacklogSpecInput) => {
   const cwd =

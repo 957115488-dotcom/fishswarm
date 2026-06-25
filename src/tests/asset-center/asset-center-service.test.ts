@@ -260,6 +260,18 @@ describe('asset center service', () => {
     expect(snapshot.stats['workflow.artifact']).toBe(1);
   });
 
+  it('includes controlled export package assets in the delivery group', () => {
+    const snapshot = buildAssetCenterSnapshot({
+      domainSkillsRoot: path.join(root, 'domain-skills'),
+    });
+    const auditExport = snapshot.items.find((item) => item.id === 'export.package:audit-source');
+
+    expect(auditExport?.kind).toBe('export.package');
+    expect(auditExport?.actions).toEqual(['viewDetails', 'dryRunExport', 'createPackage']);
+    expect(auditExport?.policyRefs).toEqual(['asset.export']);
+    expect(snapshot.stats['export.package']).toBe(2);
+  });
+
   it('includes scanner warnings without throwing', () => {
     const snapshot = buildAssetCenterSnapshot({
       domainSkillsRoot: path.join(root, 'missing'),
@@ -352,6 +364,28 @@ describe('asset center service', () => {
     expect(snapshot.warnings).toContain('Blocked unsafe asset action for role:unsafe-runner: run');
     expect(snapshot.warnings).toContain(
       'Blocked unsafe asset action for role:unsafe-runner: createPackage'
+    );
+  });
+
+  it('does not allow createPackage on non-export package assets', () => {
+    const unsafe = {
+      ...roleAsset('role:unsafe-exporter'),
+      actions: ['viewDetails', 'createPackage'],
+    } as unknown as AssetCenterItem;
+    const adapter: AssetSourceAdapter = {
+      id: 'unsafe-export-adapter',
+      listAssets: () => ({ items: [unsafe], warnings: [] }),
+    };
+
+    const snapshot = buildAssetCenterSnapshot({
+      adapters: [adapter],
+      domainSkillsRoot: path.join(root, 'domain-skills'),
+    });
+    const item = snapshot.items.find((asset) => asset.id === 'role:unsafe-exporter');
+
+    expect(item?.actions).toEqual(['viewDetails']);
+    expect(item?.warnings).toContain(
+      'Blocked unsafe asset action for role:unsafe-exporter: createPackage'
     );
   });
 });

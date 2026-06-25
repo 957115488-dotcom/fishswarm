@@ -10,6 +10,8 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type {
+  AssetExportCreatePackageResponse,
+  AssetExportDryRunResponse,
   AssetCenterSnapshot,
   AssetKind,
   AssetSource,
@@ -22,6 +24,11 @@ import {
 } from '../../utils/asset-provider-configure';
 import { canUseAssetInTask, formatAssetTaskReference } from '../../utils/asset-task-reference';
 import {
+  canCreateAssetExportPackage,
+  canRunAssetExportDryRun,
+  getAssetExportMode,
+} from '../../utils/asset-export-view-model';
+import {
   ASSET_GROUPS,
   buildAssetCenterViewModel,
   type AssetCenterFilters,
@@ -32,6 +39,8 @@ import { AssetCard } from '../presets/AssetCard';
 import { AssetStatusPill } from '../presets/AssetStatusPill';
 import { EmptyState } from '../presets/EmptyState';
 import { SectionCard } from '../presets/SectionCard';
+import { AssetExportDryRunPanel } from '../release/AssetExportDryRunPanel';
+import { AssetExportResultPanel } from '../release/AssetExportResultPanel';
 import { SettingsContentSection } from './shared';
 
 const isElectron = typeof window !== 'undefined' && window.electronAPI !== undefined;
@@ -62,10 +71,30 @@ function AssetDetailPanel({
   item,
   onUseInTask,
   onConfigureProvider,
+  exportDryRun,
+  exportResult,
+  exportError,
+  exportApproved,
+  isExportDryRunRunning,
+  isExportPackageCreating,
+  onRunExportDryRun,
+  onExportApprovalChange,
+  onCreateExportPackage,
+  onRevealExportPackage,
 }: {
   item: AssetCenterViewItem | null;
   onUseInTask: (item: AssetCenterViewItem) => void;
   onConfigureProvider: (item: AssetCenterViewItem) => void;
+  exportDryRun: AssetExportDryRunResponse | null;
+  exportResult: AssetExportCreatePackageResponse | null;
+  exportError: string | null;
+  exportApproved: boolean;
+  isExportDryRunRunning: boolean;
+  isExportPackageCreating: boolean;
+  onRunExportDryRun: (item: AssetCenterViewItem) => void;
+  onExportApprovalChange: (approved: boolean) => void;
+  onCreateExportPackage: (item: AssetCenterViewItem) => void;
+  onRevealExportPackage: (path: string) => void;
 }) {
   const { t } = useTranslation();
 
@@ -143,10 +172,25 @@ function AssetDetailPanel({
               {t('assetCenter.configureProvider', '打开模型配置')}
             </button>
           )}
+          {canRunAssetExportDryRun(item) && (
+            <div className="mt-3 space-y-3">
+              <AssetExportDryRunPanel
+                response={exportDryRun}
+                error={exportError}
+                approved={exportApproved}
+                isRunning={isExportDryRunRunning}
+                isCreating={isExportPackageCreating}
+                onRunDryRun={() => onRunExportDryRun(item)}
+                onApprovalChange={onExportApprovalChange}
+                onCreatePackage={() => onCreateExportPackage(item)}
+              />
+              <AssetExportResultPanel result={exportResult} onReveal={onRevealExportPackage} />
+            </div>
+          )}
           <p className="mt-2 text-[11px] leading-4 text-text-muted">
             {t(
               'assetCenter.readOnlyHint',
-              '当前阶段不会安装、运行、导出或写入文件；受控动作只会插入任务引用或打开现有设置页。'
+              '当前阶段不会安装或运行资产；导出只能通过 dry-run、人工批准和 main process 受控服务完成。'
             )}
           </p>
         </div>
@@ -203,6 +247,12 @@ export function SettingsAssets({ isActive }: { isActive: boolean }) {
     source: 'all',
     status: 'all',
   });
+  const [exportDryRun, setExportDryRun] = useState<AssetExportDryRunResponse | null>(null);
+  const [exportResult, setExportResult] = useState<AssetExportCreatePackageResponse | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
+  const [exportApproved, setExportApproved] = useState(false);
+  const [isExportDryRunRunning, setIsExportDryRunRunning] = useState(false);
+  const [isExportPackageCreating, setIsExportPackageCreating] = useState(false);
 
   const baseViewModel = useMemo(() => buildAssetCenterViewModel(snapshot), [snapshot]);
   const viewModel = useMemo(
@@ -223,6 +273,13 @@ export function SettingsAssets({ isActive }: { isActive: boolean }) {
       setSelectedId(selectedItem.id);
     }
   }, [selectedId, selectedItem]);
+
+  useEffect(() => {
+    setExportDryRun(null);
+    setExportResult(null);
+    setExportError(null);
+    setExportApproved(false);
+  }, [selectedItem?.id]);
 
   const loadSnapshot = useCallback(async () => {
     if (!isElectron) {
@@ -295,6 +352,81 @@ export function SettingsAssets({ isActive }: { isActive: boolean }) {
     [queueProviderConfigure, setGlobalNotice, setSettingsTab, setShowSettings, t]
   );
 
+  const handleRunExportDryRun = useCallback(
+    async (item: AssetCenterViewItem) => {
+      if (!canRunAssetExportDryRun(item)) return;
+      if (!isElectron || !window.electronAPI.assetExport) {
+        setExportError(t('assetExport.desktopOnly', '导出工作流需要在 Electron 桌面端运行。'));
+        return;
+      }
+
+      setIsExportDryRunRunning(true);
+      setExportError(null);
+      setExportResult(null);
+      setExportApproved(false);
+      try {
+        const response = await window.electronAPI.assetExport.dryRun({
+          mode: getAssetExportMode(item),
+          artifactRefs: [item.id],
+        });
+        setExportDryRun(response);
+      } catch (err) {
+        setExportError(
+          err instanceof Error ? err.message : t('assetExport.dryRunFailed', '导出 dry-run 失败')
+        );
+      } finally {
+        setIsExportDryRunRunning(false);
+      }
+    },
+    [t]
+  );
+
+  const handleCreateExportPackage = useCallback(
+    async (item: AssetCenterViewItem) => {
+      if (!canCreateAssetExportPackage(item) || !exportDryRun || !exportApproved) return;
+      if (!isElectron || !window.electronAPI.assetExport) {
+        setExportError(t('assetExport.desktopOnly', '导出工作流需要在 Electron 桌面端运行。'));
+        return;
+      }
+
+      const mode = getAssetExportMode(item);
+      const date = new Date().toISOString().slice(0, 10);
+      setIsExportPackageCreating(true);
+      setExportError(null);
+      try {
+        const result = await window.electronAPI.assetExport.createPackage({
+          dryRun: exportDryRun.result,
+          expectedDryRunSha256: exportDryRun.dryRunSha256,
+          approved: exportApproved,
+          artifactRefs: [item.id],
+          packageFileName: `fishswarm-${mode}-${date}.zip`,
+        });
+        setExportResult(result);
+        setExportApproved(false);
+        setGlobalNotice({
+          id: `asset-export-package-${Date.now()}`,
+          type: 'success',
+          message: t(
+            'assetExport.packageCreated',
+            '导出包已创建，并生成 checksum 与 redaction report。'
+          ),
+        });
+      } catch (err) {
+        setExportError(
+          err instanceof Error ? err.message : t('assetExport.packageFailed', '导出包创建失败')
+        );
+      } finally {
+        setIsExportPackageCreating(false);
+      }
+    },
+    [exportApproved, exportDryRun, setGlobalNotice, t]
+  );
+
+  const handleRevealExportPackage = useCallback((packagePath: string) => {
+    if (!isElectron) return;
+    void window.electronAPI.showItemInFolder(packagePath);
+  }, []);
+
   return (
     <div className="space-y-5">
       <SettingsContentSection
@@ -344,7 +476,7 @@ export function SettingsAssets({ isActive }: { isActive: boolean }) {
             <span>
               {t(
                 'assetCenter.securityHint',
-                '安全边界：此页只调用 assetCenter.getSnapshot；不会暴露 install/run/export/apply，也不会从 renderer 执行命令或写文件。'
+                '安全边界：资源浏览只调用 assetCenter.getSnapshot；导出只调用 assetExport.dryRun/createPackage，renderer 不执行命令、不直接写文件。'
               )}
             </span>
           </div>
@@ -517,6 +649,16 @@ export function SettingsAssets({ isActive }: { isActive: boolean }) {
               item={selectedItem}
               onUseInTask={handleUseInTask}
               onConfigureProvider={handleConfigureProvider}
+              exportDryRun={exportDryRun}
+              exportResult={exportResult}
+              exportError={exportError}
+              exportApproved={exportApproved}
+              isExportDryRunRunning={isExportDryRunRunning}
+              isExportPackageCreating={isExportPackageCreating}
+              onRunExportDryRun={handleRunExportDryRun}
+              onExportApprovalChange={setExportApproved}
+              onCreateExportPackage={handleCreateExportPackage}
+              onRevealExportPackage={handleRevealExportPackage}
             />
             {snapshot?.generatedAt && (
               <p className="mt-2 text-center text-[11px] text-text-muted">

@@ -36,7 +36,8 @@ export type DeferredAssetAction =
   | 'insertPrompt'
   | 'configure'
   | 'testConnection'
-  | 'dryRunExport';
+  | 'dryRunExport'
+  | 'createPackage';
 export type AssetAction = ReadOnlyAssetAction | DeferredAssetAction;
 
 export interface AssetSourceRef {

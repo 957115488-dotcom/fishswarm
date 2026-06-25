@@ -32,6 +32,10 @@ import type {
   AddDecisionInput,
   ActiveDecision,
   AssetCenterSnapshot,
+  AssetExportCreatePackageRequest,
+  AssetExportCreatePackageResponse,
+  AssetExportDryRunRequest,
+  AssetExportDryRunResponse,
   BacklogSpecArtifact,
   BacklogSpecInput,
   BenchmarkRunArtifact,
@@ -226,6 +230,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   assetCenter: {
     getSnapshot: (): Promise<AssetCenterSnapshot> => ipcRenderer.invoke('assetCenter.getSnapshot'),
+  },
+
+  assetExport: {
+    dryRun: (payload?: AssetExportDryRunRequest): Promise<AssetExportDryRunResponse> =>
+      ipcRenderer.invoke('assetExport.dryRun', payload),
+    createPackage: (
+      payload: AssetExportCreatePackageRequest
+    ): Promise<AssetExportCreatePackageResponse> =>
+      ipcRenderer.invoke('assetExport.createPackage', payload),
   },
 
   // Config methods
@@ -774,6 +787,12 @@ declare global {
       };
       assetCenter: {
         getSnapshot: () => Promise<AssetCenterSnapshot>;
+      };
+      assetExport: {
+        dryRun: (payload?: AssetExportDryRunRequest) => Promise<AssetExportDryRunResponse>;
+        createPackage: (
+          payload: AssetExportCreatePackageRequest
+        ) => Promise<AssetExportCreatePackageResponse>;
       };
       config: {
         get: () => Promise<AppConfig>;

@@ -57,4 +57,10 @@ describe('AssetCenterItem', () => {
     expect(kinds).toContain('concept.lowcode');
     expect(kinds).toContain('export.package');
   });
+
+  it('includes controlled export package actions in the action contract', () => {
+    const actions: AssetAction[] = ['dryRunExport', 'createPackage'];
+
+    expect(actions).toEqual(['dryRunExport', 'createPackage']);
+  });
 });

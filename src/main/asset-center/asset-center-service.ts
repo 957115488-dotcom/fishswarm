@@ -18,6 +18,7 @@ import { indexProviderAssets } from './provider-asset-index';
 import { indexRoleAssets } from './role-asset-index';
 import type { WorkflowArtifactAssetIndexInput } from './workflow-artifact-asset-index';
 import { indexWorkflowArtifactAssets } from './workflow-artifact-asset-index';
+import { indexAssetExportPackageAssets } from './asset-export-asset-index';
 
 export interface BuildAssetCenterSnapshotInput {
   domainSkillsRoot?: string;
@@ -38,6 +39,7 @@ const SNAPSHOT_ALLOWED_ACTIONS = new Set<string>([
   'configure',
   'testConnection',
   'dryRunExport',
+  'createPackage',
 ]);
 
 function defaultDomainSkillsRoot(cwd: string): string {
@@ -58,6 +60,11 @@ function buildStats(items: AssetCenterItem[]): Record<string, number> {
 function sanitizeItemActions(item: AssetCenterItem): { item: AssetCenterItem; warnings: string[] } {
   const warnings: string[] = [];
   const actions = (item.actions as readonly string[]).filter((action) => {
+    if (action === 'createPackage' && item.kind !== 'export.package') {
+      warnings.push(`Blocked unsafe asset action for ${item.id}: ${action}`);
+      return false;
+    }
+
     if (SNAPSHOT_ALLOWED_ACTIONS.has(action)) {
       return true;
     }
@@ -127,6 +134,7 @@ export function buildAssetCenterSnapshot(
   const mcpIndex = indexMcpAssets();
   const roleIndex = indexRoleAssets();
   const pluginIndex = indexPluginAssets(input.pluginAssets);
+  const assetExportIndex = indexAssetExportPackageAssets();
   const workflowArtifactIndex =
     input.workflowArtifacts === false
       ? { items: [], warnings: [] }
@@ -146,6 +154,7 @@ export function buildAssetCenterSnapshot(
     ...mcpIndex.items,
     ...roleIndex.items,
     ...pluginIndex.items,
+    ...assetExportIndex.items,
     ...workflowArtifactIndex.items,
     ...adapterItems,
   ]);
@@ -167,6 +176,7 @@ export function buildAssetCenterSnapshot(
       ...mcpIndex.warnings,
       ...roleIndex.warnings,
       ...pluginIndex.warnings,
+      ...assetExportIndex.warnings,
       ...workflowArtifactIndex.warnings,
       ...adapterWarnings,
       ...deduped.warnings,
