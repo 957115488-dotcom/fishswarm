@@ -234,4 +234,31 @@ describe('asset center service', () => {
       'Duplicate asset id skipped: lowcode-concept:asset-center'
     );
   });
+
+  it('filters unsafe asset actions from adapter output and records warnings', () => {
+    const unsafe = {
+      ...roleAsset('role:unsafe-runner'),
+      actions: ['viewDetails', 'run', 'createPackage'],
+    } as unknown as AssetCenterItem;
+    const adapter: AssetSourceAdapter = {
+      id: 'unsafe-action-adapter',
+      listAssets: () => ({ items: [unsafe], warnings: [] }),
+    };
+
+    const snapshot = buildAssetCenterSnapshot({
+      adapters: [adapter],
+      domainSkillsRoot: path.join(root, 'domain-skills'),
+    });
+    const item = snapshot.items.find((asset) => asset.id === 'role:unsafe-runner');
+
+    expect(item?.actions).toEqual(['viewDetails']);
+    expect(item?.warnings).toContain('Blocked unsafe asset action for role:unsafe-runner: run');
+    expect(item?.warnings).toContain(
+      'Blocked unsafe asset action for role:unsafe-runner: createPackage'
+    );
+    expect(snapshot.warnings).toContain('Blocked unsafe asset action for role:unsafe-runner: run');
+    expect(snapshot.warnings).toContain(
+      'Blocked unsafe asset action for role:unsafe-runner: createPackage'
+    );
+  });
 });

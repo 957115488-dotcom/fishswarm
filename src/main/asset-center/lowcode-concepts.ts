@@ -14,8 +14,8 @@ export interface LowcodeConcept {
 export const LOWCODE_CONCEPTS: LowcodeConcept[] = [
   {
     lowcodeKey: 'asset-center',
-    lowcodeName: '????',
-    fishSwarmName: '??? / Assets',
+    lowcodeName: '资产中心',
+    fishSwarmName: '资源库 / Assets',
     decision: 'adopt',
     rationale:
       'Use as the unified discovery and reuse surface for skills, roles, connectors, workflows, templates, and exports.',
@@ -23,8 +23,8 @@ export const LOWCODE_CONCEPTS: LowcodeConcept[] = [
   },
   {
     lowcodeKey: 'page-design',
-    lowcodeName: '???? / ???',
-    fishSwarmName: '???? / Component Blueprints',
+    lowcodeName: '页面设计 / 组件库',
+    fishSwarmName: '组件蓝图 / Component Blueprints',
     decision: 'adapt',
     rationale:
       'Use as reusable blueprints and promptable UI primitives, not as a full runtime page builder.',
@@ -32,16 +32,16 @@ export const LOWCODE_CONCEPTS: LowcodeConcept[] = [
   },
   {
     lowcodeKey: 'logic-design',
-    lowcodeName: '????',
-    fishSwarmName: 'LogicFlow Drafts',
+    lowcodeName: '逻辑设计',
+    fishSwarmName: 'LogicFlow 草稿 / LogicFlow Drafts',
     decision: 'adapt',
     rationale: 'Compile to reviewable workflow artifacts; do not execute directly.',
     artifactKinds: ['logic_flow_draft', 'implementation_plan_dsl'],
   },
   {
     lowcodeKey: 'process-design',
-    lowcodeName: '????',
-    fishSwarmName: 'Agent Workflow Templates',
+    lowcodeName: '流程设计',
+    fishSwarmName: 'Agent 工作流模板 / Agent Workflow Templates',
     decision: 'adapt',
     rationale:
       'Represent as role-driven templates that create plan artifacts for existing runner workflows.',
@@ -49,24 +49,24 @@ export const LOWCODE_CONCEPTS: LowcodeConcept[] = [
   },
   {
     lowcodeKey: 'data-model',
-    lowcodeName: '????',
-    fishSwarmName: '?????? / Domain Data Models',
+    lowcodeName: '数据模型',
+    fishSwarmName: '业务数据模型 / Domain Data Models',
     decision: 'adapt',
     rationale: 'Treat as business/domain data drafts, not AI model provider configuration.',
     artifactKinds: ['data_model_draft'],
   },
   {
     lowcodeKey: 'interface-integration',
-    lowcodeName: '????',
-    fishSwarmName: 'Connectors, MCP, IPC/API Contracts, Provider Setup Recipes',
+    lowcodeName: '接口集成',
+    fishSwarmName: '连接器、MCP、IPC/API 合约、Provider 设置方案',
     decision: 'adapt',
     rationale: 'Model integrations as assets with explicit setup, credential, and policy metadata.',
     artifactKinds: ['api_contract_draft', 'mcp.server', 'ai.providerSetup'],
   },
   {
     lowcodeKey: 'source-export',
-    lowcodeName: '???? / ????',
-    fishSwarmName: 'Auditable Export Package',
+    lowcodeName: '源码导出 / 独立部署',
+    fishSwarmName: '可审计导出包 / Auditable Export Package',
     decision: 'adapt',
     rationale: 'Export source and artifacts with manifest, checksums, redaction, and provenance.',
     artifactKinds: ['export.package', 'release_summary'],

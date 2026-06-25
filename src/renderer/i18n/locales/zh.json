@@ -63,8 +63,8 @@
     "panelDesc": "配置工作区、工具以及账号相关行为。",
     "general": "通用",
     "generalDesc": "外观、语言等通用偏好",
-    "assets": "???",
-    "assetsDesc": "?????????????"
+    "assets": "资源库",
+    "assetsDesc": "浏览可复用资产与可审计交付物"
   },
   "general": {
     "appearance": "外观",

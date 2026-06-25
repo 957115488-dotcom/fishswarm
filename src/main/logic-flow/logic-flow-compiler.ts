@@ -89,7 +89,7 @@ export function createPlanArtifactFromLogicFlow(
       parentArtifactIds: [],
       sourceRefs: [{ type: 'generated', id: input.document.id, title: input.document.title }],
       roleRefs: input.roleRefs || [],
-      conceptRefs: input.conceptRefs || ['lowcode-concept:logic-flow'],
+      conceptRefs: input.conceptRefs || ['lowcode-concept:logic-design'],
       sessionId: input.sessionId,
       createdBy: input.createdBy || 'agent',
       createdAt: new Date().toISOString(),

@@ -83,6 +83,7 @@ describe('logic flow compiler', () => {
     expect(envelope.artifact.executable).toBe(false);
     expect(envelope.artifact.lineage.allowedPaths).toEqual(['src/**']);
     expect(envelope.artifact.lineage.deniedPaths).toEqual(['.env']);
+    expect(envelope.artifact.lineage.conceptRefs).toEqual(['lowcode-concept:logic-design']);
     expect(artifacts).toHaveLength(1);
   });
 

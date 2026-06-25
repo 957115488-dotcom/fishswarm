@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   LOWCODE_CONCEPTS,
@@ -27,12 +29,34 @@ describe('low-code concept mapping', () => {
     );
   });
 
+  it('does not expose placeholder text in concept labels or summaries', () => {
+    for (const concept of LOWCODE_CONCEPTS) {
+      expect(concept.lowcodeName).not.toContain('???');
+      expect(concept.fishSwarmName).not.toContain('???');
+      expect(concept.rationale).not.toContain('???');
+    }
+
+    const serialized = JSON.stringify(getLowcodeConceptAssets());
+    expect(serialized).not.toContain('???');
+  });
+
+  it('keeps the Chinese Settings assets label user-facing', () => {
+    const zhPath = path.resolve(__dirname, '../../renderer/i18n/locales/zh.json');
+    const zh = JSON.parse(fs.readFileSync(zhPath, 'utf8')) as {
+      settings?: { assets?: string; assetsDesc?: string };
+    };
+
+    expect(zh.settings?.assets).toBe('资源库');
+    expect(zh.settings?.assetsDesc).toContain('可复用资产');
+    expect(zh.settings?.assetsDesc).not.toContain('???');
+  });
+
   it('adapts page design and source export instead of cloning the low-code runtime', () => {
     expect(
       LOWCODE_CONCEPTS.find((concept) => concept.lowcodeKey === 'page-design')?.decision
     ).toBe('adapt');
     expect(
       LOWCODE_CONCEPTS.find((concept) => concept.lowcodeKey === 'source-export')?.fishSwarmName
-    ).toBe('Auditable Export Package');
+    ).toContain('Auditable Export Package');
   });
 });

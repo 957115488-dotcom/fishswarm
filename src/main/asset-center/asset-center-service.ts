@@ -1,5 +1,6 @@
 import path from 'node:path';
 import type {
+  AssetAction,
   AssetCenterItem,
   AssetCenterSnapshot,
   AssetSourceAdapter,
@@ -26,6 +27,17 @@ export interface BuildAssetCenterSnapshotInput {
   adapters?: AssetSourceAdapter[];
 }
 
+const SNAPSHOT_ALLOWED_ACTIONS = new Set<string>([
+  'viewDetails',
+  'openSource',
+  'preview',
+  'useInTask',
+  'insertPrompt',
+  'configure',
+  'testConnection',
+  'dryRunExport',
+]);
+
 function defaultDomainSkillsRoot(cwd: string): string {
   return path.join(cwd, 'resources', 'domain-skills');
 }
@@ -39,6 +51,31 @@ function buildStats(items: AssetCenterItem[]): Record<string, number> {
     stats[item.kind] = (stats[item.kind] || 0) + 1;
     return stats;
   }, {});
+}
+
+function sanitizeItemActions(item: AssetCenterItem): { item: AssetCenterItem; warnings: string[] } {
+  const warnings: string[] = [];
+  const actions = (item.actions as readonly string[]).filter((action) => {
+    if (SNAPSHOT_ALLOWED_ACTIONS.has(action)) {
+      return true;
+    }
+
+    warnings.push(`Blocked unsafe asset action for ${item.id}: ${action}`);
+    return false;
+  }) as AssetAction[];
+
+  if (warnings.length === 0) {
+    return { item, warnings };
+  }
+
+  return {
+    item: {
+      ...item,
+      actions,
+      warnings: [...item.warnings, ...warnings],
+    },
+    warnings,
+  };
 }
 
 function sortItems(items: AssetCenterItem[]): AssetCenterItem[] {
@@ -104,7 +141,9 @@ export function buildAssetCenterSnapshot(
     ...workflowArtifactIndex.items,
     ...adapterItems,
   ]);
-  const items = sortItems(deduped.items);
+  const sanitized = deduped.items.map(sanitizeItemActions);
+  const items = sortItems(sanitized.map((result) => result.item));
+  const actionWarnings = sanitized.flatMap((result) => result.warnings);
 
   return {
     schemaVersion: 1,
@@ -121,6 +160,7 @@ export function buildAssetCenterSnapshot(
       ...workflowArtifactIndex.warnings,
       ...adapterWarnings,
       ...deduped.warnings,
+      ...actionWarnings,
     ],
   };
 }
