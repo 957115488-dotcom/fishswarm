@@ -61,6 +61,34 @@ function writeLowcodeBlueprints(blocks: unknown[]): void {
   );
 }
 
+function writeLowcodeExampleModule(): void {
+  const examplesDir = path.join(root, 'domain-skills', 'lowcode-builder', 'examples');
+  fs.mkdirSync(examplesDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(examplesDir, 'fishswarm-dashboard.module.json'),
+    JSON.stringify(
+      {
+        name: 'FishSwarm Low-code Operations Board',
+        componentName: 'FishSwarmOperationsBoard',
+        blocks: [{ kind: 'metric-card' }],
+      },
+      null,
+      2
+    ),
+    'utf8'
+  );
+}
+
+function writeLowcodeGeneratorScript(): void {
+  const scriptsDir = path.join(root, 'domain-skills', 'lowcode-builder', 'scripts');
+  fs.mkdirSync(scriptsDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(scriptsDir, 'generate-lowcode-module.mjs'),
+    '#!/usr/bin/env node\nconsole.log("reference only");\n',
+    'utf8'
+  );
+}
+
 describe('asset center service', () => {
   it('builds a snapshot with concepts, domain skills, stats, and warnings', () => {
     const snapshot = buildAssetCenterSnapshot({
@@ -110,6 +138,28 @@ describe('asset center service', () => {
     ).toBe(true);
     expect(snapshot.items.some((item) => item.title.includes('Metric Card'))).toBe(true);
     expect(snapshot.stats['component.blueprint']).toBe(2);
+  });
+
+  it('includes low-code example modules and generators as read-only workflow templates', () => {
+    writeLowcodeExampleModule();
+    writeLowcodeGeneratorScript();
+
+    const snapshot = buildAssetCenterSnapshot({
+      domainSkillsRoot: path.join(root, 'domain-skills'),
+      builtInSkillsRoot: path.join(root, 'built-in-skills'),
+    });
+
+    expect(
+      snapshot.items.some(
+        (item) => item.id === 'workflow.template:lowcode-builder:fishswarmoperationsboard'
+      )
+    ).toBe(true);
+    expect(
+      snapshot.items.some(
+        (item) => item.id === 'workflow.template:lowcode-builder:generate-lowcode-module'
+      )
+    ).toBe(true);
+    expect(snapshot.stats['workflow.template']).toBe(2);
   });
 
   it('includes role assets by default', () => {
