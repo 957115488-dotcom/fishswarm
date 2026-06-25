@@ -12,6 +12,7 @@ import { indexBundledDomainSkillAssets } from './domain-skill-asset-index';
 import { indexMcpAssets } from './mcp-asset-index';
 import type { PluginAssetIndexInput } from './plugin-asset-index';
 import { indexPluginAssets } from './plugin-asset-index';
+import { indexLowcodeBuilderAssets } from './lowcode-builder-asset-index';
 import { indexProviderAssets } from './provider-asset-index';
 import { indexRoleAssets } from './role-asset-index';
 import type { WorkflowArtifactAssetIndexInput } from './workflow-artifact-asset-index';
@@ -115,6 +116,9 @@ export function buildAssetCenterSnapshot(
   const domainSkillsRoot = input.domainSkillsRoot || defaultDomainSkillsRoot(cwd);
   const builtInSkillsRoot = input.builtInSkillsRoot || defaultBuiltInSkillsRoot(cwd);
   const conceptItems = getLowcodeConceptAssets();
+  const lowcodeBuilderIndex = indexLowcodeBuilderAssets({
+    lowcodeBuilderRoot: path.join(domainSkillsRoot, 'lowcode-builder'),
+  });
   const domainSkillIndex = indexBundledDomainSkillAssets({ domainSkillsRoot });
   const builtInSkillIndex = indexBuiltInSkillAssets({ skillsRoot: builtInSkillsRoot });
   const providerIndex = indexProviderAssets();
@@ -132,6 +136,7 @@ export function buildAssetCenterSnapshot(
   const adapterWarnings = adapterResults.flatMap((result) => result.warnings);
   const deduped = dedupeItems([
     ...conceptItems,
+    ...lowcodeBuilderIndex.items,
     ...domainSkillIndex.items,
     ...builtInSkillIndex.items,
     ...providerIndex.items,
@@ -152,6 +157,7 @@ export function buildAssetCenterSnapshot(
     stats: buildStats(items),
     warnings: [
       ...domainSkillIndex.warnings,
+      ...lowcodeBuilderIndex.warnings,
       ...builtInSkillIndex.warnings,
       ...providerIndex.warnings,
       ...mcpIndex.warnings,

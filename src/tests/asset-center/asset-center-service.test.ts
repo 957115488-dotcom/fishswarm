@@ -51,6 +51,16 @@ function roleAsset(id: string): AssetCenterItem {
   };
 }
 
+function writeLowcodeBlueprints(blocks: unknown[]): void {
+  const assetsDir = path.join(root, 'domain-skills', 'lowcode-builder', 'assets');
+  fs.mkdirSync(assetsDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(assetsDir, 'component-blueprints.json'),
+    JSON.stringify({ version: 1, source: 'lowcode-builder', blocks }, null, 2),
+    'utf8'
+  );
+}
+
 describe('asset center service', () => {
   it('builds a snapshot with concepts, domain skills, stats, and warnings', () => {
     const snapshot = buildAssetCenterSnapshot({
@@ -85,6 +95,21 @@ describe('asset center service', () => {
 
     expect(snapshot.items.some((item) => item.id === 'built-in-skill:gstack-review')).toBe(true);
     expect(snapshot.stats['skill.builtIn']).toBe(1);
+  });
+
+  it('includes low-code component blueprints from bundled domain skill assets', () => {
+    writeLowcodeBlueprints([{ kind: 'metric-card' }, { kind: 'process-flow' }]);
+
+    const snapshot = buildAssetCenterSnapshot({
+      domainSkillsRoot: path.join(root, 'domain-skills'),
+      builtInSkillsRoot: path.join(root, 'built-in-skills'),
+    });
+
+    expect(
+      snapshot.items.some((item) => item.id === 'component.blueprint:lowcode-builder:metric-card')
+    ).toBe(true);
+    expect(snapshot.items.some((item) => item.title.includes('Metric Card'))).toBe(true);
+    expect(snapshot.stats['component.blueprint']).toBe(2);
   });
 
   it('includes role assets by default', () => {
