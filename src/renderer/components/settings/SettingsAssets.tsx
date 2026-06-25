@@ -1,5 +1,13 @@
 ﻿import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, Loader2, RefreshCw, Search, Send, ShieldCheck } from 'lucide-react';
+import {
+  AlertTriangle,
+  Loader2,
+  RefreshCw,
+  Search,
+  Send,
+  Settings,
+  ShieldCheck,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type {
   AssetCenterSnapshot,
@@ -8,6 +16,10 @@ import type {
   AssetStatus,
 } from '../../types/asset-center';
 import { useAppStore } from '../../store';
+import {
+  canConfigureProviderAsset,
+  getProviderConfigureTarget,
+} from '../../utils/asset-provider-configure';
 import { canUseAssetInTask, formatAssetTaskReference } from '../../utils/asset-task-reference';
 import {
   ASSET_GROUPS,
@@ -49,9 +61,11 @@ function MetadataRow({ label, value }: { label: string; value: string }) {
 function AssetDetailPanel({
   item,
   onUseInTask,
+  onConfigureProvider,
 }: {
   item: AssetCenterViewItem | null;
   onUseInTask: (item: AssetCenterViewItem) => void;
+  onConfigureProvider: (item: AssetCenterViewItem) => void;
 }) {
   const { t } = useTranslation();
 
@@ -119,10 +133,20 @@ function AssetDetailPanel({
               {t('assetCenter.useInTask', '插入到任务输入框')}
             </button>
           )}
+          {canConfigureProviderAsset(item) && (
+            <button
+              type="button"
+              onClick={() => onConfigureProvider(item)}
+              className="mt-3 inline-flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-medium text-text-secondary transition-colors hover:border-accent/40 hover:bg-surface-hover hover:text-text-primary"
+            >
+              <Settings className="h-3.5 w-3.5" />
+              {t('assetCenter.configureProvider', '打开模型配置')}
+            </button>
+          )}
           <p className="mt-2 text-[11px] leading-4 text-text-muted">
             {t(
               'assetCenter.readOnlyHint',
-              '当前阶段不会安装、运行、导出或写入文件；“插入到任务输入框”只生成结构化引用，仍需用户手动发送。'
+              '当前阶段不会安装、运行、导出或写入文件；受控动作只会插入任务引用或打开现有设置页。'
             )}
           </p>
         </div>
@@ -164,7 +188,9 @@ function AssetDetailPanel({
 export function SettingsAssets({ isActive }: { isActive: boolean }) {
   const { t } = useTranslation();
   const queuePromptInsert = useAppStore((state) => state.queuePromptInsert);
+  const queueProviderConfigure = useAppStore((state) => state.queueProviderConfigure);
   const setShowSettings = useAppStore((state) => state.setShowSettings);
+  const setSettingsTab = useAppStore((state) => state.setSettingsTab);
   const setGlobalNotice = useAppStore((state) => state.setGlobalNotice);
   const [snapshot, setSnapshot] = useState<AssetCenterSnapshot | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -243,6 +269,30 @@ export function SettingsAssets({ isActive }: { isActive: boolean }) {
       setShowSettings(false);
     },
     [queuePromptInsert, setGlobalNotice, setShowSettings, t]
+  );
+
+  const handleConfigureProvider = useCallback(
+    (item: AssetCenterViewItem) => {
+      const target = getProviderConfigureTarget(item);
+      if (!target) return;
+      queueProviderConfigure({
+        source: 'assetCenter',
+        assetId: target.assetId,
+        providerId: target.providerId,
+        setupId: target.setupId,
+      });
+      setGlobalNotice({
+        id: `asset-configure-provider-${Date.now()}`,
+        type: 'info',
+        message: t(
+          'assetCenter.providerConfigureQueued',
+          '已打开模型配置页；资产只传递 provider/setup 引用，不包含密钥。'
+        ),
+      });
+      setSettingsTab('api');
+      setShowSettings(true);
+    },
+    [queueProviderConfigure, setGlobalNotice, setSettingsTab, setShowSettings, t]
   );
 
   return (
@@ -463,7 +513,11 @@ export function SettingsAssets({ isActive }: { isActive: boolean }) {
               ))}
           </div>
           <div className="lg:sticky lg:top-0 lg:self-start">
-            <AssetDetailPanel item={selectedItem} onUseInTask={handleUseInTask} />
+            <AssetDetailPanel
+              item={selectedItem}
+              onUseInTask={handleUseInTask}
+              onConfigureProvider={handleConfigureProvider}
+            />
             {snapshot?.generatedAt && (
               <p className="mt-2 text-center text-[11px] text-text-muted">
                 {t('assetCenter.generatedAt', '生成时间')}: {formatDate(snapshot.generatedAt)}

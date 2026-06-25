@@ -40,6 +40,15 @@ export interface PendingPromptInsert {
   createdAt: number;
 }
 
+export interface PendingProviderConfigure {
+  id: string;
+  source: 'assetCenter';
+  assetId: string;
+  providerId?: AppConfig['provider'];
+  setupId?: string;
+  createdAt: number;
+}
+
 // Unified per-session state that replaces 8 parallel xxxBySession Maps
 export interface SessionState {
   messages: Message[];
@@ -131,6 +140,7 @@ interface AppState {
   showSettings: boolean;
   settingsTab: string | null;
   pendingPromptInsert: PendingPromptInsert | null;
+  pendingProviderConfigure: PendingProviderConfigure | null;
 
   // Permission
   pendingPermission: PermissionRequest | null;
@@ -216,6 +226,13 @@ interface AppState {
     assetId?: string;
   }) => void;
   clearPromptInsert: (id?: string) => void;
+  queueProviderConfigure: (input: {
+    source: PendingProviderConfigure['source'];
+    assetId: string;
+    providerId?: PendingProviderConfigure['providerId'];
+    setupId?: string;
+  }) => void;
+  clearProviderConfigure: (id?: string) => void;
 
   setPendingPermission: (permission: PermissionRequest | null) => void;
 
@@ -290,6 +307,7 @@ export const useAppStore = create<AppState>((set) => ({
   showSettings: false,
   settingsTab: null,
   pendingPromptInsert: null,
+  pendingProviderConfigure: null,
   pendingPermission: null,
   pendingSudoPassword: null,
   settings: defaultSettings,
@@ -672,6 +690,23 @@ export const useAppStore = create<AppState>((set) => ({
       if (!state.pendingPromptInsert) return {};
       if (id && state.pendingPromptInsert.id !== id) return {};
       return { pendingPromptInsert: null };
+    }),
+  queueProviderConfigure: (input) =>
+    set({
+      pendingProviderConfigure: {
+        id: `provider-configure-${Date.now()}`,
+        source: input.source,
+        assetId: input.assetId,
+        providerId: input.providerId,
+        setupId: input.setupId,
+        createdAt: Date.now(),
+      },
+    }),
+  clearProviderConfigure: (id) =>
+    set((state) => {
+      if (!state.pendingProviderConfigure) return {};
+      if (id && state.pendingProviderConfigure.id !== id) return {};
+      return { pendingProviderConfigure: null };
     }),
 
   // Permission actions

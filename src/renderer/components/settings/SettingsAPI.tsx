@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Key,
@@ -11,6 +12,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { useApiConfigState } from '../../hooks/useApiConfigState';
+import { useAppStore } from '../../store';
 import { ApiConfigSetManager } from '../ApiConfigSetManager';
 import { CommonProviderSetupsCard, GuidanceInlineHint } from '../ProviderGuidance';
 import ApiDiagnosticsPanel from '../ApiDiagnosticsPanel';
@@ -24,6 +26,8 @@ interface ModelOptionItem {
 
 export function SettingsAPI() {
   const { t } = useTranslation();
+  const pendingProviderConfigure = useAppStore((state) => state.pendingProviderConfigure);
+  const clearProviderConfigure = useAppStore((state) => state.clearProviderConfigure);
   const {
     provider,
     customProtocol,
@@ -87,6 +91,24 @@ export function SettingsAPI() {
     handleDeepDiagnose,
     shouldShowOllamaManualModelToggle,
   } = useApiConfigState();
+
+  useEffect(() => {
+    if (isLoadingConfig || !pendingProviderConfigure) return;
+
+    if (pendingProviderConfigure.setupId) {
+      applyCommonProviderSetup(pendingProviderConfigure.setupId);
+    } else if (pendingProviderConfigure.providerId) {
+      changeProvider(pendingProviderConfigure.providerId);
+    }
+
+    clearProviderConfigure(pendingProviderConfigure.id);
+  }, [
+    applyCommonProviderSetup,
+    changeProvider,
+    clearProviderConfigure,
+    isLoadingConfig,
+    pendingProviderConfigure,
+  ]);
 
   if (isLoadingConfig) {
     return (

@@ -20,6 +20,11 @@ describe('provider asset index', () => {
     );
 
     expect(providerIds.every((id) => result.items.some((item) => item.id === id))).toBe(true);
+    expect(
+      result.items
+        .filter((item) => item.kind === 'ai.provider')
+        .every((item) => item.actions.includes('configure'))
+    ).toBe(true);
   });
 
   it('creates provider setup assets for every common provider setup', () => {
@@ -27,6 +32,16 @@ describe('provider asset index', () => {
     const setupIds = COMMON_PROVIDER_SETUPS.map((setup) => `ai.providerSetup:${setup.id}`);
 
     expect(setupIds.every((id) => result.items.some((item) => item.id === id))).toBe(true);
+    expect(
+      result.items
+        .filter((item) => item.kind === 'ai.providerSetup')
+        .every((item) => item.actions.includes('configure'))
+    ).toBe(true);
+    expect(
+      result.items
+        .filter((item) => item.kind === 'ai.modelPreset')
+        .every((item) => !item.actions.includes('configure'))
+    ).toBe(true);
   });
 
   it('does not include api keys, key placeholders, or token-like values in asset content', () => {

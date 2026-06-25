@@ -28,7 +28,7 @@ function toProviderAssets(): AssetCenterItem[] {
     sourceRef: { type: 'generated', id: providerId },
     schemaVersion: 1,
     credentialRefs: providerId === 'ollama' ? [] : [providerCredentialRef(providerId)],
-    actions: ['viewDetails'],
+    actions: ['viewDetails', 'configure'],
     warnings: [],
   })) satisfies AssetCenterItem[];
 }
@@ -66,7 +66,7 @@ function toProviderSetupAssets(): AssetCenterItem[] {
     sourceRef: { type: 'generated', id: setup.id },
     schemaVersion: 1,
     lineageRefs: [`ai.provider:${setup.applyProvider}`],
-    actions: ['viewDetails'],
+    actions: ['viewDetails', 'configure'],
     warnings: [],
   })) satisfies AssetCenterItem[];
 }

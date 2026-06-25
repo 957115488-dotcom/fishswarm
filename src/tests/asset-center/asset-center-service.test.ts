@@ -206,6 +206,9 @@ describe('asset center service', () => {
 
     expect(snapshot.items.some((item) => item.id === 'ai.provider:openai')).toBe(true);
     expect(snapshot.items.some((item) => item.kind === 'ai.modelPreset')).toBe(true);
+    expect(snapshot.items.find((item) => item.id === 'ai.provider:openai')?.actions).toContain(
+      'configure'
+    );
     expect(serialized).not.toMatch(/apiKey/i);
     expect(serialized).not.toMatch(/sk-[A-Za-z0-9_-]{3,}/);
     expect(serialized).not.toMatch(/AIza[0-9A-Za-z_-]*/);
