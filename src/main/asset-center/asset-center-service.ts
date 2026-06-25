@@ -9,6 +9,7 @@ import type {
 import { indexBuiltInSkillAssets } from './built-in-skill-asset-index';
 import { getLowcodeConceptAssets } from './lowcode-concepts';
 import { indexBundledDomainSkillAssets } from './domain-skill-asset-index';
+import { indexLogicFlowTemplateAssets } from './logic-flow-template-asset-index';
 import { indexMcpAssets } from './mcp-asset-index';
 import type { PluginAssetIndexInput } from './plugin-asset-index';
 import { indexPluginAssets } from './plugin-asset-index';
@@ -119,6 +120,7 @@ export function buildAssetCenterSnapshot(
   const lowcodeBuilderIndex = indexLowcodeBuilderAssets({
     lowcodeBuilderRoot: path.join(domainSkillsRoot, 'lowcode-builder'),
   });
+  const logicFlowTemplateIndex = indexLogicFlowTemplateAssets();
   const domainSkillIndex = indexBundledDomainSkillAssets({ domainSkillsRoot });
   const builtInSkillIndex = indexBuiltInSkillAssets({ skillsRoot: builtInSkillsRoot });
   const providerIndex = indexProviderAssets();
@@ -137,6 +139,7 @@ export function buildAssetCenterSnapshot(
   const deduped = dedupeItems([
     ...conceptItems,
     ...lowcodeBuilderIndex.items,
+    ...logicFlowTemplateIndex.items,
     ...domainSkillIndex.items,
     ...builtInSkillIndex.items,
     ...providerIndex.items,
@@ -158,6 +161,7 @@ export function buildAssetCenterSnapshot(
     warnings: [
       ...domainSkillIndex.warnings,
       ...lowcodeBuilderIndex.warnings,
+      ...logicFlowTemplateIndex.warnings,
       ...builtInSkillIndex.warnings,
       ...providerIndex.warnings,
       ...mcpIndex.warnings,

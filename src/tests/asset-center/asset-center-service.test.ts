@@ -159,7 +159,22 @@ describe('asset center service', () => {
         (item) => item.id === 'workflow.template:lowcode-builder:generate-lowcode-module'
       )
     ).toBe(true);
-    expect(snapshot.stats['workflow.template']).toBe(2);
+    expect(snapshot.stats['workflow.template']).toBeGreaterThanOrEqual(2);
+  });
+
+  it('includes built-in LogicFlow templates as preview-only workflow assets', () => {
+    const snapshot = buildAssetCenterSnapshot({
+      domainSkillsRoot: path.join(root, 'domain-skills'),
+      builtInSkillsRoot: path.join(root, 'built-in-skills'),
+    });
+    const logicFlowAsset = snapshot.items.find(
+      (item) => item.id === 'workflow.template:logic-flow:lowcode-human-review-patch'
+    );
+
+    expect(logicFlowAsset?.kind).toBe('workflow.template');
+    expect(logicFlowAsset?.actions).toEqual(['viewDetails', 'preview']);
+    expect(logicFlowAsset?.warnings[0]).toContain('not executed directly');
+    expect(logicFlowAsset?.tags).toContain('logic-flow');
   });
 
   it('includes role assets by default', () => {
