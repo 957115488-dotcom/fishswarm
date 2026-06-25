@@ -60,13 +60,15 @@ function resolveWorkspacePath(cwd: string, relativePath: string): string {
   return absolute;
 }
 
-function listUntrackedFiles(cwd: string): string[] {
+function listUntrackedFiles(cwd: string, targetFiles: string[]): string[] {
+  const targetSet = new Set(targetFiles.map(normalizeRelativePath));
   const output = runGit(cwd, ['ls-files', '--others', '--exclude-standard', '-z']);
   return output
     .split('\0')
     .map((entry) => entry.trim())
     .filter(Boolean)
     .map(normalizeRelativePath)
+    .filter((entry) => targetSet.has(entry))
     .sort((a, b) => a.localeCompare(b));
 }
 
@@ -82,8 +84,11 @@ function getTargetFileHashes(cwd: string, targetFiles: string[]): TargetFileHash
     .sort((a, b) => a.path.localeCompare(b.path));
 }
 
-function buildUntrackedManifest(cwd: string): RollbackCheckpointArtifact['untrackedManifest'] {
-  return listUntrackedFiles(cwd).map((relativePath) => {
+function buildUntrackedManifest(
+  cwd: string,
+  targetFiles: string[]
+): RollbackCheckpointArtifact['untrackedManifest'] {
+  return listUntrackedFiles(cwd, targetFiles).map((relativePath) => {
     const absolute = resolveWorkspacePath(cwd, relativePath);
     const stat = fs.statSync(absolute);
     const item: RollbackCheckpointArtifact['untrackedManifest'][number] = {
@@ -136,13 +141,14 @@ export function createRollbackCheckpointArtifact(
   }
 
   const cwd = path.resolve(input.cwd);
+  const targetFiles = input.targetFiles.map(normalizeRelativePath);
   const checkpointId = randomUUID();
   const createdAt = (input.now || new Date()).toISOString();
   const baseHead = runGit(cwd, ['rev-parse', 'HEAD']).trim() || 'unknown';
-  const dirtyDiff = runGit(cwd, ['diff', '--binary']);
+  const dirtyDiff = runGit(cwd, ['diff', '--binary', '--', ...targetFiles]);
   const dirtyDiffSha256 = dirtyDiff.trim() ? sha256Text(dirtyDiff) : undefined;
-  const targetFileHashes = getTargetFileHashes(cwd, input.targetFiles);
-  const untrackedManifest = buildUntrackedManifest(cwd);
+  const targetFileHashes = getTargetFileHashes(cwd, targetFiles);
+  const untrackedManifest = buildUntrackedManifest(cwd, targetFiles);
   const checkpointRef = writeCheckpointFiles({
     cwd,
     checkpointId,
@@ -172,7 +178,7 @@ export function createRollbackCheckpointArtifact(
           checkpointRef,
         })
       ),
-      allowedPaths: input.targetFiles.map(normalizeRelativePath),
+      allowedPaths: targetFiles,
       deniedPaths: ['.env', '.git/**', 'node_modules/**'],
       reviewState: 'ready_for_review',
     }),

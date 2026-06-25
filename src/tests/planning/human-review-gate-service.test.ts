@@ -162,4 +162,45 @@ describe('human review gate service', () => {
       reason: 'Gate diff hash does not match the current patch proposal.',
     });
   });
+
+  it('requires patch.apply and prevents gate paths from widening proposal policy', () => {
+    const cwd = makeWorkspace();
+    const proposal = createProposal(cwd);
+
+    expect(() =>
+      createHumanReviewGateArtifact({
+        cwd,
+        patchProposalId: proposal.id,
+        decision: 'approved',
+        approver: 'reviewer',
+        allowedActions: ['patch.preview'],
+      })
+    ).toThrow(/patch\.apply/i);
+
+    expect(() =>
+      createHumanReviewGateArtifact({
+        cwd,
+        patchProposalId: proposal.id,
+        decision: 'approved',
+        approver: 'reviewer',
+        allowedPaths: ['**'],
+      })
+    ).toThrow(/allowedPaths/i);
+
+    const narrowed = createHumanReviewGateArtifact({
+      cwd,
+      patchProposalId: proposal.id,
+      decision: 'approved',
+      approver: 'reviewer',
+      allowedPaths: ['src/main/**'],
+    });
+
+    expect(
+      validateHumanReviewGateForPatch({
+        gate: { ...narrowed.artifact, allowedActions: [] },
+        proposal: proposal.artifact,
+        patchProposalId: proposal.id,
+      })
+    ).toMatchObject({ valid: false, reason: 'Gate does not approve patch.apply.' });
+  });
 });

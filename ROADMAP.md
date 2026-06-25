@@ -17,12 +17,15 @@
 - **Model Presets**: Up-to-date model catalogs for all major providers
 - **Dependency Policy**: Tiered management strategy with Dependabot grouping
 - **Memory System Foundation**: Unified storage with core/experience memory and source-aware retrieval workflow (PR #138)
+- **Low-code Assets Integration Foundation**: Read-only Assets library, Lowcode sub-asset adapters, safe task references, provider configuration handoff, patch review UI, export dry-run/package workflow, and release notes.
 
 ## 🚧 In Progress
 
 - **Role Runtime UX**: Make role selection, role handbook mounting, acceptance logs, and review handoffs visible and configurable in the app.
 - **Browser Skill Runtime**: Continue hardening browser execution, screenshots, page state capture, and GStack Browse compatibility.
 - **Context Guardrails**: Polish Context Save / Restore, Freeze / Guard, prompt-injection controls, and decision-store feedback loops.
+- **Planning Governance Hardening**: Continue moving policy/audit/approval logic from feature services toward a reusable governance layer.
+- **Agent Workboard Lite**: Connect assets, roles, structured development artifacts, and approval references into visible task-board status cards.
 
 ## 📋 Planned
 
@@ -45,6 +48,7 @@
 - **Plugin System**: Extensible architecture for community-built integrations
 - **Multi-Agent**: Orchestrate multiple agents for complex workflows
 - **Workspace Templates**: Pre-configured environments for common use cases (coding, writing, research)
+- **Low-code Advanced Authoring**: richer LogicFlow and component blueprint previews, reusable template chips, and deeper role-generated artifact timelines.
 
 ### Long-term
 
@@ -54,5 +58,5 @@
 
 ---
 
-_Last updated: 2026-06-21_
+_Last updated: 2026-06-25_
 _Want to contribute? Check our [Contributing Guide](CONTRIBUTING.md) and pick an issue labeled `good first issue`._

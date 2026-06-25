@@ -15,6 +15,10 @@ function git(cwd: string, args: string[]) {
   execFileSync('git', ['-C', cwd, ...args], { stdio: 'ignore' });
 }
 
+function gitText(cwd: string, args: string[]): string {
+  return execFileSync('git', ['-C', cwd, ...args], { encoding: 'utf8' }).trim();
+}
+
 function makeGitWorkspace(): string {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'fishswarm-apply-'));
   tempRoots.push(root);
@@ -66,7 +70,7 @@ function createApprovedProposal(cwd: string, diff = validDiff) {
     cwd,
     title: 'Update feature',
     diff,
-    baseCommit: 'abc1234',
+    baseCommit: gitText(cwd, ['rev-parse', 'HEAD']),
     allowedPaths: ['src/**'],
     deniedPaths: ['.env'],
   });
@@ -140,7 +144,30 @@ describe('approved patch apply service', () => {
     expect(result.artifact.status).toBe('failed');
     expect(result.artifact.error).toBeTruthy();
     expect(result.artifact.filesChanged).toEqual([]);
-    expect(rollbackArtifacts).toHaveLength(1);
+    expect(rollbackArtifacts).toHaveLength(0);
+    expect(fs.readFileSync(path.join(cwd, 'src', 'feature.ts'), 'utf8')).toContain('value = 1');
+  });
+
+  it('rejects stale base commits before creating checkpoints or touching files', () => {
+    const cwd = makeGitWorkspace();
+    const proposal = createPatchProposalArtifact({
+      cwd,
+      title: 'Update feature',
+      diff: validDiff,
+      baseCommit: 'stale-base',
+      allowedPaths: ['src/**'],
+    });
+    const gate = createHumanReviewGateArtifact({
+      cwd,
+      patchProposalId: proposal.id,
+      decision: 'approved',
+      approver: 'reviewer',
+    });
+
+    expect(() =>
+      applyApprovedPatch({ cwd, patchProposalId: proposal.id, humanReviewGateId: gate.id })
+    ).toThrow(/baseCommit/i);
+    expect(listWorkflowArtifacts({ cwd, kind: 'rollback_checkpoint' })).toHaveLength(0);
     expect(fs.readFileSync(path.join(cwd, 'src', 'feature.ts'), 'utf8')).toContain('value = 1');
   });
 });

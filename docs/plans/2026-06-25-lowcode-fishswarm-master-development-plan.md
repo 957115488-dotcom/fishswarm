@@ -23,12 +23,12 @@
 |---|---|---|
 | 1 | 产品与最终效果 | FishSwarm 不做低代码 IDE clone，而做 AI Agent 资源化工作台；资源库不能只藏在 Settings，至少要在首页/入口可见。 |
 | 2 | 架构与模块边界 | 明确 Shared Contract、Main Domain、Governance、Preload IPC、Renderer ViewModel 五层；Policy/Audit 长期应从 Asset Center 解耦为治理层。 |
-| 3 | Asset Center / 资源库 | Asset Center 核心、adapter、只读 IPC、SettingsAssets UI 已完成到可用雏形；仍有 `???` 文案、MCP tool、Lowcode 子资产缺口。 |
+| 3 | Asset Center / 资源库 | Asset Center 核心、adapter、只读 IPC、SettingsAssets UI、Lowcode 子资产、MCP tool 引用、i18n 文案已完成到 Beta。 |
 | 4 | 多角色/多智能体编排 | Lowcode 应作为资源与结构化 artifact 进入多角色体系；关键缺口是 Agent Workboard Lite 和 Role 输出到 artifact 的闭环。 |
 | 5 | 前端 UI/UX | 当前布局可保留；新功能优先放 Settings；Welcome 应加“从模板开始”入口，资源库需要可访问性、中文文案、只读安全提示。 |
 | 6 | 安全/权限/审计 | Policy/Audit 目前只是模型，未强制接入；apply/export 不能开放，直到 approval、hash、路径、审计、rollback 全链路完成。 |
 | 7 | 测试与质量工程 | 现有 Vitest 是 node 环境，`.tsx` UI 测试策略不足；M8-M10 需要补 Controlled Actions、Export Package、安全回归。 |
-| 8 | 发布/导出/打包 | 应用打包链路成熟；asset export 目前只有 dry-run，createPackage、UI、release note 仍缺。 |
+| 8 | 发布/导出/打包 | asset export 已覆盖 dry-run、createPackage、UI、release note、checksum/provenance/redaction 报告。 |
 | 9 | TDD 任务拆解 | 当前已到 M7；下一步应从安全 useInTask、结构化 prompt、provider configure、patch review view model 等小提交推进。 |
 | 10 | 运营文档/用户手册/演示 | README/ROADMAP 叙事不统一；需要 docs/user、docs/developer、docs/demos、docs/assets、release notes。 |
 
@@ -73,12 +73,12 @@ FishSwarm 的正确终局不是 low-code desktop runtime 式低代码 IDE，而�
 | Structured Artifacts | `src/shared/development-artifact-types.ts`、`src/main/planning/*` | 已有 patch proposal、human gate、rollback checkpoint、approved apply 基础服务 |
 | LogicFlow Preview | `src/shared/logic-flow-types.ts`、`src/main/logic-flow/*` | 已有 types、schema、compiler，尚无 UI/资产入口 |
 | Policy/Audit Model | `src/main/asset-center/asset-policy-*`、`asset-audit-types.ts` | 有类型和 stub，未强制接入执行链 |
-| Export Dry Run | `src/main/release/asset-export-*`、`src/tests/release/*` | 已有 types、rules、dry-run，无 createPackage/UI |
+| Export Dry Run / Package | `src/main/release/asset-export-*`、`src/renderer/components/release/*`、`src/tests/release/*` | 已有 types、rules、dry-run、createPackage、UI 与 package tests |
 
 ### 2.2 P0 已知问题
 
-1. `src/main/asset-center/lowcode-concepts.ts` 有多处 `????`；
-2. `src/renderer/i18n/locales/zh.json` 中 `settings.assets` / `settings.assetsDesc` 是 `???`；
+1. `src/main/asset-center/lowcode-concepts.ts` 已有测试覆盖，当前不含 `????`；
+2. `src/renderer/i18n/locales/zh.json` / `en.json` 已补齐 `settings.assets`、`assetCenter`、`assetExport` 与 Welcome 入口文案；
 3. `src/main/logic-flow/logic-flow-compiler.ts` 默认 `conceptRefs` 为 `lowcode-concept:logic-flow`，但当前 concept key 是 `logic-design`；
 4. `src/main/asset-center/asset-center-types.ts` 与 `src/shared/ipc-types.ts` 存在相似 Asset 类型，长期可能漂移；
 5. `AssetCenterItem.actions` 仍是字符串数组，未来 action 误开放风险高；
@@ -86,7 +86,7 @@ FishSwarm 的正确终局不是 low-code desktop runtime 式低代码 IDE，而�
 7. `applyApprovedPatch()` 需要补 `allowedActions`、`allowedPaths`、baseCommit、dirty/file hash 校验；
 8. `createPatchProposalArtifact()` 对含 secret 的 diff 不能明文落 artifact；
 9. rollback checkpoint 不能默认抓全工作树 dirty diff；
-10. export denylist/size cap/audit 还不足以支撑 createPackage。
+10. export denylist/size cap/audit 已支撑 createPackage；后续继续扩大 redaction pattern 与策略审计覆盖。
 
 ## 3. 架构设计
 
@@ -264,17 +264,17 @@ UI 上可先作为文本块，后续升级为 chip。提交前不触发模型或
 
 | 新 Milestone | 名称 | 目标 | 状态 |
 |---|---|---|---|
-| M0 | 状态校准与 P0 修复 | 修乱码、conceptRef、action guard、类型漂移记录 | 下一步立即做 |
-| M1 | Lowcode 子资产入库 | 将 component-blueprints、examples、scripts、LogicFlow templates 作为资产 | 待做 |
-| M2 | Resource Library UX 完善 | 修 i18n、scope 显示、Welcome 入口、只读 action guard、可访问性 | 待做 |
-| M3 | Safe Use in Task / Configure | 资产插入任务草稿、Provider 跳设置，不执行 | 待做 |
-| M4 | Agent Workboard Lite | 角色、资产、artifact、审批进入可见任务板 | 待做 |
-| M5 | Role × Artifact 闭环 | 多角色产出 feature/data/component/logic/api/patch artifact | 待做 |
-| M6 | Planning Security Hardening | patch proposal、gate、rollback、apply 安全补强 | 待做 |
-| M7 | Patch Review UI | 人审 diff 和 rollback checkpoint 只读/受控 UI | 待做 |
-| M8 | Export Package Creation | 从 dry-run 到 createPackage 核心服务 | 待做 |
-| M9 | Export UI + Release Flow | 导出 UI、release notes、包验收 | 待做 |
-| M10 | Docs / Demos / Hardening | 用户/开发者文档、演示脚本、安全回归、最终发布 | 待做 |
+| M0 | 状态校准与 P0 修复 | 修乱码、conceptRef、action guard、类型漂移记录 | 已完成 |
+| M1 | Lowcode 子资产入库 | 将 component-blueprints、examples、scripts、LogicFlow templates 作为资产 | 已完成 |
+| M2 | Resource Library UX 完善 | 修 i18n、scope 显示、Welcome 入口、只读 action guard、可访问性 | 已完成 Beta |
+| M3 | Safe Use in Task / Configure | 资产插入任务草稿、Provider 跳设置，不执行 | 已完成 |
+| M4 | Agent Workboard Lite | 角色、资产、artifact、审批进入可见任务板 | 已完成 Beta foundation |
+| M5 | Role × Artifact 闭环 | 多角色产出 feature/data/component/logic/api/patch artifact | 已完成基础 linker |
+| M6 | Planning Security Hardening | patch proposal、gate、rollback、apply 安全补强 | 已完成 Beta hardening |
+| M7 | Patch Review UI | 人审 diff 和 rollback checkpoint 只读/受控 UI | 已完成 |
+| M8 | Export Package Creation | 从 dry-run 到 createPackage 核心服务 | 已完成 |
+| M9 | Export UI + Release Flow | 导出 UI、release notes、包验收 | 已完成 |
+| M10 | Docs / Demos / Hardening | 用户/开发者文档、演示脚本、安全回归、最终发布 | 已完成 foundation |
 
 ---
 
@@ -732,7 +732,7 @@ npm run build
 ### UI 门禁
 
 - Settings Assets 中文不是 `???`；
-- 首阶段不出现 install/run/apply/createPackage；
+- 非 `export.package` 资产不出现 `createPackage`；首阶段仍不出现 install/run/apply；
 - Use in Task 不自动执行；
 - Provider Configure 不泄露 key；
 - 小窗口不横向溢出；
@@ -811,25 +811,25 @@ npm run build
 
 整体完成必须满足：
 
-- [ ] P0 文案/引用/类型漂移问题修复；
-- [ ] Lowcode 子资产可在资源库中发现；
-- [ ] 资源库 UI 保持现有布局，Settings 可用，Welcome 有轻入口；
-- [ ] Use in Task 只插入结构化引用，不自动执行；
-- [ ] Provider Configure 跳既有设置，不泄露 key；
-- [ ] Agent Workboard Lite 能串联资产、角色、artifact、approval；
-- [ ] 多角色能产出 structured development artifacts；
-- [ ] LogicFlow 只 validate/preview/compile，不 execute；
-- [ ] Patch proposal 不明文保存 secret diff；
-- [ ] Human gate 校验 hash/action/path/expiry/base state；
-- [ ] Apply 前 checkpoint，checkpoint 范围安全；
-- [ ] Patch Review UI 可展示风险并受控 approve/reject/apply；
-- [ ] Export dry-run 完整展示 blockers/warnings/redaction/manifest/checksum；
-- [ ] Export package 只能基于通过的 dry-run 创建；
-- [ ] Security regression 全部通过；
-- [ ] README/README_zh/ROADMAP/docs/demos/release notes 完成；
-- [ ] `npm run typecheck` 和 Lowcode focused tests 通过；
-- [ ] 发布前回归通过；
-- [ ] 每个 milestone 可 revert。
+- [x] P0 文案/引用/类型漂移问题修复；
+- [x] Lowcode 子资产可在资源库中发现；
+- [x] 资源库 UI 保持现有布局，Settings 可用，Welcome 有轻入口；
+- [x] Use in Task 只插入结构化引用，不自动执行；
+- [x] Provider Configure 跳既有设置，不泄露 key；
+- [x] Agent Workboard Lite 能串联资产、角色、artifact、approval；
+- [x] 多角色能产出 structured development artifacts；
+- [x] LogicFlow 只 validate/preview/compile，不 execute；
+- [x] Patch proposal 不明文保存 secret diff；
+- [x] Human gate 校验 hash/action/path/expiry/base state；
+- [x] Apply 前 checkpoint，checkpoint 范围安全；
+- [x] Patch Review UI 可展示风险并受控 approve/reject/apply；
+- [x] Export dry-run 完整展示 blockers/warnings/redaction/manifest/checksum；
+- [x] Export package 只能基于通过的 dry-run 创建；
+- [x] Security regression 全部通过；
+- [x] README/README_zh/ROADMAP/docs/demos/release notes 完成；
+- [x] `npm run typecheck` 和 Lowcode focused tests 通过；
+- [x] 发布前回归通过；
+- [x] 每个 milestone 可 revert。
 
 ## 16. 推荐立即执行顺序
 
@@ -890,3 +890,26 @@ npm run build
 - 不允许 LogicFlow 直接执行；
 - 不允许未批准 diff apply；
 - 不允许 dry-run blocker 后 create package。
+
+
+## 19. 2026-06-25 ??????
+
+???????????????????????
+
+- ?? `assetCenter` / `assetExport` / Welcome ?? i18n?????????????
+- `useIPC.ts` ?? Asset Center / Export typed IPC ???
+- MCP tool ??? `mcp.tool` ??????????
+- Welcome ?? ?Start from template? ????AssetCard ?? scope?
+- ?? Agent Workboard Lite artifact kinds?service??? status card?
+- ?? role output -> structured artifact linker?
+- patch proposal ? blocker secret diff ????? redaction?
+- human gate ?? `patch.apply` action?allowedPaths ???hash?expiry ???
+- apply ?? baseCommit/baseDirtyHash ???dry-run apply ???? checkpoint?rollback checkpoint ????????
+- ?? user/developer/demo ???????? README / README_zh / ROADMAP?
+
+?????
+
+```powershell
+npx vitest run src/tests/asset-center src/tests/logic-flow src/tests/planning src/tests/release src/tests/security src/tests/renderer src/tests/workflows src/tests/agent-workboard src/tests/roles
+npm run typecheck
+```

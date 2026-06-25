@@ -44,6 +44,9 @@ export function AssetCard({
             <span className="rounded-md bg-surface-muted px-2 py-0.5 text-[11px] text-text-muted">
               {item.sourceLabel}
             </span>
+            <span className="rounded-md bg-accent/10 px-2 py-0.5 text-[11px] font-medium text-accent">
+              {item.scope}
+            </span>
             {item.tags.slice(0, 3).map((tag) => (
               <span
                 key={tag}

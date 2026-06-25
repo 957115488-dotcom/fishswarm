@@ -8,6 +8,11 @@ import {
 } from '../../shared/development-artifact-types';
 
 const expectedKinds: WorkflowArtifactKind[] = [
+  'agent_goal',
+  'agent_plan',
+  'agent_task_board',
+  'approval_record',
+  'workflow_incubation',
   'feature_blueprint',
   'data_model_draft',
   'component_tree_draft',
@@ -39,8 +44,10 @@ describe('structured development artifact types', () => {
       parentArtifactIds,
       sourceRefs,
       roleRefs: ['qa-release-steward'],
+      assetRefs: ['role:qa'],
       conceptRefs: ['lowcode-concept:asset-center'],
       sessionId: 'session-1',
+      taskBoardId: 'board-1',
       createdBy: 'agent',
       createdAt: '2026-06-25T00:00:00.000Z',
       contentSha256: 'a'.repeat(64),
@@ -60,6 +67,8 @@ describe('structured development artifact types', () => {
     });
     expect(lineage.parentArtifactIds).toEqual(['parent-1']);
     expect(lineage.sourceRefs[0]?.id).toBe('role:qa');
+    expect(lineage.assetRefs).toEqual(['role:qa']);
+    expect(lineage.taskBoardId).toBe('board-1');
   });
 
   it('models patch proposals with exact diff hash and review lineage', () => {

@@ -9,9 +9,15 @@ describe('mcp asset index', () => {
 
     expect(result.warnings).toEqual([]);
     expect(expectedIds.every((id) => result.items.some((item) => item.id === id))).toBe(true);
-    expect(result.items.every((item) => item.kind === 'mcp.server')).toBe(true);
     expect(
-      result.items.every((item) => item.actions.every((action) => action === 'viewDetails'))
+      result.items
+        .filter((item) => expectedIds.includes(item.id))
+        .every((item) => item.kind === 'mcp.server')
+    ).toBe(true);
+    expect(
+      result.items
+        .filter((item) => item.kind === 'mcp.server')
+        .every((item) => item.actions.every((action) => action === 'viewDetails'))
     ).toBe(true);
   });
 
@@ -45,5 +51,27 @@ describe('mcp asset index', () => {
     });
 
     expect(result.items.map((item) => item.id)).toEqual(['mcp.server:alpha', 'mcp.server:zeta']);
+  });
+
+  it('indexes declared MCP tools as safe task-reference assets without executable actions', () => {
+    const result = indexMcpAssets({
+      presets: {
+        browser: {
+          name: 'Browser MCP',
+          type: 'stdio',
+          command: 'node',
+          args: [],
+          tools: [{ name: 'open_page', description: 'Open a browser page.' }],
+        },
+      },
+    });
+    const tool = result.items.find((item) => item.kind === 'mcp.tool');
+
+    expect(tool).toMatchObject({
+      id: 'mcp.tool:browser:open_page',
+      kind: 'mcp.tool',
+      actions: ['viewDetails', 'useInTask'],
+    });
+    expect(tool?.actions).not.toContain('run');
   });
 });

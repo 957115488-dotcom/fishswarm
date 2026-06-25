@@ -47,6 +47,22 @@ function runGitApply(cwd: string, diff: string, checkOnly: boolean): void {
   );
 }
 
+function runGitText(cwd: string, args: string[]): string {
+  try {
+    return execFileSync('git', ['-C', cwd, ...args], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+  } catch {
+    return '';
+  }
+}
+
+function currentDirtyHash(cwd: string): string | undefined {
+  const dirtyDiff = runGitText(cwd, ['diff', '--binary']);
+  return dirtyDiff.trim() ? sha256Text(dirtyDiff) : undefined;
+}
+
 function saveApplyResult(input: {
   cwd: string;
   proposalEnvelope: WorkflowArtifactEnvelope<PatchProposalArtifact>;
@@ -85,7 +101,7 @@ function saveApplyResult(input: {
           error: input.error,
         })
       ),
-      allowedPaths: proposal.allowedPaths,
+      allowedPaths: gate.allowedPaths,
       deniedPaths: proposal.deniedPaths,
       reviewState: input.status === 'applied' ? 'applied' : 'draft',
     }),
@@ -143,10 +159,17 @@ export function applyApprovedPatch(
   if (proposal.secretScan.status === 'blocked') {
     throw new Error('Cannot apply a patch proposal blocked by secret scan.');
   }
+  const currentHead = runGitText(cwd, ['rev-parse', 'HEAD']).trim();
+  if (currentHead && proposal.baseCommit !== currentHead) {
+    throw new Error('Patch proposal baseCommit does not match the current workspace HEAD.');
+  }
+  if (proposal.baseDirtyHash && proposal.baseDirtyHash !== currentDirtyHash(cwd)) {
+    throw new Error('Patch proposal baseDirtyHash does not match the current workspace state.');
+  }
 
   const pathValidation = validatePatchProposalPaths({
     files: proposal.files,
-    allowedPaths: proposal.allowedPaths,
+    allowedPaths: gate.allowedPaths,
     deniedPaths: proposal.deniedPaths,
   });
   if (pathValidation.blocked.length > 0) {
@@ -155,6 +178,21 @@ export function applyApprovedPatch(
         .map((blocked) => `${blocked.file}: ${blocked.reason}`)
         .join('; ')}`
     );
+  }
+
+  try {
+    runGitApply(cwd, proposal.diff, true);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return saveApplyResult({
+      cwd,
+      proposalEnvelope,
+      gateEnvelope,
+      status: 'failed',
+      error: message,
+      now,
+      createdBy,
+    });
   }
 
   const rollback = createRollbackCheckpointArtifact({
@@ -167,7 +205,6 @@ export function applyApprovedPatch(
   });
 
   try {
-    runGitApply(cwd, proposal.diff, true);
     runGitApply(cwd, proposal.diff, false);
     return saveApplyResult({
       cwd,

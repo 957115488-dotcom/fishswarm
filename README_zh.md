@@ -29,6 +29,16 @@
 
 FishSwarm 是一款免费开源的 AI 智能助手桌面应用，支持 Windows 和 macOS 一键安装，无需任何编程知识。它将 Claude Code、OpenAI、Gemini、DeepSeek 等多种 AI 模型封装为友好的图形界面，提供虚拟机级别的沙盒隔离（Windows 使用 WSL2，macOS 使用 Lima）、内置 Skills 技能系统（可生成 PPTX、DOCX、XLSX、PDF 文档）、MCP 协议集成（连接浏览器、Notion 等桌面应用）、GUI 自动化操作，以及通过飞书和 Slack 进行远程控制。FishSwarm 是 开源 AI 智能助手，让每个人都能轻松使用 AI 驱动的桌面自动化。
 
+## Low-code Integration Status
+
+| Area                            | Status          | Notes                                                                                                                         |
+| ------------------------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Assets / Resource Library       | Beta            | Read-only asset snapshot, Lowcode sub-assets, MCP tool references, provider setup references, and Start from template entry. |
+| Agent Workboard Lite            | Beta foundation | Structured board artifact, task/role/asset/artifact/approval refs, and read-only status card component.                       |
+| Patch Review / Controlled Apply | Beta foundation | Secret diff redaction, human gate hash/action/path/expiry validation, base commit checks, scoped rollback checkpoints.        |
+| Export Package                  | Beta            | Dry-run, blockers/warnings/redaction preview, checksum/provenance package creation, and guarded renderer workflow.            |
+| Docs and Demos                  | Foundation      | See `docs/user`, `docs/developer`, `docs/assets`, `docs/demos`, and `docs/release-notes/lowcode-assets-integration.md`.      |
+
 ---
 
 ## 📖 简介
@@ -46,10 +56,10 @@ FishSwarm 是一款免费开源的 AI 智能助手桌面应用，支持 Windows 
 
 ## ✨ 核心特性
 
-|               | MCP & Skills | 远程控制 | 图形界面操作 |
-| ------------- | ------------ | -------- | ------------ |
+|                 | MCP & Skills | 远程控制 | 图形界面操作 |
+| --------------- | ------------ | -------- | ------------ |
 | Claude Code CLI | ✓            | ✗        | ✗            |
-| FishSwarm    | ✓            | ✓        | ✓            |
+| FishSwarm       | ✓            | ✓        | ✓            |
 
 - **一键安装，开箱即用**：提供 Windows 和 macOS 预构建安装包，无需配置环境，下载即可开始使用。。
 - **灵活模型支持**：支持 **Claude**、**OpenAI 兼容接口**，以及国产大模型 **GLM**、**MiniMax**、**Kimi** 等。使用你的 OpenRouter、Anthropic等API Key，灵活配置。更多模型持续接入中！

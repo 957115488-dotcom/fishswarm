@@ -1,6 +1,11 @@
 ﻿import type { WorkflowArtifactKind } from './ipc-types';
 
 export const STRUCTURED_DEVELOPMENT_ARTIFACT_KINDS = [
+  'agent_goal',
+  'agent_plan',
+  'agent_task_board',
+  'approval_record',
+  'workflow_incubation',
   'feature_blueprint',
   'data_model_draft',
   'component_tree_draft',
@@ -40,8 +45,10 @@ export interface ArtifactLineage {
   parentArtifactIds: string[];
   sourceRefs: ArtifactSourceRef[];
   roleRefs: string[];
+  assetRefs: string[];
   conceptRefs: string[];
   sessionId?: string;
+  taskBoardId?: string;
   createdBy: 'user' | 'agent' | 'system' | string;
   createdAt: string;
   contentSha256: string;
@@ -54,6 +61,79 @@ export interface BaseDevelopmentArtifact<TKind extends StructuredDevelopmentArti
   kind: TKind;
   title: string;
   lineage: ArtifactLineage;
+}
+
+export interface AgentGoalArtifact extends BaseDevelopmentArtifact<'agent_goal'> {
+  goal: string;
+  successCriteria: string[];
+  constraints: string[];
+}
+
+export interface AgentPlanArtifact extends BaseDevelopmentArtifact<'agent_plan'> {
+  goalArtifactId?: string;
+  steps: Array<{
+    id: string;
+    title: string;
+    roleRefs: string[];
+    assetRefs: string[];
+    artifactRefs: string[];
+    status: 'todo' | 'doing' | 'blocked' | 'done';
+  }>;
+}
+
+export type AgentTaskBoardTaskStatus =
+  | 'queued'
+  | 'running'
+  | 'blocked'
+  | 'ready_for_review'
+  | 'approved'
+  | 'done'
+  | 'failed';
+
+export interface AgentTaskBoardTask {
+  id: string;
+  title: string;
+  description?: string;
+  status: AgentTaskBoardTaskStatus;
+  assetRefs: string[];
+  roleRefs: string[];
+  artifactRefs: string[];
+  approvalRefs: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AgentTaskBoardArtifact extends BaseDevelopmentArtifact<'agent_task_board'> {
+  boardId: string;
+  goal: string;
+  status: 'draft' | 'active' | 'blocked' | 'ready_for_review' | 'complete';
+  assetRefs: string[];
+  roleRefs: string[];
+  artifactRefs: string[];
+  approvalRefs: string[];
+  tasks: AgentTaskBoardTask[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ApprovalRecordArtifact extends BaseDevelopmentArtifact<'approval_record'> {
+  targetArtifactId: string;
+  approver: string;
+  decision: 'approved' | 'rejected' | 'expired';
+  approvedActions: string[];
+  approvedPaths: string[];
+  decidedAt: string;
+  expiresAt?: string;
+  reason?: string;
+}
+
+export interface WorkflowIncubationArtifact extends BaseDevelopmentArtifact<'workflow_incubation'> {
+  candidateWorkflowId: string;
+  sourceTaskBoardId?: string;
+  missingCapabilities: string[];
+  proposedRoleRefs: string[];
+  proposedAssetRefs: string[];
+  status: 'draft' | 'candidate' | 'approved' | 'rejected';
 }
 
 export interface FeatureBlueprintArtifact extends BaseDevelopmentArtifact<'feature_blueprint'> {
@@ -194,6 +274,11 @@ export interface ConceptApplicationMapArtifact extends BaseDevelopmentArtifact<'
 }
 
 export type StructuredDevelopmentArtifact =
+  | AgentGoalArtifact
+  | AgentPlanArtifact
+  | AgentTaskBoardArtifact
+  | ApprovalRecordArtifact
+  | WorkflowIncubationArtifact
   | FeatureBlueprintArtifact
   | DataModelDraftArtifact
   | ComponentTreeDraftArtifact
@@ -216,16 +301,24 @@ export function isStructuredDevelopmentArtifactKind(
   return STRUCTURED_KIND_SET.has(kind);
 }
 
-export function buildArtifactLineage(
-  input: Omit<ArtifactLineage, 'schemaVersion'> & { schemaVersion?: 1 }
-): ArtifactLineage {
+export type BuildArtifactLineageInput = Omit<ArtifactLineage, 'schemaVersion' | 'assetRefs'> & {
+  schemaVersion?: 1;
+  assetRefs?: string[];
+};
+
+export function buildArtifactLineage(input: BuildArtifactLineageInput): ArtifactLineage {
+  const sourceAssetRefs = input.sourceRefs
+    .filter((source) => source.type === 'asset' && source.id)
+    .map((source) => source.id as string);
   return {
     schemaVersion: 1,
     parentArtifactIds: [...input.parentArtifactIds],
     sourceRefs: input.sourceRefs.map((source) => ({ ...source })),
     roleRefs: [...input.roleRefs],
+    assetRefs: [...(input.assetRefs || sourceAssetRefs)],
     conceptRefs: [...input.conceptRefs],
     sessionId: input.sessionId,
+    taskBoardId: input.taskBoardId,
     createdBy: input.createdBy,
     createdAt: input.createdAt,
     contentSha256: input.contentSha256,

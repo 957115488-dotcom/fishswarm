@@ -181,6 +181,34 @@ export function scanDiffForSecrets(diff: string): SecretScanResult {
   return { status, findings };
 }
 
+export function redactDiffSecrets(diff: string): string {
+  const replacements: Array<{ start: number; end: number; replacement: string }> = [];
+  for (const pattern of SECRET_PATTERNS) {
+    pattern.regex.lastIndex = 0;
+    for (const match of diff.matchAll(pattern.regex)) {
+      const value = match[0];
+      const start = match.index || 0;
+      const fingerprint = findingFingerprint(pattern.type, value);
+      replacements.push({
+        start,
+        end: start + value.length,
+        replacement: `[REDACTED:${fingerprint}]`,
+      });
+    }
+  }
+  replacements.sort((left, right) => left.start - right.start || right.end - left.end);
+  let cursor = 0;
+  let output = '';
+  for (const replacement of replacements) {
+    if (replacement.start < cursor) continue;
+    output += diff.slice(cursor, replacement.start);
+    output += replacement.replacement;
+    cursor = replacement.end;
+  }
+  output += diff.slice(cursor);
+  return output;
+}
+
 export function createPatchProposalArtifact(
   input: CreatePatchProposalInput
 ): WorkflowArtifactEnvelope<PatchProposalArtifact> {
@@ -210,6 +238,7 @@ export function createPatchProposalArtifact(
 
   const diffSha256 = sha256Text(diff);
   const secretScan = scanDiffForSecrets(diff);
+  const persistedDiff = secretScan.status === 'blocked' ? redactDiffSecrets(diff) : diff;
   const artifact: PatchProposalArtifact = {
     kind: 'patch_proposal',
     title: input.title || 'Patch proposal',
@@ -228,7 +257,7 @@ export function createPatchProposalArtifact(
     }),
     baseCommit: input.baseCommit,
     baseDirtyHash: input.baseDirtyHash,
-    diff,
+    diff: persistedDiff,
     diffSha256,
     files,
     allowedPaths,

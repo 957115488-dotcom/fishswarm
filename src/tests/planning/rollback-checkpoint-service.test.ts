@@ -50,7 +50,7 @@ afterEach(() => {
 });
 
 describe('rollback checkpoint service', () => {
-  it('captures head, dirty diff hash, untracked files, target hashes, and checkpoint files', () => {
+  it('captures head, scoped dirty diff hash, target hashes, and checkpoint files', () => {
     const cwd = makeGitWorkspace();
     const envelope = createRollbackCheckpointArtifact({
       cwd,
@@ -71,12 +71,28 @@ describe('rollback checkpoint service', () => {
     expect(envelope.artifact.baseHead).toMatch(/[a-f0-9]{40}/);
     expect(envelope.artifact.dirtyDiffSha256).toHaveLength(64);
     expect(envelope.artifact.targetFileHashes).toHaveLength(1);
-    expect(envelope.artifact.untrackedManifest.map((item) => item.path)).toContain(
+    expect(envelope.artifact.untrackedManifest.map((item) => item.path)).not.toContain(
       'src/new-file.ts'
     );
     expect(fs.existsSync(path.join(checkpointDir, 'dirty.diff'))).toBe(true);
+    expect(fs.readFileSync(path.join(checkpointDir, 'dirty.diff'), 'utf8')).not.toContain(
+      'src/new-file.ts'
+    );
     expect(fs.existsSync(path.join(checkpointDir, 'untracked-manifest.json'))).toBe(true);
     expect(artifacts).toHaveLength(1);
+  });
+
+  it('records only targeted untracked files in rollback manifests', () => {
+    const cwd = makeGitWorkspace();
+    const envelope = createRollbackCheckpointArtifact({
+      cwd,
+      targetFiles: ['src/new-file.ts'],
+    });
+
+    expect(envelope.artifact.untrackedManifest.map((item) => item.path)).toEqual([
+      'src/new-file.ts',
+    ]);
+    expect(envelope.artifact.targetFileHashes).toHaveLength(1);
   });
 
   it('rejects checkpoint target paths that escape the workspace', () => {

@@ -11,6 +11,13 @@ import type {
   TraceStep,
   ContentBlock,
 } from '../types';
+import type {
+  AssetCenterSnapshot,
+  AssetExportCreatePackageRequest,
+  AssetExportCreatePackageResponse,
+  AssetExportDryRunRequest,
+  AssetExportDryRunResponse,
+} from '../../shared/ipc-types';
 import i18n from '../i18n/config';
 
 // Check if running in Electron
@@ -812,6 +819,40 @@ export function useIPC() {
     return window.electronAPI.mcp.getServerStatus();
   }, []);
 
+  const getAssetCenterSnapshot = useCallback(async (): Promise<AssetCenterSnapshot> => {
+    if (!isElectron || !window.electronAPI.assetCenter) {
+      throw new Error('Asset center is only available in the Electron desktop app.');
+    }
+    return window.electronAPI.assetCenter.getSnapshot();
+  }, []);
+
+  const dryRunAssetExport = useCallback(
+    async (payload?: AssetExportDryRunRequest): Promise<AssetExportDryRunResponse> => {
+      if (!isElectron || !window.electronAPI.assetExport) {
+        throw new Error('Asset export is only available in the Electron desktop app.');
+      }
+      return window.electronAPI.assetExport.dryRun(payload);
+    },
+    []
+  );
+
+  const createAssetExportPackage = useCallback(
+    async (payload: AssetExportCreatePackageRequest): Promise<AssetExportCreatePackageResponse> => {
+      if (!isElectron || !window.electronAPI.assetExport) {
+        throw new Error('Asset export is only available in the Electron desktop app.');
+      }
+      return window.electronAPI.assetExport.createPackage(payload);
+    },
+    []
+  );
+
+  const showItemInFolder = useCallback(async (filePath: string, cwd?: string): Promise<boolean> => {
+    if (!isElectron || !window.electronAPI.showItemInFolder) {
+      return false;
+    }
+    return window.electronAPI.showItemInFolder(filePath, cwd);
+  }, []);
+
   return {
     send,
     invoke,
@@ -829,6 +870,10 @@ export function useIPC() {
     getWorkingDir,
     changeWorkingDir,
     getMCPServers,
+    getAssetCenterSnapshot,
+    dryRunAssetExport,
+    createAssetExportPackage,
+    showItemInFolder,
     isElectron,
   };
 }

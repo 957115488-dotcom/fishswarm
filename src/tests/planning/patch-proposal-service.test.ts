@@ -130,6 +130,9 @@ describe('patch proposal service', () => {
     expect(scan.status).toBe('blocked');
     expect(envelope.status).toBe('blocked');
     expect(envelope.artifact.secretScan.findings[0]?.severity).toBe('blocker');
+    expect(envelope.artifact.diffSha256).toHaveLength(64);
+    expect(envelope.artifact.diff).not.toContain('sk-1234567890abcdefghijklmnop');
+    expect(envelope.artifact.diff).toContain('[REDACTED:api_key:');
     expect(envelope.artifact.riskSummary).toContain('Blocked by secret scan');
   });
 });

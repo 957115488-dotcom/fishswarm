@@ -29,6 +29,16 @@
 
 FishSwarm is a free, open-source AI agent desktop application for Windows and macOS. It wraps Claude Code, OpenAI, Gemini, DeepSeek, and other AI models into a user-friendly GUI with one-click installation — no coding required. Key capabilities include VM-level sandbox isolation (WSL2 on Windows, Lima on macOS), a built-in Skills system for generating PPTX, DOCX, XLSX, and PDF documents, MCP (Model Context Protocol) integration for connecting to browsers, Notion, and other desktop apps, GUI automation via computer use, and remote control through Feishu (Lark) and Slack. FishSwarm is designed to make AI-powered desktop automation accessible to everyone.
 
+## Low-code Integration Status
+
+| Area                            | Status          | Notes                                                                                                                         |
+| ------------------------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Assets / Resource Library       | Beta            | Read-only asset snapshot, Lowcode sub-assets, MCP tool references, provider setup references, and Start from template entry. |
+| Agent Workboard Lite            | Beta foundation | Structured board artifact, task/role/asset/artifact/approval refs, and read-only status card component.                       |
+| Patch Review / Controlled Apply | Beta foundation | Secret diff redaction, human gate hash/action/path/expiry validation, base commit checks, scoped rollback checkpoints.        |
+| Export Package                  | Beta            | Dry-run, blockers/warnings/redaction preview, checksum/provenance package creation, and guarded renderer workflow.            |
+| Docs and Demos                  | Foundation      | See `docs/user`, `docs/developer`, `docs/assets`, `docs/demos`, and `docs/release-notes/lowcode-assets-integration.md`.      |
+
 ---
 
 ## 📖 Introduction
@@ -46,10 +56,10 @@ It provides a sandboxed workspace where AI can manage files, generate profession
 
 ## ✨ Key Features
 
-|               | MCP & Skills | Remote Control | GUI Operation |
-| ------------- | ------------ | -------------- | ------------- |
+|                 | MCP & Skills | Remote Control | GUI Operation |
+| --------------- | ------------ | -------------- | ------------- |
 | Claude Code CLI | ✓            | ✗              | ✗             |
-| FishSwarm    | ✓            | ✓              | ✓             |
+| FishSwarm       | ✓            | ✓              | ✓             |
 
 - **One-Click Install, Ready to Use**: Pre-built installers for Windows and macOS, no environment setup needed—just download and start using.
 - **Flexible Model Support**: Supports **Claude**, **OpenAI-compatible APIs**, and Chinese models like **GLM**, **MiniMax**, **Kimi**. Use your OpenRouter, Anthropic, or other API keys with flexible configuration. More models coming soon!

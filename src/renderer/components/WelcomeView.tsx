@@ -493,6 +493,10 @@ export function WelcomeView() {
       prompt: t('welcome.quickPromptOrganize'),
     },
   ];
+  const handleStartFromTemplate = useCallback(() => {
+    setSettingsTab('assets');
+    setShowSettings(true);
+  }, [setSettingsTab, setShowSettings]);
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto flex flex-col items-center px-5 py-5 md:px-8 md:py-6">
@@ -551,6 +555,30 @@ export function WelcomeView() {
               <span>{tag.label}</span>
             </button>
           ))}
+        </div>
+
+        <div className="flex justify-center px-3">
+          <button
+            type="button"
+            onClick={handleStartFromTemplate}
+            className="inline-flex max-w-xl items-center gap-3 rounded-2xl border border-accent/25 bg-accent/5 px-4 py-3 text-left text-sm text-text-secondary transition-colors hover:border-accent/50 hover:bg-accent/10 hover:text-text-primary"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">
+              <FolderOpen className="h-4.5 w-4.5" />
+            </span>
+            <span className="min-w-0">
+              <span className="block font-medium text-text-primary">
+                {t('welcome.startFromTemplate', '从模板开始 / Start from template')}
+              </span>
+              <span className="mt-0.5 block text-xs leading-5 text-text-muted">
+                {t(
+                  'welcome.startFromTemplateDesc',
+                  '打开资源库选择模板、角色、Skill 或工作流，只插入任务草稿，不会自动发送。'
+                )}
+              </span>
+            </span>
+            <ArrowRight className="h-4 w-4 shrink-0 text-accent" />
+          </button>
         </div>
 
         {/* Main Input Card - Right aligned */}

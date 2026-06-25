@@ -87,6 +87,37 @@ export const CAPABILITY_DEFINITIONS: CapabilityDefinition[] = [
     keywords: ['documentation', 'docs', 'api reference', 'manual', '文档', '手册'],
     specialistRoleIds: ['documentation-specialist'],
   },
+  {
+    id: 'asset-curation',
+    label: 'asset curation',
+    keywords: [
+      'asset center',
+      'asset library',
+      'resource library',
+      'template asset',
+      'lowcode asset',
+      'asset curation',
+    ],
+    specialistRoleIds: ['qa-release-steward'],
+  },
+  {
+    id: 'low-code-blueprint',
+    label: 'low-code blueprint design',
+    keywords: ['low-code', 'lowcode', 'component blueprint', 'component tree', 'lowcode-builder'],
+    specialistRoleIds: ['product-designer'],
+  },
+  {
+    id: 'workflow-template',
+    label: 'workflow template and logic flow design',
+    keywords: ['workflow template', 'logicflow', 'logic flow', 'flow preview', 'flow compiler'],
+    specialistRoleIds: ['product-designer'],
+  },
+  {
+    id: 'export-package',
+    label: 'auditable export package',
+    keywords: ['export package', 'dry-run', 'manifest', 'checksum', 'redaction report'],
+    specialistRoleIds: ['qa-release-steward', 'security-officer'],
+  },
 ];
 
 export function assessRoleCapabilityAdequacy(

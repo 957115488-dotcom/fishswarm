@@ -56,6 +56,33 @@ function gateContentHash(input: {
   return sha256Text(JSON.stringify(input));
 }
 
+function normalizePolicyPattern(pattern: string): string {
+  return pattern.trim().replace(/\\/g, '/').replace(/^\.\//, '').replace(/\/+$/g, '');
+}
+
+function isPolicySubset(candidatePattern: string, allowedPattern: string): boolean {
+  const candidate = normalizePolicyPattern(candidatePattern);
+  const allowed = normalizePolicyPattern(allowedPattern);
+  if (!candidate || !allowed) return false;
+  if (allowed === '**' || allowed === '*') return true;
+  if (candidate === allowed) return true;
+  if (allowed.endsWith('/**')) {
+    const allowedPrefix = allowed.slice(0, -3);
+    if (candidate === allowedPrefix || candidate.startsWith(`${allowedPrefix}/`)) return true;
+    if (candidate.endsWith('/**')) {
+      return candidate.slice(0, -3).startsWith(`${allowedPrefix}/`);
+    }
+  }
+  return false;
+}
+
+function allowedPathsAreSubset(candidatePaths: string[], proposalAllowedPaths: string[]): boolean {
+  if (proposalAllowedPaths.length === 0) return true;
+  return candidatePaths.every((candidate) =>
+    proposalAllowedPaths.some((allowed) => isPolicySubset(candidate, allowed))
+  );
+}
+
 export function validateHumanReviewGateForPatch(input: {
   gate: HumanReviewGateArtifact;
   proposal: PatchProposalArtifact;
@@ -70,6 +97,12 @@ export function validateHumanReviewGateForPatch(input: {
   }
   if (input.gate.approvedDiffSha256 !== input.proposal.diffSha256) {
     return { valid: false, reason: 'Gate diff hash does not match the current patch proposal.' };
+  }
+  if (!input.gate.allowedActions.includes('patch.apply')) {
+    return { valid: false, reason: 'Gate does not approve patch.apply.' };
+  }
+  if (!allowedPathsAreSubset(input.gate.allowedPaths, input.proposal.allowedPaths)) {
+    return { valid: false, reason: 'Gate allowed paths are wider than the patch proposal.' };
   }
   const now = input.now || new Date();
   const expiresAtMs = new Date(input.gate.expiresAt).getTime();
@@ -96,6 +129,14 @@ export function createHumanReviewGateArtifact(
   }
   if (input.decision === 'approved' && proposal.secretScan.status === 'blocked') {
     throw new Error('Cannot approve a patch proposal blocked by secret scan.');
+  }
+  const allowedPaths = input.allowedPaths || proposal.allowedPaths;
+  const allowedActions = input.allowedActions || ['patch.apply'];
+  if (input.decision === 'approved' && !allowedActions.includes('patch.apply')) {
+    throw new Error('Approved review gates must include the patch.apply action.');
+  }
+  if (!allowedPathsAreSubset(allowedPaths, proposal.allowedPaths)) {
+    throw new Error('Review gate allowedPaths must not be wider than the patch proposal.');
   }
 
   const now = input.now || new Date();
@@ -125,7 +166,7 @@ export function createHumanReviewGateArtifact(
         approver: input.approver,
         approvedAt,
       }),
-      allowedPaths: input.allowedPaths || proposal.allowedPaths,
+      allowedPaths,
       deniedPaths: proposal.deniedPaths,
       reviewState: input.decision === 'approved' ? 'approved' : 'rejected',
     }),
@@ -134,8 +175,8 @@ export function createHumanReviewGateArtifact(
     approver: input.approver,
     approvedAt,
     expiresAt,
-    allowedPaths: input.allowedPaths || proposal.allowedPaths,
-    allowedActions: input.allowedActions || ['patch.apply'],
+    allowedPaths,
+    allowedActions,
     decision: input.decision,
     reason: input.reason,
   };

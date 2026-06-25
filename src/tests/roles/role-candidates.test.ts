@@ -204,6 +204,26 @@ describe('role capability gaps', () => {
     expect(assessment.adequate).toBe(true);
     expect(gap).toBeNull();
   });
+
+  it('recognizes Lowcode asset and export capabilities for existing specialist roles', () => {
+    const assessment = assessRoleCapabilityAdequacy({
+      taskId: 'task-lowcode-export',
+      taskText:
+        'Use the asset center to prepare an auditable export package with manifest, checksum, and redaction report.',
+      routedRoles: [
+        {
+          id: 'qa-release-steward',
+          name: 'QA / Release Steward',
+          triggerKeywords: ['release', 'export package', 'manifest', 'checksum'],
+          triggerScopes: ['release'],
+          handbookText: 'Owns release readiness, export package checks, and audit evidence.',
+        },
+      ],
+    });
+
+    expect(assessment.requiredCapabilities).toEqual(['asset curation', 'auditable export package']);
+    expect(assessment.adequate).toBe(true);
+  });
 });
 
 describe('role candidate builder and research provider', () => {
