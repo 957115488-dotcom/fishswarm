@@ -1,362 +1,163 @@
 <p align="center">
-  <img src="resources/logo.png" alt="FishSwarm Logo" width="280" />
+  <img src="resources/logo.png" alt="FishSwarm Logo" width="240" />
 </p>
 
-<h1 align="center">🚀 FishSwarm: Your Personal AI Agent Desktop App</h1>
+<h1 align="center">FishSwarm</h1>
 
 <p align="center">
-  • Open Source AI Agent • One-Click Install 
-</p>
-
-<p align="center">
-  <a href="./README_zh.md">中文文档</a> •
-  <a href="#features">Features</a> •
-  <a href="#demo">Demo</a> •
-  <a href="#installation">Downloads</a> •
-  <a href="#quick-start">Quick Start</a> •
-  <a href="#skills">Skills Library</a>
+  Local-first AI agent desktop workspace for multi-model, multi-role, auditable automation.
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Platform-Windows%20%7C%20macOS-blue" alt="Platform" />
-  <img src="https://img.shields.io/badge/License-MIT-green" alt="License" />
-  <img src="https://img.shields.io/badge/Node.js-18+-brightgreen" alt="Node.js" />
-  <a href="https://discord.gg/pynjtQDf"><img src="https://img.shields.io/discord/1493588403260883078?logo=discord&label=Discord&color=5865F2" alt="Discord" /></a>
-  <a href="#community"><img src="https://img.shields.io/badge/WeChat-微信群-07C160?logo=wechat&logoColor=white" alt="WeChat" /></a>
+  <a href="./README_zh.md">??</a> ?
+  <a href="#what-is-fishswarm">Overview</a> ?
+  <a href="#features">Features</a> ?
+  <a href="#quick-start">Quick Start</a> ?
+  <a href="#development">Development</a> ?
+  <a href="#documentation">Docs</a>
 </p>
 
----
+<p align="center">
+  <img src="https://img.shields.io/badge/Platform-Windows%20%7C%20macOS-blue" alt="Platform: Windows and macOS" />
+  <img src="https://img.shields.io/badge/Node.js-%3E%3D22-brightgreen" alt="Node.js >= 22" />
+  <img src="https://img.shields.io/badge/Electron-React%20%2B%20TypeScript-47848F" alt="Electron, React, TypeScript" />
+  <img src="https://img.shields.io/badge/License-MIT-green" alt="MIT License" />
+</p>
 
-FishSwarm is a free, open-source AI agent desktop application for Windows and macOS. It wraps Claude Code, OpenAI, Gemini, DeepSeek, and other AI models into a user-friendly GUI with one-click installation — no coding required. Key capabilities include VM-level sandbox isolation (WSL2 on Windows, Lima on macOS), a built-in Skills system for generating PPTX, DOCX, XLSX, and PDF documents, MCP (Model Context Protocol) integration for connecting to browsers, Notion, and other desktop apps, GUI automation via computer use, and remote control through Feishu (Lark) and Slack. FishSwarm is designed to make AI-powered desktop automation accessible to everyone.
+> This README has been cleaned up to reflect the current project direction. Outdated community links, stale demo links, and old model/version claims have been removed.
 
-## Low-code Integration Status
+## What is FishSwarm?
 
-| Area                            | Status          | Notes                                                                                                                         |
-| ------------------------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Assets / Resource Library       | Beta            | Read-only asset snapshot, Lowcode sub-assets, MCP tool references, provider setup references, and Start from template entry. |
-| Agent Workboard Lite            | Beta foundation | Structured board artifact, task/role/asset/artifact/approval refs, and read-only status card component.                       |
-| Patch Review / Controlled Apply | Beta foundation | Secret diff redaction, human gate hash/action/path/expiry validation, base commit checks, scoped rollback checkpoints.        |
-| Export Package                  | Beta            | Dry-run, blockers/warnings/redaction preview, checksum/provenance package creation, and guarded renderer workflow.            |
-| Docs and Demos                  | Foundation      | See `docs/user`, `docs/developer`, `docs/assets`, `docs/demos`, and `docs/release-notes/lowcode-assets-integration.md`.      |
+FishSwarm is an open-source desktop application for running AI agents inside a controlled local workspace. It combines model-provider configuration, MCP connectors, reusable Skills, workspace/sandbox guardrails, memory, roles, and asset-driven workflows into one Electron app.
 
----
+The project is aimed at people who want an AI assistant that can work with real project files while keeping execution visible, reviewable, and scoped to the workspace you choose.
 
-## 📖 Introduction
+## Features
 
-**FishSwarm** is an open-source AI agent desktop app with one-click installers for **Windows** and **macOS**—no coding required.
+| Area                          | Current focus                                                                                                            |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Desktop agent workspace       | Chat-driven local workspace with visible tool calls, file context, and project sessions.                                 |
+| Model providers               | Configurable API providers and OpenAI-compatible endpoints; secrets stay in provider settings, not in prompts.           |
+| Skills                        | Reusable workflows for documents, spreadsheets, PDFs, screenshots, browser/tool operations, and custom capability packs. |
+| MCP connectors                | Connect external tools through Model Context Protocol configurations.                                                    |
+| Workspace safety              | Path restrictions, permission rules, review flows, and optional VM isolation with WSL2/Lima where available.             |
+| Roles and workboards          | Role routing, role artifacts, Agent Workboard Lite, and review handoff foundations.                                      |
+| Assets / low-code integration | Read-only asset library, provider setup references, safe task references, patch review, and export package workflows.    |
+| Remote control                | Feishu/Lark and Slack integration code exists as optional/beta infrastructure; configure only if you need it.            |
 
-It provides a sandboxed workspace where AI can manage files, generate professional outputs (PPTX, DOCX, XLSX, etc.) through our built-in **Skills** system, and **connect to desktop apps via MCP** (browser, Notion, etc.) for better collaboration.
+## Current status
 
-> [!WARNING]
-> **Disclaimer**: FishSwarm is an AI collaboration tool. Please exercise caution with its operations, especially when authorizing file modifications or deletions. We support VM-based sandbox isolation, but some operations may still carry risks.
+FishSwarm is under active development. Treat advanced automation features as review-first workflows:
 
----
+- **Stable core direction:** local desktop app, workspace-scoped agent execution, model settings, skills, MCP, and sandbox foundations.
+- **Beta foundations:** Assets, low-code workflow style structured artifacts, Agent Workboard Lite, controlled patch review, and export packages.
+- **Source builds:** supported with Node.js 22+.
+- **Installers:** if this repository publishes prebuilt packages, use the repository's [Releases](https://github.com/957115488-dotcom/fishswarm/releases) page. Otherwise build from source.
 
-<a id="features"></a>
+## Quick start
 
-## ✨ Key Features
+### Requirements
 
-|                 | MCP & Skills | Remote Control | GUI Operation |
-| --------------- | ------------ | -------------- | ------------- |
-| Claude Code CLI | ✓            | ✗              | ✗             |
-| FishSwarm       | ✓            | ✓              | ✓             |
+- Node.js **22 or newer**
+- npm
+- Git
+- Optional: WSL2 on Windows or Lima on macOS for stronger command isolation
 
-- **One-Click Install, Ready to Use**: Pre-built installers for Windows and macOS, no environment setup needed—just download and start using.
-- **Flexible Model Support**: Supports **Claude**, **OpenAI-compatible APIs**, and Chinese models like **GLM**, **MiniMax**, **Kimi**. Use your OpenRouter, Anthropic, or other API keys with flexible configuration. More models coming soon!
-- **Remote Control**: Connect to collaboration platforms like **Feishu (Lark)** and other remote services to automate workflows and cross-platform operations.
-- **GUI Operation**: Control and interact with various desktop GUI applications on your computer. **Recommended model: Gemini-3-Pro** for optimal GUI understanding and control.
-- **Smart File Management**: Read, write, and organize files within your workspace.
-- **Skills System**: Built-in workflows for PPTX, DOCX, PDF, XLSX generation and processing. **Supports custom skill creation and deletion.**
-- **Role Incubation**: When current roles are not sufficiently capable for a task, FishSwarm can create a temporary candidate role and let the user save it as a formal role.
-- **MCP External Service Support**: Integrate browser, Notion, custom apps and more through **MCP Connectors** to extend AI capabilities.
-- **Multimodal Input**: Drag & drop files and images directly into the chat input for seamless multimodal interaction.
-- **Real-time Trace**: Watch AI reasoning and tool execution in the Trace Panel.
-- **Secure Workspace**: All operations confined to your chosen workspace folder.
-- **VM-Level Isolation**: WSL2 (Windows) and Lima (macOS) VM isolation—all commands execute in an isolated VM to protect your host system.
-- **UI Enhancements**: Beautiful and flexible UI design, system language switching, comprehensive MCP/Skills/Tools call display.
-
-<a id="demo"></a>
-
-## 🎬 Demo
-
-See FishSwarm in action:
-
-### 1. Folder Organization & Cleanup 📂
-
-https://github.com/user-attachments/assets/dbeb0337-2d19-4b5d-a438-5220f2a87ca7
-
-### 2. Generate PPT from Files 📊
-
-https://github.com/user-attachments/assets/30299ded-0260-468f-b11d-d282bb9c97f2
-
-### 3. Generate XLSX Spreadsheets 📉
-
-https://github.com/user-attachments/assets/f57b9106-4b2c-4747-aecd-a07f78af5dfc
-
-### 4. GUI Operation🖥
-
-https://github.com/user-attachments/assets/75542c76-210f-414d-8182-1da988c148f2
-
-### 5. Remote control with Feishu(Lark) 🤖
-
-https://github.com/user-attachments/assets/05a703de-c0f5-407b-9a43-18b6a172fd74
-
----
-
-<a id="installation"></a>
-
-## 📦 Installation
-
-### Option 1: Homebrew (macOS, Recommended)
+### Run from source
 
 ```bash
-brew tap FishSwarm/tap
-brew install --cask --no-quarantine fishswarm
-```
-
-> The `--no-quarantine` flag bypasses macOS Gatekeeper, so you won't see the "Apple cannot verify this app" warning.
-
-### Option 2: Download Installer
-
-Get the latest version from our [Releases Page](https://github.com/FishSwarm/fishswarm/releases).
-
-| Platform                  | File Type |
-| ------------------------- | --------- |
-| **Windows**               | `.exe`    |
-| **macOS** (Apple Silicon) | `.dmg`    |
-
-### Option 3: Build from Source
-
-For developers who want to contribute or modify the codebase:
-
-```bash
-git clone https://github.com/FishSwarm/fishswarm.git
+git clone https://github.com/957115488-dotcom/fishswarm.git
 cd fishswarm
 npm install
-npm run rebuild
 npm run dev
 ```
 
-To build the installer locally: `npm run build`
-
-### Security Configuration: 🔒 Sandbox Support
-
-FishSwarm provides **multi-level sandbox protection** to keep your system safe:
-
-| Level        | Platform | Technology | Description                                    |
-| ------------ | -------- | ---------- | ---------------------------------------------- |
-| **Basic**    | All      | Path Guard | File operations restricted to workspace folder |
-| **Enhanced** | Windows  | WSL2       | Commands execute in isolated Linux VM          |
-| **Enhanced** | macOS    | Lima       | Commands execute in isolated Linux VM          |
-
-- **Windows (WSL2)**: When WSL2 is detected, all Bash commands are automatically routed to a Linux VM. The workspace is synced bidirectionally.
-- **macOS (Lima)**: When [Lima](https://lima-vm.io/) is installed (`brew install lima`), commands run in an Ubuntu VM with `/Users` mounted.
-- **Fallback**: If no VM is available, commands run natively with path-based restrictions.
-
-**Setup (Optional, Recommended)**
-
-- **Windows**: WSL2 is auto-detected if installed. [Install WSL2](https://docs.microsoft.com/en-us/windows/wsl/install)
-
-- **macOS**:
-  Lima is auto-detected if installed. Install command:
+### Build a desktop package
 
 ```bash
-brew install lima
-# FishSwarm will automatically create and manage a Lima VM (internal Lima name: 'fishswarm-sandbox')
+npm run build
 ```
 
----
+Generated installers are written to the local `release/` directory when the build completes.
 
-<a id="quick-start"></a>
+## First-use checklist
 
-## 🚀 Quick Start Guide
+1. Open FishSwarm.
+2. Choose a workspace folder. Agent file operations should stay inside this workspace.
+3. Open settings and configure your model provider/API key.
+4. Add MCP connectors or Skills only when you need them.
+5. Start with small, reversible tasks and review any file modifications before applying them.
 
-### 1. Get an API Key
+Example prompt:
 
-You need an API key to power the agent. We support **OpenRouter**, **Anthropic**, and various cost-effective **Chinese Models**.
-
-| Provider           | Get Key / Coding Plan                                                      | Base URL (Required)                      | Recommended Model    |
-| ------------------ | -------------------------------------------------------------------------- | ---------------------------------------- | -------------------- |
-| **OpenRouter**     | [OpenRouter](https://openrouter.ai/)                                       | `https://openrouter.ai/api`              | `claude-4-5-sonnet`  |
-| **Anthropic**      | [Anthropic Console](https://console.anthropic.com/)                        | (Default)                                | `claude-4-5-sonnet`  |
-| **Zhipu AI (GLM)** | [GLM Coding Plan](https://bigmodel.cn/glm-coding) (⚡️Chinese Deal)         | `https://open.bigmodel.cn/api/anthropic` | `glm-4.7`, `glm-4.6` |
-| **MiniMax**        | [MiniMax Coding Plan](https://platform.minimaxi.com/subscribe/coding-plan) | `https://api.minimaxi.com/anthropic`     | `minimax-m2`         |
-| **Kimi**           | [Kimi Coding Plan](https://www.kimi.com/membership/pricing)                | `https://api.kimi.com/coding/`           | `kimi-k2`            |
-
-### 2. Configure
-
-1. Open the app and click the ⚙️ **Settings** icon in the bottom left.
-2. Paste your **API Key**.
-3. **Crucial**: Set the **Base URL** according to the table above (especially for Zhipu/MiniMax, etc.).
-4. Enter the **Model** name you want to use.
-
-### 3. Start Using FishSwarm
-
-1. **Select a Workspace**: Choose a folder where Claude is allowed to work.
-2. **Enter a Prompt**:
-   > "Read the financial_report.csv in this folder and create a PowerPoint summary with 5 slides."
-
-### 📝 Important Notes
-
-1.  **macOS Installation**: If you downloaded the DMG directly (not via Homebrew) and see a security warning, go to **System Settings > Privacy & Security** and click **Open Anyway**. Or install via Homebrew to avoid this entirely:
-    ```bash
-    brew tap FishSwarm/tap && brew install --cask --no-quarantine fishswarm
-    ```
-2.  **Network Access**: For tools like `WebSearch`, you may need to enable "Virtual Network Interface" (TUN Mode) in your proxy settings to ensure connectivity.
-3.  **Notion Connector**: Besides setting the integration token, you also need to add connections in a root page. See https://www.notion.com/help/add-and-manage-connections-with-the-api for more details.
-
----
-
-<a id="skills"></a>
-
-## 🧰 Skills Library
-
-FishSwarm ships with built-in skills under `.claude/skills/`, and supports user-added or custom skills, including:
-
-- `pptx` for PowerPoint generation
-- `docx` for Word document processing
-- `pdf` for PDF handling and forms
-- `xlsx` for Excel spreadsheet support
-- `skill-creator` for creating custom skills
-
----
-
-## 🏗️ Architecture
-
+```text
+Read the markdown files in this workspace and draft a concise project summary. Do not modify files until I approve the plan.
 ```
+
+## Safety and privacy
+
+FishSwarm is local-first, but it is still an AI automation tool. Review actions before approving file changes, command execution, patch application, or export packaging.
+
+- Your workspace files remain local unless you explicitly send content to a configured model provider or external connector.
+- API keys, tokens, and credentials should live in settings or credential stores, not in prompts or project files.
+- Workspace path restrictions reduce risk, but they are not a replacement for human review.
+- Optional VM isolation uses WSL2 on Windows and Lima on macOS when configured and available.
+
+## Project layout
+
+```text
 fishswarm/
-├── src/
-│   ├── main/                    # Electron Main Process (Node.js)
-│   │   ├── index.ts             # Main entry point
-│   │   ├── claude/              # Agent SDK & Runner
-│   │   │   └── agent-runner.ts  # AI agent execution logic
-│   │   ├── config/              # Configuration management
-│   │   │   └── config-store.ts  # Persistent settings storage
-│   │   ├── db/                  # Database layer
-│   │   │   └── database.ts      # SQLite/data persistence
-│   │   ├── ipc/                 # IPC handlers
-│   │   ├── memory/              # Memory management
-│   │   │   └── memory-manager.ts
-│   │   ├── sandbox/             # Security & Path Resolution
-│   │   │   └── path-resolver.ts # Sandboxed file access
-│   │   ├── session/             # Session management
-│   │   │   └── session-manager.ts
-│   │   ├── skills/              # Skill Loader & Manager
-│   │   │   └── skills-manager.ts
-│   │   └── tools/               # Tool execution
-│   │       └── tool-executor.ts # Tool call handling
-│   ├── preload/                 # Electron preload scripts
-│   │   └── index.ts             # Context bridge setup
-│   └── renderer/                # Frontend UI (React + Tailwind)
-│       ├── App.tsx              # Root component
-│       ├── main.tsx             # React entry point
-│       ├── components/          # UI Components
-│       │   ├── ChatView.tsx     # Main chat interface
-│       │   ├── ConfigModal.tsx  # Settings dialog
-│       │   ├── ContextPanel.tsx # File context display
-│       │   ├── MessageCard.tsx  # Chat message component
-│       │   ├── PermissionDialog.tsx
-│       │   ├── Sidebar.tsx      # Navigation sidebar
-│       │   ├── Titlebar.tsx     # Custom window titlebar
-│       │   ├── TracePanel.tsx   # AI reasoning trace
-│       │   └── WelcomeView.tsx  # Onboarding screen
-│       ├── hooks/               # Custom React hooks
-│       │   └── useIPC.ts        # IPC communication hook
-│       ├── store/               # State management
-│       │   └── index.ts
-│       ├── styles/              # CSS styles
-│       │   └── globals.css
-│       ├── types/               # TypeScript types
-│       │   └── index.ts
-│       └── utils/               # Utility functions
-├── .claude/
-│   └── skills/                  # Default Skill Definitions
-│       ├── pptx/                # PowerPoint generation
-│       ├── docx/                # Word document processing
-│       ├── pdf/                 # PDF handling & forms
-│       ├── xlsx/                # Excel spreadsheet support
-│       └── skill-creator/       # Skill development toolkit
-├── resources/                   # Static Assets (icons, images)
-├── electron-builder.yml         # Build configuration
-├── vite.config.ts               # Vite bundler config
-└── package.json                 # Dependencies & scripts
+??? src/
+?   ??? main/          # Electron main process, agent runtime, sandbox, MCP, assets, roles
+?   ??? preload/       # Secure bridge between renderer and main process
+?   ??? renderer/      # React UI, settings, chat, assets, workboard views
+?   ??? shared/        # Shared types and utilities
+?   ??? tests/         # Test helpers and runtime-facing tests
+??? docs/              # User docs, developer docs, plans, demos, release notes
+??? resources/         # Icons and static app assets
+??? scripts/           # Build, bundle, diagnostics, and packaging scripts
+??? website/           # Project website sources
+??? package.json       # Scripts, dependencies, and app metadata
 ```
 
----
+## Development
 
-## 🗺️ Roadmap
+Common commands:
 
-See our full **[ROADMAP.md](ROADMAP.md)** for detailed plans.
+```bash
+npm run dev          # start the desktop app in development mode
+npm run build        # build the app and package installers
+npm test             # run the Vitest suite through the native rebuild wrapper
+npm run lint         # lint TypeScript/React sources
+npm run typecheck    # run TypeScript without emitting files
+npm run clean        # remove generated build artifacts
+```
 
-**Completed:** Core installers · Filesystem sandboxing · VM isolation (WSL2/Lima) · Skills (PPTX/DOCX/PDF/XLSX) · MCP connectors · Multi-model support · Rich input · i18n
+Useful focused checks for recent work:
 
-**Coming next:** Browser skill runtime · Role management · Decision store polish · Linux support
+```bash
+npx vitest run src/tests/asset-center src/tests/agent-workboard src/tests/renderer
+npx vitest run src/tests/security src/tests/release src/tests/workflows
+```
 
----
+## Documentation
 
-## ❓ FAQ
+- [User docs](docs/user/)
+- [Developer testing notes](docs/developer/testing.md)
+- [Assets documentation](docs/assets/)
+- [low-code assets integration release notes](docs/release-notes/lowcode-assets-integration.md)
+- [Roadmap](ROADMAP.md)
+- [Contributing guide](CONTRIBUTING.md)
+- [Security policy](SECURITY.md)
 
-**What is FishSwarm?**
-FishSwarm is a free, open-source desktop application that provides a local AI agent workspace. It wraps AI models (Claude, GPT, Gemini, DeepSeek, etc.) into a GUI with one-click installers for Windows and macOS — no terminal or coding knowledge required.
+## Community and support
 
-**What makes FishSwarm different?**
-FishSwarm adds multi-model support, GUI automation via computer use, remote control through Feishu/Slack, and VM-level sandbox isolation. See the [feature comparison table](#features) for details.
+There is currently no external chat group advertised in this README. Please use repository-native channels so issues stay searchable and actionable:
 
-**What AI models does FishSwarm support?**
-Claude (via Anthropic or OpenRouter), OpenAI-compatible APIs, and Chinese models including GLM (Zhipu AI), MiniMax, and Kimi. Any provider offering an OpenAI-compatible API endpoint can be configured.
+- Report bugs through [GitHub Issues](https://github.com/957115488-dotcom/fishswarm/issues).
+- Open pull requests for fixes and documentation improvements.
+- Keep discussions tied to reproducible steps, logs, screenshots, or affected files when possible.
 
-**Is FishSwarm free?**
-Yes. FishSwarm itself is completely free and open-source under the MIT license. You only need to pay for the AI model API usage from your chosen provider.
+## License
 
-**Does FishSwarm work on Linux?**
-Currently, FishSwarm provides pre-built installers for Windows and macOS only. Linux users can build from source — see the [Build from Source](#installation) section.
-
-**How does sandbox isolation work?**
-FishSwarm offers multi-level protection: basic path-based restrictions on all platforms, and enhanced VM-level isolation using WSL2 (Windows) or Lima (macOS). When a VM is available, all commands execute inside an isolated Linux environment, protecting your host system.
-
-**What are Skills and how do I create custom ones?**
-Skills are built-in workflows for specific tasks like generating PPTX, DOCX, PDF, or XLSX files. FishSwarm ships with default skills under `.claude/skills/` and includes a `skill-creator` tool to help you build your own custom skills.
-
-**What is MCP and how does it work?**
-MCP (Model Context Protocol) lets AI connect to external tools and services. FishSwarm supports MCP connectors for browsers, Notion, and other desktop apps — extending the AI's capabilities beyond just file management and code.
-
-**How do I set up remote control via Feishu or Slack?**
-FishSwarm supports remote control through Feishu (Lark) and Slack integration, allowing you to send commands and receive results from collaboration platforms. Check the app settings for remote control configuration.
-
-**Is my data safe? Does FishSwarm send data to external servers?**
-FishSwarm runs locally on your machine. Your files stay in your workspace. The only external communication is with the AI model API you configure (e.g., Anthropic, OpenRouter). No data is sent to FishSwarm servers.
-
----
-
-## 🛠️ Contributing
-
-We welcome contributions! Whether it's a new Skill, a UI fix, or a security improvement:
-
-1. Fork the repo.
-2. Create a branch (`git checkout -b feature/NewSkill`).
-3. Submit a PR.
-
----
-
-## 💬 Community
-
-Join our community for support and discussion:
-
-- **Discord**: [Join our Discord server](https://discord.gg/pynjtQDf) — for real-time chat, support, and development discussion.
-- **WeChat**: Scan the QR code below to join our WeChat group (Chinese community).
-
-<p align="center">
-  <img src="resources/WeChat.jpg" alt="WeChat Group" width="200" />
-</p>
-
----
-
-## 📄 License
-
-MIT © FishSwarm Team
-
----
-
-<p align="center">
-  Made by the FishSwarm Team
-</p>
+FishSwarm is released under the [MIT License](LICENSE).
