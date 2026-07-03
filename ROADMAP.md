@@ -17,7 +17,7 @@
 - **Model Presets**: Up-to-date model catalogs for all major providers
 - **Dependency Policy**: Tiered management strategy with Dependabot grouping
 - **Memory System Foundation**: Unified storage with core/experience memory and source-aware retrieval workflow (PR #138)
-- **Low-code Assets Integration Foundation**: Read-only Assets library, Lowcode sub-asset adapters, safe task references, provider configuration handoff, patch review UI, export dry-run/package workflow, and release notes.
+- **Low-code Assets Integration Foundation**: Read-only Assets library, low-code workflow sub-asset adapters, safe task references, provider configuration handoff, patch review UI, export dry-run/package workflow, and release notes.
 
 ## 🚧 In Progress
 

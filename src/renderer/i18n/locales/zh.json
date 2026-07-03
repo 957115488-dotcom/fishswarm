@@ -629,7 +629,7 @@
       },
       "lowCodeRuntime": {
         "title": "低代码与运行时",
-        "description": "沉淀 Lowcode 低代码平台模式和 Electron 容器经验，辅助 FishSwarm 安全集成。"
+        "description": "沉淀 low-code workflow 低代码平台模式和 Electron 容器经验，辅助 FishSwarm 安全集成。"
       },
       "dataResearch": {
         "title": "数据与研究",
@@ -674,7 +674,7 @@
         "description": "把 GitHub 仓库任务异步交给 Google Jules。"
       },
       "lowcodeBuilder": {
-        "description": "将 Lowcode 低代码平台能力和 desktop Electron 运行时模式转化为 FishSwarm 安全集成方案。"
+        "description": "将 low-code workflow 低代码平台能力和 desktop Electron 运行时模式转化为 FishSwarm 安全集成方案。"
       },
       "csvDataSummarizer": {
         "description": "分析 CSV 文件并生成洞察和可视化。"
@@ -1149,7 +1149,7 @@
   },
   "assetCenter": {
     "title": "资源库 / Assets",
-    "description": "统一浏览 Lowcode 概念、Skills、Roles、MCP、Plugins、模型提供商与工作流交付物。当前为只读模式。",
+    "description": "统一浏览 low-code workflow 概念、Skills、Roles、MCP、Plugins、模型提供商与工作流交付物。当前为只读模式。",
     "detail": "详情",
     "noSelection": "选择一个资产",
     "noSelectionDesc": "在左侧选择卡片后，这里会显示元数据、来源、警告和只读动作。",

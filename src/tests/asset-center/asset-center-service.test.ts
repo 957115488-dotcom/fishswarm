@@ -18,7 +18,7 @@ beforeEach(() => {
   fs.mkdirSync(skillDir, { recursive: true });
   fs.writeFileSync(
     path.join(skillDir, 'SKILL.md'),
-    '---\nname: Lowcode Lowcode\ndescription: Blueprints\n---\n# Skill',
+    '---\nname: low-code workflow Lowcode\ndescription: Blueprints\n---\n# Skill',
     'utf8'
   );
   const builtInSkillDir = path.join(root, 'built-in-skills', 'gstack-review');
@@ -335,9 +335,7 @@ describe('asset center service', () => {
     const duplicates = snapshot.items.filter((item) => item.id === 'lowcode-concept:asset-center');
 
     expect(duplicates).toHaveLength(1);
-    expect(snapshot.warnings).toContain(
-      'Duplicate asset id skipped: lowcode-concept:asset-center'
-    );
+    expect(snapshot.warnings).toContain('Duplicate asset id skipped: lowcode-concept:asset-center');
   });
 
   it('filters unsafe asset actions from adapter output and records warnings', () => {

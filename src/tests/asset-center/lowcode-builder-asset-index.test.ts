@@ -33,7 +33,8 @@ function writeExampleModule(name = 'FishSwarm Low-code Operations Board'): void 
       {
         name,
         componentName: 'FishSwarmOperationsBoard',
-        description: 'A generated dashboard assembled from low-code workflow style reusable blocks.',
+        description:
+          'A generated dashboard assembled from low-code workflow style reusable blocks.',
         blocks: [{ kind: 'metric-card' }, { kind: 'process-flow' }],
       },
       null,

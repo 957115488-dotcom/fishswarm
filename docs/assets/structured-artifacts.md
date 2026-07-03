@@ -1,6 +1,6 @@
 # Structured Development Artifacts
 
-本文档说明 Low-code Builder x FishSwarm 融合后的结构化开发交付物：它们如何记录来源、如何进入人工审查、如何应用 patch、如何创建 rollback checkpoint，以及为什么 LogicFlow 只能预览/编译不能直接运行。
+本文档说明 low-code workflow × FishSwarm 融合后的结构化开发交付物：它们如何记录来源、如何进入人工审查、如何应用 patch、如何创建 rollback checkpoint，以及为什么 LogicFlow 只能预览/编译不能直接运行。
 
 ## 1. 目标定位
 

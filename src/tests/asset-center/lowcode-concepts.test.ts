@@ -52,9 +52,9 @@ describe('low-code concept mapping', () => {
   });
 
   it('adapts page design and source export instead of cloning the low-code runtime', () => {
-    expect(
-      LOWCODE_CONCEPTS.find((concept) => concept.lowcodeKey === 'page-design')?.decision
-    ).toBe('adapt');
+    expect(LOWCODE_CONCEPTS.find((concept) => concept.lowcodeKey === 'page-design')?.decision).toBe(
+      'adapt'
+    );
     expect(
       LOWCODE_CONCEPTS.find((concept) => concept.lowcodeKey === 'source-export')?.fishSwarmName
     ).toContain('Auditable Export Package');

@@ -1,8 +1,8 @@
-# Low-code Builder x FishSwarm Comprehensive Development Plan
+# low-code workflow × FishSwarm Comprehensive Development Plan
 
 > For Claude: REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-Goal: 将 Lowcode 的资产中心、组件蓝图、流程设计、数据建模、接口集成、源码导出能力，完整、安全、渐进地融合进 FishSwarm，最终形成一个“资源库 / Assets + Agent 工作流 + 结构化开发 Artifact + 人审 Diff + QA + 回滚 + 可审计导出”的 AI Agent 桌面开发工作台。
+Goal: 将 low-code workflow 的资产中心、组件蓝图、流程设计、数据建模、接口集成、源码导出能力，完整、安全、渐进地融合进 FishSwarm，最终形成一个“资源库 / Assets + Agent 工作流 + 结构化开发 Artifact + 人审 Diff + QA + 回滚 + 可审计导出”的 AI Agent 桌面开发工作台。
 
 Architecture: 采用“只读资产索引 -> 资源库 UI -> 结构化开发 Artifact -> LogicFlow 预览 -> Policy/Audit -> Export Dry Run -> 受控执行”的分层架构。Asset Center 是统一资产索引与 source adapter 聚合层，初期不作为主存储；所有写入、安装、运行、导出能力都必须经过 main process、权限策略、人审 gate 与审计记录，不允许 renderer 直接执行命令、读写任意文件或泛化网络访问。
 
@@ -12,7 +12,7 @@ Tech Stack: Electron, TypeScript, React, Vite, Vitest, Node fs/path/crypto, exis
 
 ## 0. 文档定位
 
-这是一份总纲级开发计划，不是单个 feature 的短计划。它的目标是让后续实现者即使不了解当前上下文，也能按阶段、按测试、按文件路径推进 Lowcode 与 FishSwarm 的融合。
+这是一份总纲级开发计划，不是单个 feature 的短计划。它的目标是让后续实现者即使不了解当前上下文，也能按阶段、按测试、按文件路径推进 low-code workflow 与 FishSwarm 的融合。
 
 当前基线：
 
@@ -35,7 +35,7 @@ git switch -c codex/lowcode-fishswarm-comprehensive-integration
 
 ## 1. 最终产品效果
 
-最终 FishSwarm 不应该变成 Lowcode 的低代码 IDE clone，而应该升级为一个 AI Agent 资源化开发工作台。
+最终 FishSwarm 不应该变成 low-code workflow 的低代码 IDE clone，而应该升级为一个 AI Agent 资源化开发工作台。
 
 用户可以：
 
@@ -76,9 +76,9 @@ git switch -c codex/lowcode-fishswarm-comprehensive-integration
 
 ---
 
-## 2. Lowcode 概念融合映射
+## 2. low-code workflow 概念融合映射
 
-| Lowcode 内容 | FishSwarm 融合方式 | 决策 | 说明 |
+| low-code workflow 内容 | FishSwarm 融合方式 | 决策 | 说明 |
 |---|---|---|---|
 | 资产中心 | 资源库 / Assets | Adopt | 统一发现、复用、管理入口 |
 | 页面设计 / 组件库 | 组件蓝图、UI blocks、promptable presets | Adapt | 不做完整低代码页面运行时 |
@@ -147,7 +147,7 @@ FishSwarm 的正确路径是：
 
 ~~~mermaid
 flowchart TD
-  CW[Lowcode Concepts] --> AC[Asset Center Core]
+  CW[low-code workflow Concepts] --> AC[Asset Center Core]
   AC --> CM[Concept Map Adapter]
   AC --> DS[Domain Skills Adapter]
   AC --> SK[Built-in Skills Adapter]
@@ -654,7 +654,7 @@ Commit:
 - git add src/main/asset-center/asset-center-types.ts src/tests/asset-center/asset-center-types.test.ts。
 - git commit -m "feat: add asset center type contract"。
 
-### Task 1.3: Lowcode 概念映射
+### Task 1.3: low-code workflow 概念映射
 
 Files:
 

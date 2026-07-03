@@ -108,7 +108,7 @@ const DOMAIN_SKILL_GROUPS: DomainSkillGroup[] = [
       {
         id: 'lowcode-builder',
         name: 'Low-code Builder',
-        aliases: ['Lowcode', 'desktop runtime', 'low-code-platform', 'lowcode-builder'],
+        aliases: ['low-code workflow', 'desktop runtime', 'low-code-platform', 'lowcode-builder'],
         descriptionKey: 'skills.domainSkillsList.lowcodeBuilder.description',
       },
     ],

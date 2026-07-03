@@ -6,7 +6,7 @@ Scope: low-code concept integration, Asset Center, structured development artifa
 
 ## 1. Summary
 
-This release upgrades FishSwarm into a Lowcode-informed AI Agent development workbench while preserving the existing app layout. The integration adds a unified resource library in Settings, structured development artifacts for reviewable agent output, LogicFlow preview/compile support, policy and audit foundations, controlled task/configuration/export actions, and auditable ZIP export packages.
+This release upgrades FishSwarm into a low-code workflow-informed AI Agent development workbench while preserving the existing app layout. The integration adds a unified resource library in Settings, structured development artifacts for reviewable agent output, LogicFlow preview/compile support, policy and audit foundations, controlled task/configuration/export actions, and auditable ZIP export packages.
 
 The implementation intentionally does **not** turn FishSwarm into a low-code IDE clone. Instead, low-code assets become discoverable, reusable references that feed FishSwarm's existing agent workflow, human review, rollback, QA, and release paths.
 

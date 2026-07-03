@@ -56,7 +56,7 @@ export const ASSET_GROUPS: AssetGroupDefinition[] = [
     labelKey: 'assetCenter.groups.creation',
     fallbackLabel: '创作起点',
     descriptionKey: 'assetCenter.groups.creationDesc',
-    fallbackDescription: '模板、蓝图、Lowcode 概念和可被 Agent 复用的起始方案。',
+    fallbackDescription: '模板、蓝图、low-code workflow 概念和可被 Agent 复用的起始方案。',
   },
   {
     id: 'capabilities',
@@ -143,7 +143,7 @@ export function formatAssetKindLabel(kind: AssetKind): string {
     .replace('Ai ', 'AI ')
     .replace('Mcp ', 'MCP ')
     .replace('Built In', 'Built-in')
-    .replace('Lowcode', 'Lowcode');
+    .replace('Lowcode', 'low-code workflow');
 }
 
 function normalizeText(value: string): string {

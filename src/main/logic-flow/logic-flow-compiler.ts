@@ -27,7 +27,7 @@ export interface CreatePlanArtifactFromLogicFlowInput {
 const BUILTIN_LOGIC_FLOWS: LogicFlowBuiltinTemplate[] = [
   {
     id: 'lowcode-human-review-patch',
-    title: 'Lowcode human-reviewed patch flow',
+    title: 'low-code workflow human-reviewed patch flow',
     description: 'Plan, review, approve, apply, and QA without direct LogicFlow execution.',
     document: {
       schemaVersion: 1,

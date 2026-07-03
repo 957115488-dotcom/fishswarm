@@ -205,7 +205,7 @@ describe('role capability gaps', () => {
     expect(gap).toBeNull();
   });
 
-  it('recognizes Lowcode asset and export capabilities for existing specialist roles', () => {
+  it('recognizes low-code workflow asset and export capabilities for existing specialist roles', () => {
     const assessment = assessRoleCapabilityAdequacy({
       taskId: 'task-lowcode-export',
       taskText:

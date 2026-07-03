@@ -138,7 +138,7 @@ function readJsonFile<T>(
     return { parsed: JSON.parse(content) as T, content };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    return { warning: `Failed to read Lowcode ${label}: ${message}` };
+    return { warning: `Failed to read low-code workflow ${label}: ${message}` };
   }
 }
 
@@ -147,7 +147,7 @@ function readTextFile(filePath: string, label: string): { content?: string; warn
     return { content: fs.readFileSync(filePath, 'utf8') };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    return { warning: `Failed to read Lowcode ${label}: ${message}` };
+    return { warning: `Failed to read low-code workflow ${label}: ${message}` };
   }
 }
 
@@ -163,7 +163,7 @@ function optionalFileInsideRoot(
   }
 
   if (!isInside(realRoot, realCandidate)) {
-    return { warning: `Skipped Lowcode ${label} outside root: ${candidate}` };
+    return { warning: `Skipped low-code workflow ${label} outside root: ${candidate}` };
   }
 
   return { filePath: realCandidate };

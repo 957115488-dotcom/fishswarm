@@ -280,7 +280,7 @@ export function LowcodeModuleComposer({
     <section className="cwlc-shell">
       <header className="cwlc-hero">
         <div>
-          <span className="cwlc-eyebrow">Low-code Builder x FishSwarm</span>
+          <span className="cwlc-eyebrow">low-code workflow × FishSwarm</span>
           <h2>低代码模块作坊</h2>
           <p>把成熟组件拖到画布，或批量套用 manifest，生成可审查、可版本化的功能模块。</p>
         </div>

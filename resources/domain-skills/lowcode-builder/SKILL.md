@@ -1,6 +1,6 @@
 ---
 name: lowcode-builder
-description: Analyze and adapt low-code desktop runtime low-code platform material into FishSwarm. Use when working with Lowcode docs, low-code platform design, data-model-first app generation, page/logic/process/API/asset workflows, component or service reuse, source export and independent deployment, or Electron container ideas such as webview shells, preload IPC, Node workers, memory tuning, fetch/cache bridges, print/PDF, and safe runtime integration.
+description: Analyze and adapt low-code desktop runtime low-code platform material into FishSwarm. Use when working with low-code workflow docs, low-code platform design, data-model-first app generation, page/logic/process/API/asset workflows, component or service reuse, source export and independent deployment, or Electron container ideas such as webview shells, preload IPC, Node workers, memory tuning, fetch/cache bridges, print/PDF, and safe runtime integration.
 ---
 
 # Low-code Builder Adaptation
@@ -65,7 +65,7 @@ Use the generated files as the concrete module implementation, then refine styli
 
 ## FishSwarm Guardrails
 
-- Do not copy Lowcode's renderer-exposed command execution pattern into FishSwarm.
+- Do not copy low-code workflow's renderer-exposed command execution pattern into FishSwarm.
 - Do not add broad `webviewTag` support without a dedicated partition, allowlists, sandboxed preload, audited navigation handling, and no Node command APIs.
 - Do not persist or autofill credentials from arbitrary pages.
 - Do not disable certificate validation as a default runtime behavior.

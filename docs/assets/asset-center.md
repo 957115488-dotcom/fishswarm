@@ -1,10 +1,10 @@
 # FishSwarm Asset Center
 
-本文档说明 Low-code Builder x FishSwarm 融合后的资源库（Asset Center）如何使用、如何扩展、以及它的安全边界。
+本文档说明 low-code workflow × FishSwarm 融合后的资源库（Asset Center）如何使用、如何扩展、以及它的安全边界。
 
 ## 1. 目标定位
 
-Asset Center 不是新的主数据库，也不是低代码 IDE 运行时。它是一个只读资源索引与发现层，用统一 envelope 把 FishSwarm 已有能力和 Lowcode 概念连接起来：
+Asset Center 不是新的主数据库，也不是低代码 IDE 运行时。它是一个只读资源索引与发现层，用统一 envelope 把 FishSwarm 已有能力和 low-code workflow 概念连接起来：
 
 - low-code concept map
 - domain skills / built-in skills

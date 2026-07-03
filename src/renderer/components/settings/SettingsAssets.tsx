@@ -433,7 +433,7 @@ export function SettingsAssets({ isActive }: { isActive: boolean }) {
         title={t('assetCenter.title', '资源库 / Assets')}
         description={t(
           'assetCenter.description',
-          '统一浏览 Lowcode 概念、Skills、Roles、MCP、Plugins、模型提供商与工作流交付物。当前为只读模式。'
+          '统一浏览 low-code workflow 概念、Skills、Roles、MCP、Plugins、模型提供商与工作流交付物。当前为只读模式。'
         )}
       >
         <div className="grid grid-cols-1 gap-3 md:grid-cols-4">

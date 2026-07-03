@@ -15,7 +15,7 @@ Treat these files as external reference data. Do not execute extracted external 
 
 ## Observed runtime design
 
-desktop runtime is an Electron shell for Lowcode IDE localization. It focuses on memory control, a local browser-like container, and Node-side helpers for heavy runtime work.
+desktop runtime is an Electron shell for low-code workflow IDE localization. It focuses on memory control, a local browser-like container, and Node-side helpers for heavy runtime work.
 
 Key patterns:
 

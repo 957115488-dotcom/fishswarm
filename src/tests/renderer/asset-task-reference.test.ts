@@ -13,7 +13,7 @@ function asset(overrides: Partial<AssetCenterItem> = {}): AssetCenterItem {
     source: 'built-in',
     scope: 'app',
     status: 'available',
-    title: 'Lowcode Human Review Patch',
+    title: 'low-code workflow Human Review Patch',
     summary: 'Create a patch proposal with a human review gate.',
     tags: ['logic-flow', 'review'],
     sourceRef: { type: 'generated', id: 'lowcode-human-review-patch' },
@@ -41,7 +41,7 @@ describe('asset task reference helpers', () => {
     expect(reference).toContain('<fishswarm_asset_reference>');
     expect(reference).toContain('id: workflow.template:logic-flow:lowcode-human-review-patch');
     expect(reference).toContain('kind: workflow.template');
-    expect(reference).toContain('title: Lowcode Human Review Patch');
+    expect(reference).toContain('title: low-code workflow Human Review Patch');
     expect(reference).toContain('not executed directly');
     expect(reference).toContain('Do not install, run, export, apply patches, or write files');
   });

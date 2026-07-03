@@ -1,15 +1,15 @@
-﻿# Low-code Builder x FishSwarm Master Development Plan（10-Agent Integrated Edition）
+﻿# low-code workflow × FishSwarm Master Development Plan（10-Agent Integrated Edition）
 
-> **For Claude / Codex:** REQUIRED SUB-SKILL: Use `executing-plans` to implement this plan task-by-task.  
-> **计划日期:** 2026-06-25  
-> **工作区:** `D:\myProject\FishSwarm`  
-> **当前分支:** `codex/lowcode-fishswarm-comprehensive-integration`  
-> **当前基线:** `3042a4c feat: add asset export dry run service`  
+> **For Claude / Codex:** REQUIRED SUB-SKILL: Use `executing-plans` to implement this plan task-by-task.
+> **计划日期:** 2026-06-25
+> **工作区:** `D:\myProject\FishSwarm`
+> **当前分支:** `codex/lowcode-fishswarm-comprehensive-integration`
+> **当前基线:** `3042a4c feat: add asset export dry run service`
 > **旧总计划:** `D:\myProject\FishSwarm\docs\plans\2026-06-24-lowcode-fishswarm-comprehensive-development-plan.md`
 
-**Goal:** 在现有 FishSwarm 页面布局和产品定位基础上，完整融合 Lowcode 的资产中心、组件蓝图、逻辑/流程设计、数据模型、接口集成、源码导出能力，最终形成一个“资源库 / Assets + 多角色 Agent 工作流 + 结构化开发 Artifact + 人审 Diff + QA + 回滚 + 可审计导出包”的 AI Agent 桌面开发工作台。
+**Goal:** 在现有 FishSwarm 页面布局和产品定位基础上，完整融合 low-code workflow 的资产中心、组件蓝图、逻辑/流程设计、数据模型、接口集成、源码导出能力，最终形成一个“资源库 / Assets + 多角色 Agent 工作流 + 结构化开发 Artifact + 人审 Diff + QA + 回滚 + 可审计导出包”的 AI Agent 桌面开发工作台。
 
-**Architecture:** 采用“只读资产索引 → 资源库 UI → Lowcode 子资产入库 → Agent Workboard Lite → Role × Artifact 闭环 → LogicFlow 预览 → Policy/Audit 强制治理 → Export Dry Run → 受控动作 → 导出打包 → 文档/发布”的分层演进。Renderer 保持展示与任务草稿职责；所有写入、导出、apply、install、run 都必须走 main process、policy decision、human gate、audit event 和 rollback checkpoint。
+**Architecture:** 采用“只读资产索引 → 资源库 UI → low-code workflow 子资产入库 → Agent Workboard Lite → Role × Artifact 闭环 → LogicFlow 预览 → Policy/Audit 强制治理 → Export Dry Run → 受控动作 → 导出打包 → 文档/发布”的分层演进。Renderer 保持展示与任务草稿职责；所有写入、导出、apply、install、run 都必须走 main process、policy decision、human gate、audit event 和 rollback checkpoint。
 
 **Tech Stack:** Electron、TypeScript、React、Vite、Vitest、Zustand、Node fs/path/crypto、existing FishSwarm roles/runtime、skills manager、MCP config、workflow artifact store、permission rules、i18n、Tailwind/CSS tokens、electron-builder。
 
@@ -23,8 +23,8 @@
 |---|---|---|
 | 1 | 产品与最终效果 | FishSwarm 不做低代码 IDE clone，而做 AI Agent 资源化工作台；资源库不能只藏在 Settings，至少要在首页/入口可见。 |
 | 2 | 架构与模块边界 | 明确 Shared Contract、Main Domain、Governance、Preload IPC、Renderer ViewModel 五层；Policy/Audit 长期应从 Asset Center 解耦为治理层。 |
-| 3 | Asset Center / 资源库 | Asset Center 核心、adapter、只读 IPC、SettingsAssets UI、Lowcode 子资产、MCP tool 引用、i18n 文案已完成到 Beta。 |
-| 4 | 多角色/多智能体编排 | Lowcode 应作为资源与结构化 artifact 进入多角色体系；关键缺口是 Agent Workboard Lite 和 Role 输出到 artifact 的闭环。 |
+| 3 | Asset Center / 资源库 | Asset Center 核心、adapter、只读 IPC、SettingsAssets UI、low-code workflow 子资产、MCP tool 引用、i18n 文案已完成到 Beta。 |
+| 4 | 多角色/多智能体编排 | low-code workflow 应作为资源与结构化 artifact 进入多角色体系；关键缺口是 Agent Workboard Lite 和 Role 输出到 artifact 的闭环。 |
 | 5 | 前端 UI/UX | 当前布局可保留；新功能优先放 Settings；Welcome 应加“从模板开始”入口，资源库需要可访问性、中文文案、只读安全提示。 |
 | 6 | 安全/权限/审计 | Policy/Audit 目前只是模型，未强制接入；apply/export 不能开放，直到 approval、hash、路径、审计、rollback 全链路完成。 |
 | 7 | 测试与质量工程 | 现有 Vitest 是 node 环境，`.tsx` UI 测试策略不足；M8-M10 需要补 Controlled Actions、Export Package、安全回归。 |
@@ -98,7 +98,7 @@ flowchart TD
   AD --> RO["Roles"]
   AD --> MCP["MCP Servers/Tools"]
   AD --> PR["Model Providers"]
-  AD --> CWA["Lowcode Sub-assets"]
+  AD --> CWA["low-code workflow Sub-assets"]
   AC --> SNAP["Normalized Snapshot"]
   SNAP --> IPC["Preload Whitelisted IPC"]
   IPC --> UI["Renderer ViewModel + Settings Assets"]
@@ -265,7 +265,7 @@ UI 上可先作为文本块，后续升级为 chip。提交前不触发模型或
 | 新 Milestone | 名称 | 目标 | 状态 |
 |---|---|---|---|
 | M0 | 状态校准与 P0 修复 | 修乱码、conceptRef、action guard、类型漂移记录 | 已完成 |
-| M1 | Lowcode 子资产入库 | 将 component-blueprints、examples、scripts、LogicFlow templates 作为资产 | 已完成 |
+| M1 | low-code workflow 子资产入库 | 将 component-blueprints、examples、scripts、LogicFlow templates 作为资产 | 已完成 |
 | M2 | Resource Library UX 完善 | 修 i18n、scope 显示、Welcome 入口、只读 action guard、可访问性 | 已完成 Beta |
 | M3 | Safe Use in Task / Configure | 资产插入任务草稿、Provider 跳设置，不执行 | 已完成 |
 | M4 | Agent Workboard Lite | 角色、资产、artifact、审批进入可见任务板 | 已完成 Beta foundation |
@@ -282,7 +282,7 @@ UI 上可先作为文本块，后续升级为 chip。提交前不触发模型或
 
 ## Milestone 0: 状态校准与 P0 修复
 
-### Task 0.1: 修复 Lowcode 概念和中文设置文案
+### Task 0.1: 修复 low-code workflow 概念和中文设置文案
 
 **Files:**
 
@@ -335,7 +335,7 @@ npm run typecheck
 
 **Commit:** `docs: record asset contract source of truth`
 
-## Milestone 1: Lowcode 子资产入库
+## Milestone 1: low-code workflow 子资产入库
 
 ### Task 1.1: Component Blueprint Adapter
 
@@ -353,7 +353,7 @@ npm run typecheck
 
 **Commit:** `feat: index lowcode component blueprints as assets`
 
-### Task 1.2: Lowcode Example Module Adapter
+### Task 1.2: low-code workflow Example Module Adapter
 
 **Source:** `resources/domain-skills/lowcode-builder/examples/fishswarm-dashboard.module.json`
 
@@ -658,7 +658,7 @@ npm run typecheck
 |---|---|---|---|---|---|
 | Asset types | yes | no | no | no | no |
 | Source adapters | yes | snapshot | no secret | card grouping | no |
-| Lowcode subassets | yes | snapshot | no execute | detail | no |
+| low-code workflow subassets | yes | snapshot | no execute | detail | no |
 | Provider assets | yes | config route | no key | settings jump | no |
 | Use in task | formatter | store | no auto-run | composer insertion | no |
 | Agent Workboard | service | artifact store | approval correlation | status cards | no |
@@ -680,7 +680,7 @@ npm run typecheck
 npx vitest run <focused tests>
 ```
 
-Lowcode 集成重点回归：
+low-code workflow 集成重点回归：
 
 ```powershell
 npx vitest run src/tests/asset-center/*.test.ts src/tests/renderer/asset-center-view-model.test.ts src/tests/workflows/development-artifact-types.test.ts src/tests/planning/*.test.ts src/tests/logic-flow/*.test.ts src/tests/release/*.test.ts src/tests/security/*.test.ts
@@ -800,7 +800,7 @@ npm run build
 
 | 阶段 | 内容 | 用户可见状态 |
 |---|---|---|
-| Alpha | P0 修复、Lowcode 子资产、Settings Assets 完善 | 资源库 Beta，只读 |
+| Alpha | P0 修复、low-code workflow 子资产、Settings Assets 完善 | 资源库 Beta，只读 |
 | Beta | Use in Task、Provider Configure、Agent Workboard Lite | 可从资源开始任务，不自动执行 |
 | RC | Role × Artifact、Patch Review、Planning Security | 高级用户可人审 diff |
 | Stable | Export Package、Docs、Demos、Release Notes | 可审计导出包可用 |
@@ -812,7 +812,7 @@ npm run build
 整体完成必须满足：
 
 - [x] P0 文案/引用/类型漂移问题修复；
-- [x] Lowcode 子资产可在资源库中发现；
+- [x] low-code workflow 子资产可在资源库中发现；
 - [x] 资源库 UI 保持现有布局，Settings 可用，Welcome 有轻入口；
 - [x] Use in Task 只插入结构化引用，不自动执行；
 - [x] Provider Configure 跳既有设置，不泄露 key；
@@ -827,7 +827,7 @@ npm run build
 - [x] Export package 只能基于通过的 dry-run 创建；
 - [x] Security regression 全部通过；
 - [x] README/README_zh/ROADMAP/docs/demos/release notes 完成；
-- [x] `npm run typecheck` 和 Lowcode focused tests 通过；
+- [x] `npm run typecheck` 和 low-code workflow focused tests 通过；
 - [x] 发布前回归通过；
 - [x] 每个 milestone 可 revert。
 
@@ -871,7 +871,7 @@ npm run build
 适合拆成互不冲突写集：
 
 - Worker 1：P0 文案/ConceptRef/Action Guard；
-- Worker 2：Lowcode 子资产 adapter；
+- Worker 2：low-code workflow 子资产 adapter；
 - Worker 3：Renderer Use in Task / Provider Configure；
 - Worker 4：Planning Security Hardening；
 - Worker 5：Docs/Demos。
